@@ -46,3 +46,40 @@ the page says (including the name the employer uses for itself).
 - A future guard could live in `build_index.py`: reject appended codes whose
   `notes` lack a `http` source reference. Not implemented this pass (change
   scope was data-only); recorded here as the natural next step.
+
+## Sourcing pass 2 (2026-10-22)
+
+- **Rule addition:** this pass, researcher-agent quotes were treated as provisional.
+  All 23 candidate codes were therefore self-verified by direct fetch of each
+  source page before appending — 23/23 confirmed verbatim. Nothing unverified
+  entered verified_seeds.jsonl.
+- **Bucket results:**
+  - *Private employers (new bucket):* productive for restaurants/hospitality,
+    facilities, aviation and logistics (ABM 20784, Delaware North 593504, Endeavor
+    Air 13966, HMSHost 19413, Olive Garden 11533, Ryder 10919, Compass Group 11366
+    via Crothall's brand page). Banks/telecoms/retail giants (Walmart, Lowe's)
+    surfaced only unverifiable PDFs or 403 pages — recorded as unverified leads:
+    Atrium Health, Trinity Health, UNC Health, ECMC, Arkansas Children's, U
+    Miami, Walmart, Lowe's.
+  - *County/city/K-12 (extended from pass 1):* 12 more verified (Baltimore City
+    18599, Stanislaus County 35248, Buncombe County 22397, Polk County OR
+    3026524, Milwaukee County 13508, Ann Arbor 16993, Thompson SD 15544,
+    Rochester CSD 4246414, NEISD 18971, Magnolia ISD 11366549, Fulton County
+    Schools 17127, Buffalo Public Schools 19205).
+  - *Healthcare systems (new bucket):* 4 verified (Hackensack Meridian Health
+    25383, Health First 33162, Bon Secours Mercy Health 12925, University of
+    Rochester 11968).
+  - *State UC/claims operational guides:* still a non-finding. Fetched guides
+    (Mass DTA BEACON, Santa Clara County social-services handbook) describe TWN
+    use but publish no numeric agency code. Record: do not infer codes from
+    these guides.
+  - *Public directories (2nd attempt):* still no genuine public TWN code list on
+    GitHub/open web. Equifax's public "Find Your Employer" page is a JS shell
+    with no extractable directory in fetched text; per ground rules it stays
+    off-limits behind authentication. Not a data source.
+- **Matching-precedence observation (not a blocker):** build_index sorts output
+  alphabetically, so a bare ambiguous selection like "Polk County" resolves to
+  the uncoded generically-named Truework row rather than the coded
+  "Polk County Oregon" record; coded rows resolve on any more specific
+  selection. Noted as input to a future matcher-precedence pass, where alias
+  rows for a coded record should outrank a same-name uncoded row.

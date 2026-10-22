@@ -24,3 +24,5 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 7.3 | README: sales-page link, alpha zip download, install/use/dev instructions | done - shipped edf4df9 |
 
 | 8.1 | Provider-code sourcing pass 1 (data/sources.md ground rules + catalog) | done - 27 verified TWN codes appended, index 15,693, checks green, shipped |
+
+| 8.2 | Sourcing pass 2 (self-verified batch, banked buckets private/healthcare) | done - 22 new codes appended all self-verified, index 15,709 with 56 coded, checks green, shipped |
