@@ -26,3 +26,5 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 8.1 | Provider-code sourcing pass 1 (data/sources.md ground rules + catalog) | done - 27 verified TWN codes appended, index 15,693, checks green, shipped |
 
 | 8.2 | Sourcing pass 2 (self-verified batch, banked buckets private/healthcare) | done - 23 new codes appended all self-verified, index 15,709 with 56 coded, checks green, shipped |
+
+| 8.3 | Sourcing pass 3 (PDF front resolved: Walmart 10108 via pdftotext; 13 verified) | done - index 15,715 with 69 coded, all self-read, checks + headed E2E green, shipped |

@@ -83,3 +83,35 @@ the page says (including the name the employer uses for itself).
   "Polk County Oregon" record; coded rows resolve on any more specific
   selection. Noted as input to a future matcher-precedence pass, where alias
   rows for a coded record should outrank a same-name uncoded row.
+
+## Sourcing pass 3 (2026-10-22)
+
+- **PDF front: resolved.** Walmart's official lender PDF
+  (one.walmart.com "Employment-Verification---Lender.pdf") serves openly
+  (HTTP 200, no login); downloaded to /tmp and extracted with `pdftotext -layout`,
+  which prints "Wal-Mart Company code = 10108" twice. Landed as Walmart 10108 with
+  a dated-source caveat in its notes (the PDF uses TALX-era wording — the code is
+  old but the document is official and live on Walmart's own domain).
+  Lowe's corporate page returned 403 — stays off-limits and logged, per rules.
+- **Verified this pass (13, all self-read verbatim before landing):**
+  telecom/utilities opened with Verizon 10303 (official offboarding page) and
+  Comcast 17000 (official careers FAQ); hospitality got Marriott Vacations
+  Worldwide 18137 (public SEC 425 filing — a new allowed source class: federal
+  filings); aviation got United 10209 (AFA-CWA union page, dated 2021) and AMR
+  10101 (TWU 514 union page, dated vinting - landed as "AMR Corp" with NO
+  American Airlines alias, notes state it may predate the merger — matcher
+  check confirms "American Airlines" selections still do NOT resolve to it);
+  city bucket grew by Cleveland 102720, Cincinnati 4372219, Albuquerque 20618,
+  Minneapolis 11468, Boca Raton 29515; education by FIU 19266 and Montclair
+  State 14991.
+- **Still non-verifiable after another pass (unchanged verdict):** grocery chains
+  (Kroger, Costco, Albertsons, Publix, H-E-B, Wegmans — official pages fetched
+  but no code in text; Albertsons student-era portal is behind login), hotels
+  (no Marriott International code yet — only distinct-company MVW 18137),
+  banks/credit unions, remaining utilities, and healthcare PDFs (Atrium, Trinity,
+  UNC Health, ECMC, Arkansas Children's, U Miami) whose PDFs/readers remain
+  unfetchable or 403. None of these entered employers.json.
+- **Source-class note:** union pages may carry employers' codes, but they are
+  dated third-party material. Rule for future passes: union-sourced codes are
+  landed at most with explicit vintage/parentEntity caveats in `notes`, never as
+  aliases of the modern company name unless an employer-owned page confirms.
