@@ -126,3 +126,28 @@ Append-only log of significant steps and findings. New entries at the bottom.
 - Headed E2E extended with a live-service-worker tie assertion
   (findEmployer('Polk County') -> 3026524) and rerun on the real context-menu flow:
   ALL AUTOMATED CHECKS PASSED (exit 0); storage loads 15,720 records; match toast + no-match injection defense intact; scan latency 2.6ms.
+
+## Sourcing pass 5 (2026-10-22)
+- Four fronts on the thinned funnel. Pass-2 bar held: 10 landed codes, all
+  self-verified verbatim before appending; Per-entry (no wholesale table imports):
+  the only compiled table found was rejected after inspection.
+- Front 1 (big-tech/retail direct FAQ pages): no employer-owned codes published by
+  Amazon/Microsoft/Apple/Google/Costco/UPS/FedEx/Tyson. Only new brand code:
+  Bahama Breeze 11533 (Darden parent code, same as Olive Garden) — landed as its own
+  row for correct name display; duplicate code intentional, noted.
+- Front 2 (benefit-plan PDF lane): Farmer Focus 679792 (own 2026 Benefits Guide PDF)
+  and County of Ventura 13009 (ventura.org new-hire PDF, extracted via pdftotext,
+  cross-checked against ventura.org direct serving). Spartanburg Regional PDF: open
+  access, no code in text (non-finding). McLeod Health PDF: 403, off-limits.
+  Grocery/chains remain unreachable; Pacific Bells still robot-gated.
+- Front 3 (mop-up higher-ed): Grossmont-Cuyamaca CCD 18470, PCCC 10513118,
+  University of Richmond 14541, Missouri State 341964, Appalachian State 17706,
+  PASSHE 15972 (via IUP HTTP page; system-wide, distinct from Commonwealth 10574),
+  Pace 13914.
+- Index: 15,720 -> 15,724 records; coded rows 84 -> 94 (94 = 93 TWN + 1 T&C).
+  build_index.py --check PASS. First contributing pass to use the new tie rule:
+  exact/alias conflicts with older generic-named rows now resolve to coded rows
+  automatically (asserted Dallas County + Polk County in the 23/23 spot-check).
+- Headed E2E rerun: ALL AUTOMATED CHECKS PASSED (exit 0); storage loads 15,724
+  records; tie assertion (Polk County -> 3026524, live SW) intact; match toast +
+  no-match injection defense intact.

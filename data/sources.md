@@ -161,3 +161,37 @@ the page says (including the name the employer uses for itself).
   Carmel all verified this pass). The code-side fix (coded resolution outranking
   uncoded same-normalized-name rows) remains the singular product fix this catalog
   has been accruing evidence for.
+
+## Sourcing pass 5 (2026-10-22)
+
+- **Big-tech/retail front (direct FAQ pages): verified non-finding.** Amazon,
+  Microsoft, Apple, Google, Costco, UPS, FedEx, Tyson and WMI publish no Work Number
+  code on their employment-verification surfaces in fetched text; direct fetches and
+  not site-restricted searches were used. The only productive brand page this front
+  produced was **Bahama Breeze 11533** (bahamabreeze.com/faqs) — the same Darden
+  parent code as Olive Garden. Landed as its own row so a Bahama Breeze selection
+  displays the correct brand name; duplicate code 11533 is intentional and noted.
+  Home Depot 11116 (already in the index from pass 1) could not be re-confirmed on
+  current pages — existing landing stands on its pass-1 verification.
+- **Chain benefit-plan PDF lane: two landed, one 403, one non-finding.** Farmer Focus
+  679792 landed from farmerfocus.com's own 2026 Benefits Guide PDF; County of Ventura
+  13009 landed from the ventura.org new-hire resources PDF (extracted via
+  pdftotext; the same path on ventura.org serves the same file directly, so the
+  CDN-mirror URL was not the basis for verification). Spartanburg Regional's 2024
+  benefits guide serves openly but contains no Work Number code in extracted text —
+  non-finding, not restricted. McLeod Health 2025 guide: HTTP 403, off-limits and
+  logged. No grocery/food/theater chain code remains reachable; the compiled Scribd
+  table candidate ("Employer Code Company Name") is unproven, non-US, low-numbered —
+  not a Work Number table; recorded and rejected. Pinnacle 12535 (a Scribd doc) is
+  an unrelated company. Pacific Bells 118402 stays robot-gated and unverified.
+- **Mop-up front: 7 new higher-ed/city codes, all self-read:** Grossmont-Cuyamaca
+  CCD 18470, Passaic County Community Colleges 10513118 (8-digit), University of
+  Richmond 14541, Missouri State 341964, Appalachian State 17706, PASSHE 15972
+  (system-wide, via IUP member-institution page — distinct from Commonwealth of PA
+  10574), Pace University 13914.
+- **Per-entry rule held:** the one compiled code table found (Scribd) was rejected
+  wholesale; nothing landed from any third-party aggregation.
+- **Matcher spot-check 23/23** under the shipped normalize + tie rule, including
+  both tie assertions (Dallas County -> Dallas County Texas 15311, Polk County ->
+  Polk County Oregon 3026524), AMR negative, and the duplicate-code display check
+  (Olive Garden selection still resolves to the Olive Garden row).
