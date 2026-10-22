@@ -34,3 +34,5 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 8.5 | Sourcing pass 5 (big-tech FAQ front + benefit-PDF lane + mop-up: 10 verified incl. Bahama Breeze/ Ventura/Farmer Focus) | done - index 15,724 with 94 coded, all self-read, tie rule resolved older generic-name conflicts (sim 23/23), checks + headed E2E green, shipped |
 
 | 8.6 | Sourcing pass 6 (template-wide verifier-PDF sweep + hygiene front: 35 coded rows incl. IRS/NASA/Commerce/CCCS system + Spartanburg correction) | done - index 15,742 with 130 coded, all self-read, sim 24/24 incl. Dallas/Polk ties, checks + headed E2E green, shipped |
+
+| 8.7 | Pass 7 lead chase (Princeton/UTHealth/WayneCo/JHU) — all four resolve to bot-walls; no codes land | done - verdict written into sources.md: public-surface sourcing declared exhausted within bounds; UAB/Pro Unlimited/UNC recorded out-of-bounds |

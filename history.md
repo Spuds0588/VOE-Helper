@@ -185,3 +185,23 @@ Append-only log of significant steps and findings. New entries at the bottom.
   compiled aggregation tables (rejected by rule). Sourcing can claim a real
   exhaustion verdict for the public surfaces this catalog defines, with
   outreach/state-uppercase still the only avenues a next pass could open.
+
+## Sourcing pass 7 — lead chase closes the funnel (2026-10-22)
+- Re-attempted all four pass-6 flaky-fetch leads directly: Princeton
+  (hr.princeton.edu document/6506), UTHealth Houston (4 asset-path variants),
+  Wayne County MI (recorded PDF + 2 alternates), JHU Howard General
+  (recorded PDF + 2 alternate hosts). Every reachable surface is a bot-wall
+  (Cloudflare "Just a moment..." x3, Akamai "Access Denied" x1). No
+  circumvention attempted; nothing landed.
+- Category upgraded in the catalog: the four are now classified with UNC/
+  McLeod/Pacific Bells as gated employer domains, the true walls this catalog
+  cannot cross within its ground rules. UAB/Pro Unlimited stay recorded as
+  out-of-bounds (redacted source / off-domain authoring only).
+- Public-surface sourcing declared **exhausted** in data/sources.md: the funnel
+  catalog is fully occupied across 7 passes, ~50 verified codes landed since
+  pass 1 (12 -> 130 coded rows), and every remaining bucket is either a bot
+  wall, a redacted source, an off-domain posting, or a confirmed multi-pass
+  non-finding. Future code growth requires a new lane (employer outreach /
+  credentialed state collections), not another sweep.
+- No data or index changes this pass; no rebuild needed (last index 15,742
+  records / 130 coded, already shipped and serving).

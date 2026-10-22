@@ -249,3 +249,40 @@ the page says (including the name the employer uses for itself).
 - Headed E2E: ALL AUTOMATED CHECKS PASSED (exit 0); storage loads 15,742 records;
   tie assertion (Polk County -> 3026524, live SW) intact; match toast +
   no-match injection defense intact; scan latency 6.70ms over 15,742 rows.
+
+## Sourcing pass 7 — lead chase + exhaustion verdict (2026-10-22)
+
+- **Result of the chase: dry.** All four in-bounds pass-6 leads were re-attempted
+  directly and every reachable surface is a bot-wall, changing their category from
+  flaky-fetch to restricted. Nothing landed; no code is added this pass.
+  - Princeton 14343: hr.princeton.edu serves Cloudflare "Just a moment..." (HTTP
+    403) on document/6506 — the employer's own domain, but gated; no circumvention.
+  - UTHealth Houston 13948: www.uth.edu/hr and all asset paths (4 variants tried)
+    serve the same Cloudflare challenge; uth.tmc.edu variants fail DNS/403.
+  - Wayne County MI 13675: waynecountymi.gov Akamai "Access Denied" on the recorded
+    PDF and both alternate county paths tried.
+  - Johns Hopkins Howard County General Hospital 12301: hrpayroll.ssc.jhu.edu and
+    both alternate hosts (hr.jhu.edu, hopkinsmedicine.org) are Cloudflare 403.
+- **Out-of-bounds confirmed and left alone:** UAB 4681132-adjacent UAB (source
+  document redacts the code as XXXXX), Pro Unlimited 11586 (only off-domain
+  TalentWise-authored postings exist, no employer-owned surface), UNC Health 15503
+  (consistent 403 bot-wall). Recorded as restricted; no circumvention attempted.
+- **Exhaustion verdict (defensible for public-surface sourcing):** the legal,
+  ethical artificial-lane catalog is now fully occupied. Buckets confirmed
+  genuinely unreachable within these bounds:
+  (a) Cloudflare/Akamai-gated employer HR domains (Princeton, UTHealth, JHU,
+      Wayne County, UNC, Pacific Bells, McLeod, U-Miami HTML, Lowe's, UAB-page
+      variants) — no code-bearing page serves without circumvention, which the
+      ground rules forbid;
+  (b) big consumer tech/retail direct FAQ pages — five passes confirm they
+      publish no codes (Amazon, Microsoft, Apple, Google, Costco, UPS, FedEx,
+      Tyson, WMI, Walmart-adjacent retail);
+  (c) grocery/food/theater chains — five passes, four fronts, zero reachable;
+  (d) compiled third-party aggregation tables — rejected by the per-entry rule,
+      not a legality wall but a source-integrity wall;
+  (e) redacted/placeholder source documents (UAB) — nothing to read.
+  The residual potential left on the table lives outside public-page sweeps:
+  per-employer outreach asking HR to publish their code, and curated/uppercase
+  state-employee collections behind credential gates. That is the announced
+  successor lane, not a conceivable sweep. Sourcing within the stated bounds is
+  **declared exhausted**; any future codes come from a new lane, not this one.
