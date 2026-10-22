@@ -249,25 +249,30 @@ function injectToastUI(queryText, match) {
   const container = document.createElement('div');
   container.className = 'toast-card';
 
+  // Everything interpolated below goes through innerHTML; selection text is
+  // attacker-controlled page content and index fields are remotely synced,
+  // so all dynamic values are HTML-escaped first.
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+
   if (match) {
     container.innerHTML = `
       <div class="header">
-        <h4 class="title">${match.name}</h4>
+        <h4 class="title">${esc(match.name)}</h4>
         <button class="btn-close" id="close">✕</button>
       </div>
       <div class="row">
         <span class="label">Provider:</span>
-        <span class="val-provider">${match.provider}</span>
+        <span class="val-provider">${esc(match.provider)}</span>
       </div>
       <div class="row">
         <div>
           <span class="label">Code:</span>
-          <span class="code-badge">${match.provider_code || 'N/A'}</span>
+          <span class="code-badge">${esc(match.provider_code || 'N/A')}</span>
         </div>
         ${match.provider_code ? `<button class="btn-copy" id="copy-btn">Copy Code</button>` : ''}
       </div>
-      ${match.notes ? `<div class="notes-box">ℹ️ ${match.notes}</div>` : ''}
-      <a class="btn-portal" href="${match.portal_url}" target="_blank" rel="noopener noreferrer">Open Verification Portal</a>
+      ${match.notes ? `<div class="notes-box">ℹ️ ${esc(match.notes)}</div>` : ''}
+      <a class="btn-portal" href="${esc(match.portal_url)}" target="_blank" rel="noopener noreferrer">Open Verification Portal</a>
     `;
   } else {
     container.innerHTML = `
@@ -276,7 +281,7 @@ function injectToastUI(queryText, match) {
         <button class="btn-close" id="close">✕</button>
       </div>
       <p class="not-found-text">
-        No electronic VOE clearinghouse registered for "<strong>${queryText}</strong>". Initiate a manual Written VOE (Form 1005).
+        No electronic VOE clearinghouse registered for "<strong>${esc(queryText)}</strong>". Initiate a manual Written VOE (Form 1005).
       </p>
     `;
   }
