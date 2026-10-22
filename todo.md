@@ -30,3 +30,4 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 8.3 | Sourcing pass 3 (PDF front resolved: Walmart 10108 via pdftotext; 13 verified) | done - index 15,715 with 69 coded, all self-read, checks + headed E2E green, shipped |
 
 | 8.4 | Sourcing pass 4 (finance PDF front + hospital PDF rally: 15 verified, incl. 4 carried-over healthcare PDFs) | done - index 15,720 with 84 coded, all self-read, checks + headed E2E green, shipped |
+| 9.1 | Matcher tie rule: coded rows win exact/alias ties (fixes 3-time-logged artifact) | done - sim 11/11 + headed E2E with live-SW tie assertion green, shipped |

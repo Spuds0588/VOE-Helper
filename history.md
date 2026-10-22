@@ -102,3 +102,27 @@ Append-only log of significant steps and findings. New entries at the bottom.
   beyond U.S. Bank publish no numeric code in fetched official text; fast-food/coffee/
   movie chains have no employer-owned code pages (franchise per-operator codes must
   never become brand codes). Recorded in sources.md.
+
+## Matcher tie-rule fix (2026-10-22)
+- The artifact logged in passes 2 and 4 (a coded record losing an exact/alias tie to
+  a generically-named uncoded Truework row: Polk County, Dallas County, Dallas County
+  TX, Metro Nashville) is fixed in its natural owner, `background.js findEmployer`.
+- Smallest change: pass 1 no longer takes the first exact match unconditionally. It
+  scans for exact name/alias matches, and a record carrying a provider_code wins the
+  tie (first coded match wins; an uncoded exact match only stands when no coded exact
+  match exists anywhere in the index). Pass 2 substring precedence is untouched, so
+  the matching contract outside the tie rule is unchanged. The shipped comment
+  already claimed "code-bearing wins"; the code now honors it.
+- One data-side companion (index rebuild, no count change, 15,720): the Dallas County
+  Texas seed gained the truthful qualifier alias "Dallas County TX" so that the
+  state-abbreviated selection reaches pass 1 at all — without it, "Dallas County TX" still
+  died in the substring pass against the uncoded "Dallas County" row. Qualifier
+  aliases of this kind are identity descriptors (same norm as "Polk County OR"), not
+  invented brand strings.
+- Proof: matcher simulation with the exact shipped normalize + tie logic, 11/11 -
+  all pass-2 case-set selections (Dallas County, Dallas County TX, Metro Nashville,
+  US Bank, Polk County), standing regressions (Home Depot, Target Stores alias, USC,
+  NEISD), AMR still does not capture "American Airlines", no-match path unchanged.
+- Headed E2E extended with a live-service-worker tie assertion
+  (findEmployer('Polk County') -> 3026524) and rerun on the real context-menu flow:
+  ALL AUTOMATED CHECKS PASSED (exit 0); storage loads 15,720 records; match toast + no-match injection defense intact; scan latency 2.6ms.

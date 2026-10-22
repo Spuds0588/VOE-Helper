@@ -95,7 +95,16 @@ async function findEmployer(rawQuery) {
     return query.length >= 4 && (nameNorm.includes(query) || query.includes(nameNorm));
   };
 
-  let match = employers.find(firstPass);
+  // Pass-1 tie rule: on exact name/alias ties, a record carrying a provider_code
+  // wins over an uncoded row (first coded match wins; uncoded exact matches only
+  // stand when no coded exact match exists anywhere). Substring matches keep
+  // their lower precedence below every exact/alias match.
+  let match = null;
+  for (let i = 0; i < employers.length; i++) {
+    if (!firstPass(employers[i])) continue;
+    if (!match || (!match.provider_code && employers[i].provider_code)) match = employers[i];
+    if (match.provider_code) break;
+  }
   if (!match) match = employers.find(secondPass);
 
   const duration = (performance.now() - startTime).toFixed(2);
