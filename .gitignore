@@ -3,10 +3,11 @@ tools/cft/
 data/testprofile/
 __pycache__/
 *.log
-!data/test_headed_pass.log
+data/test_headed_pass.log
+tools/test_headed.py
+data/test/
 data/tw_*
 data/sister_*
-# Test evidence: keep the two final toast screenshots only
-data/test/*
-!data/test/pg-5-toast-match.png
-!data/test/pg-6-toast-nomatch.png
+data/test_page.html
+data/test_webaccess/
+data/test_grant/
