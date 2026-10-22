@@ -18,7 +18,7 @@ A zero-latency Manifest V3 Chrome Extension engineered for mortgage loan process
 
 1. Highlight an employer name on any web page.
 2. Right-click the selection and choose **Lookup VOE Provider...**
-3. A toast shows the provider (The Work Number, Thomas & Company, or Truework), the employer code where known, and a deep link to the provider portal. If no match is found, a Form 1005 fallback hint appears. If no match is found, a Form 1005 fallback hint appears.
+3. A toast shows the provider (The Work Number, Thomas & Company, or Truework), the employer code where known, and a deep link to the provider portal. If no match is found, a Form 1005 fallback hint appears.
 
 ## How it works
 

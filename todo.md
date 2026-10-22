@@ -22,3 +22,5 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 7.2 | Exercise the daily-sync path (alarms 24h refresh) in the live service worker | done - 15/15 sync checks passed via local harness (alarm wiring, replace semantics with upstream edit + new record visible to matcher, lastSync gating, unreachable-upstream fault tolerance, invalid-payload guard, alarm-fired handler sync). No shipped change found; local-only harness, not committed |
 
 | 7.3 | README: sales-page link, alpha zip download, install/use/dev instructions | done - shipped edf4df9 |
+
+| 8.1 | Provider-code sourcing pass 1 (data/sources.md ground rules + catalog) | done - 27 verified TWN codes appended, index 15,693, checks green, shipped |
