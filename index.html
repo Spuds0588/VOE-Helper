@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VOE Helper | Instant VOE Provider &amp; Employer Code Lookup</title>
+    <meta name="description" content="A free Chrome extension for mortgage processors: right-click any employer name to instantly see the VOE/VOI provider and employer code. 15,000+ employers indexed. No login, no API key, works offline.">
+    <meta property="og:title" content="VOE Helper | Instant VOE Provider &amp; Employer Code Lookup">
+    <meta property="og:description" content="Right-click any employer name to instantly see the VOE/VOI provider and employer code. 15,000+ employers indexed, free and open source.">
+    <meta property="og:type" content="website">
+
+    <link rel="icon" href="icons/icon128.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0B0F19;
+            --bg-card: #151D2E;
+            --bg-card-hover: #1A2438;
+            --accent-blue: #3B82F6;
+            --accent-hover: #60A5FA;
+            --text-main: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --border-light: rgba(255,255,255,0.08);
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+        }
+        a { color: var(--accent-blue); text-decoration: none; }
+        a:hover { color: var(--accent-hover); }
+
+        .section-subtitle {
+            font-size: 0.9rem; color: var(--accent-blue);
+            text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
+        }
+        .section-title { font-size: 2.2rem; font-weight: 700; margin: 0.4rem 0 0.6rem; }
+        .section-lead { color: var(--text-muted); max-width: 640px; }
+
+        .wrap { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
+
+        /* Hero */
+        #hero { padding: 6.5rem 1.5rem 4.5rem; border-bottom: 1px solid var(--border-light); text-align: center; }
+        #hero h1 { font-size: 3rem; font-weight: 800; margin: 1.2rem 0 1rem; }
+        #hero h1 .accent { color: var(--accent-blue); }
+        #hero p.sub { font-size: 1.25rem; color: var(--text-muted); max-width: 640px; margin: 0 auto 2rem; }
+        .logo { width: 96px; height: 96px; border-radius: 20px; background: #fff; padding: 12px; box-sizing: border-box; }
+
+        .btn {
+            display: inline-block; padding: 0.8rem 1.6rem; border-radius: 10px;
+            font-weight: 600; margin: 0.3rem;
+        }
+        .btn-primary { background: var(--accent-blue); color: #fff; }
+        .btn-primary:hover { background: var(--accent-hover); color: #fff; }
+        .btn-secondary { border: 1px solid var(--border-light); color: var(--text-main); background: var(--bg-card); }
+        .btn-secondary:hover { border-color: rgba(59,130,246,0.4); color: var(--text-main); }
+
+        /* Stats bar */
+        #stats { padding: 2rem 1.5rem; border-bottom: 1px solid var(--border-light); }
+        #stats .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center; }
+        #stats .num { font-family: 'Outfit', sans-serif; font-size: 1.9rem; font-weight: 700; color: var(--text-main); }
+        #stats .lbl { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+
+        /* Cards */
+        section.block { padding: 3.5rem 0; border-bottom: 1px solid var(--border-light); }
+        .cards { display: grid; gap: 1.2rem; margin-top: 2.2rem; }
+        .cards.three { grid-template-columns: repeat(3, 1fr); }
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            border-radius: 14px; padding: 1.5rem;
+        }
+        .card:hover { background: var(--bg-card-hover); border-color: rgba(59,130,246,0.3); }
+        .card .stepnum {
+            display: inline-flex; width: 28px; height: 28px; border-radius: 9999px;
+            background: rgba(59,130,246,0.15); color: var(--accent-blue);
+            align-items: center; justify-content: center; font-weight: 700; margin-bottom: 0.8rem;
+        }
+        .card h3 { font-size: 1.15rem; margin: 0.2rem 0 0.5rem; }
+        .card p { color: var(--text-muted); font-size: 0.95rem; margin: 0; }
+        .card .icon { font-size: 1.4rem; margin-bottom: 0.5rem; }
+
+        /* Install */
+        .install-steps { counter-reset: step; margin-top: 2rem; }
+        .install-steps li { margin-bottom: 0.9rem; color: var(--text-muted); }
+        .install-steps li strong { color: var(--text-main); }
+        code {
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            border-radius: 6px; padding: 0.15rem 0.5rem; font-size: 0.9em; color: var(--accent-hover);
+        }
+
+        /* Provider badges */
+        .badges { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.4rem; }
+        .badge {
+            display: inline-block; padding: 0.45rem 1rem; border-radius: 9999px;
+            background: rgba(59,130,246,0.15); color: var(--accent-blue);
+            font-size: 0.85rem; font-weight: 600;
+        }
+
+        footer { padding: 2.5rem 1.5rem 3.5rem; color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+
+        @media (max-width: 720px) {
+            #hero h1 { font-size: 2.2rem; }
+            .cards.three, #stats .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header id="hero">
+        <img class="logo" src="icons/icon128.svg" alt="VOE Helper logo">
+        <h1>Know the <span class="accent">VOE provider</span> instantly.</h1>
+        <p class="sub">VOE Helper is a free Chrome extension for mortgage processors and underwriters.
+        Highlight any employer name, right-click, and get the VOE/VOI provider and employer code in under 50 ms — no tabs, no portals, no re-type.</p>
+        <a class="btn btn-primary" href="#install">Install the Extension</a>
+        <a class="btn btn-secondary" href="https://github.com/Spuds0588/VOE-Helper">View Source on GitHub</a>
+    </header>
+
+    <section id="stats" class="wrap">
+        <div class="grid">
+            <div><div class="num">15,686+</div><div class="lbl">Employers Indexed</div></div>
+            <div><div class="num">&lt; 50 ms</div><div class="lbl">Local Lookup</div></div>
+            <div><div class="num">3</div><div class="lbl">Clearinghouses Covered</div></div>
+        </div>
+    </section>
+
+    <section class="wrap block" id="problem">
+        <div class="section-subtitle">The Problem</div>
+        <div class="section-title" id="problem-title">Three portals. Seven minutes. Every single loan.</div>
+        <p class="section-lead">Before ordering a verification, a processor has to figure out who actually holds the payroll data:
+        The Work Number, Thomas &amp; Company, or Truework. That means cross-referencing portals manually — 3 to 7 minutes per file,
+        plus wasted order fees when you query the wrong platform.</p>
+    </section>
+
+    <section class="wrap block" id="how">
+        <div class="section-subtitle">How It Works</div>
+        <div class="section-title">Three steps. No learning curve.</div>
+        <div class="cards three">
+            <div class="card"><div class="stepnum">1</div><h3>Highlight</h3><p>Select any employer name in your LOS, web mail, or a PDF viewer.</p></div>
+            <div class="card"><div class="stepnum">2</div><h3>Right-click</h3><p>Choose "Lookup VOE Provider" from the context menu.</p></div>
+            <div class="card"><div class="stepnum">3</div><h3>Act</h3><p>A toast shows the provider, the employer code (one-click copy), and a deep link to the portal.</p></div>
+        </div>
+    </section>
+
+    <section class="wrap block" id="features">
+        <div class="section-subtitle">Features</div>
+        <div class="section-title">Built for the processing desk</div>
+        <div class="cards three">
+            <div class="card"><div class="icon">⚡</div><h3>Zero-latency lookup</h3><p>Local in-memory match against a bundled index. No network round-trip on lookup; results render in milliseconds.</p></div>
+            <div class="card"><div class="icon">📋</div><h3>One-click code copy</h3><p>Six-digit Work Number codes and Thomas &amp; Company codes copy to the clipboard with one click — no re-typing.</p></div>
+            <div class="card"><div class="icon">🔌</div><h3>Works offline</h3><p>The full index lives in the extension. If the network is down, lookups keep working from the local cache.</p></div>
+            <div class="card"><div class="icon">🔁</div><h3>Daily auto-sync</h3><p>Once a day the extension silently reconciles against the open GitHub index. Failed syncs never interrupt work.</p></div>
+            <div class="card"><div class="icon">🛡️</div><h3>Respects the page</h3><p>Results render in an isolated Shadow DOM card — no LOS styling, no DOM scraping, no auto-flagging.</p></div>
+            <div class="card"><div class="icon">🆓</div><h3>Free &amp; open source</h3><p>MIT-licensed. No account, no API key, no data leaves your browser.</p></div>
+        </div>
+    </section>
+
+    <section class="wrap block" id="coverage">
+        <div class="section-subtitle">Coverage</div>
+        <div class="section-title">Who's in the index?</div>
+        <p class="section-lead">15,686+ employers covered, including seeded verified codes for high-volume employers.
+        If an employer isn't registered with an electronic clearinghouse, the extension says so — and points you at the manual Written VOE (Form 1005) path.</p>
+        <div class="badges">
+            <span class="badge">The Work Number (Equifax)</span>
+            <span class="badge">Thomas &amp; Company</span>
+            <span class="badge">Truework</span>
+        </div>
+    </section>
+
+    <section class="wrap block" id="install">
+        <div class="section-subtitle">Install</div>
+        <div class="section-title">GitHub download (v1)</div>
+        <p class="section-lead">VOE Helper v1 is distributed directly from its GitHub repository — not the Chrome Web Store. Installation takes about a minute:</p>
+        <ol class="install-steps">
+            <li><strong>Download</strong>: get the repository ZIP from <a href="https://github.com/Spuds0588/VOE-Helper/archive/refs/heads/main.zip">github.com/Spuds0588/VOE-Helper</a> and unzip it.</li>
+            <li><strong>Open the extensions page</strong>: visit <code>chrome://extensions</code> in Chrome.</li>
+            <li><strong>Enable Developer mode</strong> (toggle, top right).</li>
+            <li><strong>Load the extension</strong>: click "Load unpacked" and select the unzipped <code>voe-helper</code> folder. That's it — highlight an employer name, right-click, and look up.</li>
+        </ol>
+    </section>
+
+    <footer class="wrap">
+        <p>VOE Helper v1.0.0 — free, offline-first, open source (MIT).
+        Index built from public directories; verify codes against the provider portal before ordering.
+        Icon by <a href="https://tabler.io/icons">Tabler Icons</a> (MIT).</p>
+    </footer>
+
+</body>
+</html>

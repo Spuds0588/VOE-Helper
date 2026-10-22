@@ -1,0 +1,22 @@
+# history.md — VOE Helper v1 build log
+
+Append-only log of significant steps and findings. New entries at the bottom.
+
+## 2026-10-22
+
+- **Session start.** Workspace contained only `PRD-VOE_Helper.md` (558 lines, master spec) and `README.md`. No extension code, no data, no tools.
+- Created `AGENTS.md`, `todo.md`, `history.md`.
+- Env check: 16GB RAM (~11GB available), disk 54% used (97GB free). Scratch files go in `data/` / `tools/` inside the repo, not /tmp.
+- Sister projects: account `Spuds0588` on GitHub (same owner as this repo's remote). Candidate for sales-page reference: `CSV-Quickview` (Chrome Extension, same product category). [checking next]
+- Sister-project reference chosen: `Burns-Development` (the only repo with an `index.html` homepage; live on GitHub Pages). Style: dark premium (#0B0F19 bg, #3B82F6 accent), Bulma CDN + Outfit/Inter fonts, project cards. Sales page will follow this style.
+- Data sources probed: PRD's `truework.com/directory` is gone (404). Researcher found the live Truework directory at `/verifications/companies-starting-with-<letter>/` (anonymous GET, names only, no codes) and confirmed no public bulk Work Number code list exists. Decision: bulk = Truework directory (names + deep-link URLs, code empty), precision = curated seed records with verified codes (PRD seeds + 2 verified TWN lookups).
+- Built `tools/capture_truework.py` (polite crawl, 26 letter pages) -> `data/raw_employers.jsonl` (15,688 records after junk-stub filter).
+- Built `tools/build_index.py`: validates PRD §1.6 schema, dedupes by normalized name (seeds win), merges aliases, writes compact `employers.json`, gates on >=2000 with `--check` mode.
+- Index built: **15,686 records** (Truework 15,680 / TWN 5 / T&C 1), 3.58MB (<5MB PRD footprint). `--check` exits 0.
+- Logo: svgrepo blocked by bot check → sourced the same minimalist doc+magnifier mark from iconify (Tabler `file-search`, MIT). Rasterized 16/48/128 with headless Chrome + PIL.
+- Built extension core (`manifest.json`, `background.js`): MV3 SW, context-menu on selection, storage seeded from bundled `employers.json`, daily GitHub-raw sync alarm, two-pass matcher (exact/alias first, then substring so true alias beats substring noise), shadow-DOM toast with code badge, copy button, notes, portal deep link, Form-1005 no-match fallback.
+- Built `index.html` first-draft sales page in sister-project style (dark premium, GitHub-download install instructions + screenshots strip).
+- Headed test battle-scars (Chrome for Testing 137+ chosen because branded Chrome ≥137 removed `--load-extension`): CDP-synthesized right-clicks/drag never open Chrome's native context menu under synthetic input, and no menu popup window is ever materialized in the X tree, so a real menu-item click cannot be automated on this Wayland/X11-hybrid desktop. Equivalent real gesture used instead: the extension manifest declares `_execute_action` = Alt+Shift+V (kept shipped; doubles as a user activation affordance); a REAL keyboard-invoked command grants activeTab exactly like a context-menu item click, letting the test drive the true handler path: SW `chrome.scripting.executeScript(injectToastUI)` into the page.
+- **FINAL HEADED TEST RESULT: ALL AUTOMATED CHECKS PASSED** (exit 0, `data/test_headed_pass.log`). Verified in real headed Chrome on DISPLAY :1: storage seeds 15,686 employers; `findEmployer` exact ('Home Depot' → code 11116), alias ('Target Stores' → 'Target Corporation'), and no-match all correct; in-memory scan latency 15-35ms over 15,686 records; contextMenus API surface OK; real-gesture grant → true executeScript injection → toast shows provider (The Work Number) + code 11116 + Copy Code + notes + working https portal link (`data/test/pg-5-toast-match.png`); no-match toast renders Form 1005 fallback (`data/test/pg-6-toast-nomatch.png`). One dev-env-to-ship fix made during testing: matcher ordering (alias matches outrank substring matches).
+- Key automation quirks recorded for future sessions: desktop runs fractional scaling (dpr 1.046875 → multiply CSS coords by dpr for XTest); Chrome under CDP suppresses native popup creation; SW connections must be re-opened per check (MV3 workers sleep).
+- Dev-env cleanup: removed 594MB Chrome-for-Testing install, test profiles (8.6MB/profile), raw HTML dumps, probe/debug logs, __pycache__. Added `.gitignore`. Kept `data/test_headed_pass.log` + 2 toast screenshots as test evidence.
