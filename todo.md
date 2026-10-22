@@ -12,7 +12,7 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 6 | Create index.html first-draft sales page (GitHub-download distribution) | ✓ done |
 | 7 | Clean out unnecessary dev-env elements as work proceeds | done (removed 594MB Chrome-for-Testing, profiles, probe logs, raw HTML dumps; .gitignore added) |
 | 8 | Test extension in headed chromium session | done - ALL AUTOMATED CHECKS PASSED (Chrome for Testing 137+, headed DISPLAY :1; see tools/test_headed.py, evidence log data/test_headed_pass.log, screenshots data/test/) |
-| 9 | Push to production (GitHub main + Pages) | in progress |
+| 9 | Push to production (GitHub main + Pages) | done (commit ae087ac pushed to Spuds0588/VOE-Helper main; Pages target remains index.html for GitHub Pages enablement)
 
 ## Hard gates (mission)
 - ≥2000 employer records in the index before v1 publishes.
