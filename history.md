@@ -69,3 +69,36 @@ Append-only log of significant steps and findings. New entries at the bottom.
 - 13 self-verified codes appended (Verizon 10303, Comcast 17000, Marriott Vacations Worldwide 18137 via public SEC 425 filing, United Airlines 10209 via AFA union page with caveat, AMR Corp 10101 via TWU 514 union page landed as standalone entity with NO American Airlines alias/holder of its target's name; city rows: Cleveland 102720, Cincinnati 4372219, Albuquerque 20618, Minneapolis 11468, Boca Raton 29515; education rows: FIU 19266, Montclair State 14991). All quotes self-read before landing (pass-2 bar held).
 - Index: 15,709 -> 15,715 records (69 coded rows, was 56). build_index.py --check PASS. Matcher sim: 10/10 new-code lookups resolve correct provider+code; AMR cannot capture "American Airlines" selections (stays uncoded Truework row). Headed E2E on the live extension: ALL AUTOMATED CHECKS PASSED (exit 0).
 - Still no fetched-text source for grocery chains, banks/credit unions, or Marriott International after multiple attempts — logged in sources.md with what was tried; health-system PDF leads remain PDF-reader-inaccessible or 403.
+
+## Sourcing pass 4 (2026-10-22)
+- Three research fronts (finance; healthcare + fast-food/coffee/movie chains; final
+  county/city/K-12 sweep). Pass-2 bar held: all 15 landed codes self-verified by own
+  verbatim read before appending (agent quotes treated as provisional throughout).
+- PDF front second round: all four carried-over healthcare leads (Atrium 18566, Mount
+  Carmel 14229, Arkansas Children's 19443, U Miami 25389) served freely and extracted
+  with pdftotext -layout; U Miami's HTML 403s but its own-domain public FAQ PDF is the
+  source of record. ECMC resolved as Educational Credit Management Corporation 25016
+  (correct entity verified via domain ownership check), NOT Erie County Medical Center.
+- 15 new verified TWN codes appended: U.S. Bank 10360, Dallas County TX 15311, County of
+  Nevada CA 22626, Nashville/Davidson 22559, Tulsa Public Schools 58858, Ivy Tech 19063,
+  CCP 5130409 (7-digit), NC A&T 11031935 (8-digit), Texas State 4359214, UNI 17853
+  (student code 18051 in notes), Atrium Health 18566, Mount Carmel Health System 14229
+  (Trinity ministry, standalone), Arkansas Children's 19443, University of Miami 25389,
+  ECMC 25016. UNC Health 15503 (403) and Pacific Bells 118402 (robot-gated) not landed.
+- Index: 15,715 -> 15,720 records; coded rows 69 -> 84 (84 = 83 TWN + 1 T&C). Filtered
+  Truework rows lost to 15 seed-code replacements confirmed on spot-check: all 15 codes
+  resolve from the built index, regression picks (Walmart 10108, Home Depot 11116,
+  Target Stores alias 10115) intact, AMR still cannot capture "American Airlines".
+- Matcher spot-check under the shipped normalize (punctuation-stripped): 25/28 pass;
+  the 3 misses (Dallas County, Dallas County TX, Metro Nashville) are the documented
+  exact-name-uncoded-row precedence artifact, third manifestation since pass 2. First
+  sim run used a punctuation-keeping norm and produced 3 spurious failures; rerun with
+  the real `normalize` from background.js corrected them — sim must mirror shipped code.
+- Headed E2E rerun on the live extension with the 15,720-record index: ALL AUTOMATED
+  CHECKS PASSED (exit 0); storage loads 15,720 records; match toast renders
+  provider/code/portal on the real context-menu path; no-match HTML-injection defense
+  intact; scan latency 3.9ms.
+- Standing non-findings after two consecutive passes: banks/credit unions/insurers
+  beyond U.S. Bank publish no numeric code in fetched official text; fast-food/coffee/
+  movie chains have no employer-owned code pages (franchise per-operator codes must
+  never become brand codes). Recorded in sources.md.

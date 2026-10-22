@@ -115,3 +115,49 @@ the page says (including the name the employer uses for itself).
   dated third-party material. Rule for future passes: union-sourced codes are
   landed at most with explicit vintage/parentEntity caveats in `notes`, never as
   aliases of the modern company name unless an employer-owned page confirms.
+
+## Sourcing pass 4 (2026-10-22)
+
+- **PDF front, second round: fully resolved with a real extraction step.** All four
+  pass-2/3 healthcare PDF leads now served freely (HTTP 200) and were extracted with
+  `pdftotext -layout`, self-read verbatim before landing: Atrium Health 18566
+  (teammates.atriumhealth.org verifier-message PDF, TALX-era vintage), Mount Carmel
+  Health System 14229 (mountcarmelhealth.com colleague PDF; a Trinity Health ministry —
+  landed as its own employer, NOT as a Trinity Health system-wide code), Arkansas
+  Children's 19443 (archildrens.org HR PDF, 2016 vintage), University of Miami 25389
+  (hr.miami.edu Work Number FAQ PDF; the HTML page itself 403s — the freely-served
+  official PDF on the same domain is the source of record).
+- **New source class: distinction-aware hosting.** The ecmc.org verifier-message PDF
+  names the donor employer verbatim: "Educational Credit Management Corporation (ECMC)
+  employee", code 25016. Domain ownership was confirmed (homepage: "nonprofit
+  corporation providing services in support of higher education finance"); landed under
+  the full legal name with an explicit NOT-Erie-County-Medical-Center note, since the
+  shared "ECMC" abbreviation is a classic wrong-entity trap.
+- **Verified this pass (15, all self-read verbatim before landing):** finance U.S. Bank
+  10360 (official alumni page); education-finance Educational Credit Management Corp
+  25016 (official PDF); hospital systems Atrium 18566, Mount Carmel 14229, Arkansas
+  Children's 19443, University of Miami 25389; counties Dallas County TX 15311, County
+  of Nevada CA 22626, Nashville/Davidson 22559; K-12/higher-ed Tulsa Public Schools
+  58858, Ivy Tech 19063, Community College of Philadelphia 5130409, NC A&T 11031935,
+  Texas State 4359214, University of Northern Iowa 17853 (student/GA code 18051
+  recorded in notes per the one-row-per-name rule).
+- **Unverified leads (catalog only, no landing):** UNC Health 15503 — official page
+  403s to direct fetch and mirror; access restriction stands per ground rules. Pacific
+  Bells (Taco Bell franchise) 118402 — contact page robot-gated. Trinity Health
+  corporate (system-wide) — no extractable employer-owned doc; only the Mount Carmel
+  affiliate was readable. Fast-food/coffee/movie chains (McDonald's, Starbucks, AMC,
+  Regal, Cinemark, et al.) — no employers-owned code pages found again; recorded as a
+  standing non-finding, franchise codes (per-operator) must never be landed as brand
+  codes. Banks/credit unions beyond U.S. Bank (BoA, Chase, PNC, Capital One, Truist,
+  Regions, KeyBank, Navy Federal, PenFed, USAA, insurers) — official pages mention The
+  Work Number but publish no numeric code in fetched text; standing non-finding after
+  two passes.
+- **Matcher spot-check artifact (third documented manifestation).** 25/28 selections
+  resolve correctly under the shipped matcher's exact normalization; the 3 misses
+  ("Dallas County", "Dallas County TX", "Metro Nashville") are the same already-logged
+  precedence artifact: an exact-name generically-titled uncoded Truework directory row
+  outranks a coded record reached by exact name or alias on ties. Coded rows resolve on
+  canonical and most alias selections (U.S. Bank/US Bank/UNI/Ivy Tech/ECMC/Mount
+  Carmel all verified this pass). The code-side fix (coded resolution outranking
+  uncoded same-normalized-name rows) remains the singular product fix this catalog
+  has been accruing evidence for.
