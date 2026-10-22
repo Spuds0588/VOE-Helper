@@ -195,3 +195,57 @@ the page says (including the name the employer uses for itself).
   both tie assertions (Dallas County -> Dallas County Texas 15311, Polk County ->
   Polk County Oregon 3026524), AMR negative, and the duplicate-code display check
   (Olive Garden selection still resolves to the Olive Garden row).
+
+## Sourcing pass 6 (2026-10-22)
+
+- **Front A (template-wide verifier-PDF sweep) — the named "last lane" is genuinely
+  productive.** Query shapes: `"employer code" "the work number" filetype:pdf
+  site:.edu`, city/county variants, and `"the employer code is" ... school district
+  OR city OR county`. Every landed code was self-read verbatim in fetched text
+  (curl + pdftotext), from employer-owned or official-domain PDFs. Landed 35 rows /
+  36 records: Stoughton Health 10720867, Central Michigan 157374, SDSU 33022, UGA
+  13265, Butler 4681132, Wayne State 12436, Colorado School of Mines 11341979,
+  County of Riverside 12421, Harford HCPS 15815, HCPSS 14673, Shelby County Schools
+  15934, SDCCD 17710, UMSAz 686635, Texas HHSC 13068, UMUC/UMGC 14819, Columbus
+  State (GA) 18679, **Commerce Bank 10204** (first bank code beyond US Bank),
+  **IRS 10114** and **NASA 11338** (federal agencies), UTHSC + UTC system-shared
+  17617 (two official documents agree; separate brand rows), and the full
+  14-entry official Colorado Community College System code list from the
+  pikespeak.edu HR PDF (19177 system office + 13 colleges 19241–19253) — landed
+  per entry, each name-paired code read in the fetched system document, no bulk
+  import of anything third-party.
+- **Correction of a pass-5 non-finding:** Spartanburg Regional 10275642 was found
+  in the same 2024 benefits guide PDF pass 5 extracted but called a no-hit — the
+  earlier pdftotext pass missed it; the full re-extraction shows "the Employer
+  Code is 10275642." Landed with a CORRECTS note in the row.
+- **Pass-5 non-finding partially overturned by the lane itself** (the store
+  chains' benefit PDFs did turn up here): Commerce Bank 10204 landed from
+  commercebank.com's own exit-info PDF. The remaining bank/insurer plan-PDF sweep
+  found their surfaces mostly robot-gated or code-redacted (UAB) — unresolved.
+- **Unresolved leads (never inferred, recorded here only):** Princeton 14343
+  (hr.princeton.edu/document/6506 serves HTML; code seen in search snippet only),
+  Wayne County MI 13675 (fetch returns HTML), Johns Hopkins Howard County General
+  Hospital 12301 (hrpayroll.ssc.jhu.edu serves HTML), UTHealth Houston 13948
+  (uth.edu PDF now HTML), UAB (redacted XXXXX), Pro Unlimited 11586 (off-domain
+  TalentWise asset authoring — needs an authoritative host), UNC Health 15503
+  (403). Kutztown confirmed to carry the already-landed PASSHE 15972 (no new row
+  needed).
+- **Front B (hygiene) — all sources.md-named source hosts re-fetched live:**
+  archildrens.org, bahamabreeze.com/faqs, ecmc.org (302), farmerfocus.com,
+  hr.miami.edu, mountcarmelhealth.com, one.walmart.com (301),
+  teammates.atriumhealth.org, ventura.org (302) — all resolve.
+  Front-B Page-drift findings recorded (recorded-path now 404): sf.gov
+  `/income-verification` (re-homed at a new path — tracked with an updated
+  pointer in the row notes territory), hr.vcu.edu and hr.gwu.edu recorded paths
+  are 404, MMSD path unreachable/dns-undefined — codes remain banked under the
+  never-silently-un-verify rule: attribution was verified at landing time;
+  drift is annotated in row notes/sources catalog going forward.
+- **Index: 15,724 -> 15,742 records; coded rows 94 -> 130 (129 TWN + 1 T&C).**
+  build_index.py --check PASS. Matcher spot-check 24/24 under the shipped
+  normalize + tie rule (8 standing cases incl. both Dallas/Polk tie assertions +
+  AMR negative + no-match + duplicate-code Olive Garden display, plus 16 new-row
+  checks incl. "Pikes Peak" shorthand alias and system-shared 17617 brand
+  separation).
+- Headed E2E: ALL AUTOMATED CHECKS PASSED (exit 0); storage loads 15,742 records;
+  tie assertion (Polk County -> 3026524, live SW) intact; match toast +
+  no-match injection defense intact; scan latency 6.70ms over 15,742 rows.

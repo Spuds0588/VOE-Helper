@@ -151,3 +151,37 @@ Append-only log of significant steps and findings. New entries at the bottom.
 - Headed E2E rerun: ALL AUTOMATED CHECKS PASSED (exit 0); storage loads 15,724
   records; tie assertion (Polk County -> 3026524, live SW) intact; match toast +
   no-match injection defense intact.
+
+## Sourcing pass 6 (2026-10-22)
+- "Last lane before exhaustion" ran. Front A (template-wide sweep of
+  employer-owned verifier/benefits PDFs, per-entry): **35 coded rows / 36
+  records landed**, index 15,724 -> 15,742, coded 94 -> 130. Column: 3 federal
+  (IRS 10114, NASA 11338), 1 bank (Commerce 10204), 1 county (Riverside
+  12421), 3 K-12 systems (Harford 15815, HCPSS 14673, Shelby 15934), 1 state
+  agency (Texas HHSC 13068), 16 higher-ed/city/hospital (Stoughton 10720867,
+  CMU 157374, SDSU 33022, UGA 13265, Butler 4681132, Wayne State 12436, Mines
+  11341979, SDCCD 17710, UTHSC/UTC 17617 system-shared pair, UMSAz 686635,
+  UMGC 14819, Columbus State 18679, Spartanburg Regional 10275642 with a
+  CORRECTS note superseding a pass-5 non-finding), and the official Colorado
+  Community College System code list (pikespeak.edu PDF) landed per entry:
+  system office 19177 + 13 colleges 19241-19253.
+- Every landed code self-read verbatim via curl + pdftotext on employer-owned
+  or official-domain PDFs; unresolved leads went to sources.md (Princeton
+  14343, Wayne County MI 13675, JHU Howard General 12301, UTHealth 13948,
+  UAB XXXXX, Pro Unlimited 11586, UNC 15503).
+- Front B (hygiene): all 9 sources.md source-host domains re-fetched live
+  (archildrens.org, ecmc.org, ventura.org and the rest — see the pass-6 catalog); sf.gov path re-homed; VCU/GWU/MMSD
+  recorded paths 404'd — recorded as drift, never silently un-verified
+  (attribution was verified at landing time, per rule).
+- Verification: build_index.py --check PASS. Matcher sim 24/24 (8 standing
+  incl. both tie asserts + AMR negative + duplicate-code display; 16 new-row
+  incl. "Pikes Peak" shorthand alias, UTHSC/UTC brand rows sharing 17617).
+  Headed E2E (full live service-worker, real context menu): ALL AUTOMATED
+  CHECKS PASSED (exit 0); storage loads 15,742, tie assert intact, scan
+  latency 6.70ms.
+- The named funnel lane is now occupied, and Commerce's landing softens the
+  banks standing-non-finding. Remaining non-findings after this pass: big
+  consumer tech/retail direct FAQ pages, grocery/food/theater chains,
+  compiled aggregation tables (rejected by rule). Sourcing can claim a real
+  exhaustion verdict for the public surfaces this catalog defines, with
+  outreach/state-uppercase still the only avenues a next pass could open.
