@@ -1,8 +1,29 @@
 # Phase 2 (planned): WVOE Form Generator — Scope & Plan
 
-Status: **planned, not started.** No deadline; build only after the user asks.
+Status: **M1 built + verified 2026-10-23.** No deadline; M2+ build only after the user asks.
 This document exists so the future build session starts from agreed scope
 instead of re-deriving it.
+
+## M1 outcome (2026-10-23)
+
+- `wvoe.html` + `wvoe.js` (extension pages) + `vendor/pdfme-generator.iife.min.js`
+  (1.9 MB esbuild-minified IIFE of `@pdfme/generator`@latest, zero evals /
+  `new Function` / `WebAssembly`; the Roboto fallback font is embedded in the
+  bundle — confirmed by pdffonts on the generated PDF). Template is inline in
+  `wvoe.js`. pdfme v4 schema coordinates are mm
+  on an A4 blank page (`basePdf: {width, height, padding: [0,0,0,0]}`, mandatory
+  `padding`), each schema needs top-level `name/width/height` PLUS `position`,
+  and generate() renders only the `inputs`-keyed values (template `content` is
+  the designer default, not auto-rendered text).
+- Headed verification: `tools/test_wvoe_spike.py` loads the unpacked extension
+  in Chrome for Testing, opens `wvoe.html`, clicks Generate, and re-reads the
+  downloaded PDF with pdftotext — all hardcoded field strings present. EXIT 0.
+  Downloads are pinned via profile Preferences (CDP
+  Browser.setDownloadBehavior did not reliably catch extension-page anchor
+  downloads on this build; the fallback poll checks the real ~/Downloads too).
+- Known follow-ups for M2+: tree-shake the bundle (only the Text plugin is
+  needed; ~1.9 MB is bulk of it), wire the matched toast row → tab param →
+  field mapping, replace hardcoded inputs.
 
 ## Goal
 

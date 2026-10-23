@@ -369,3 +369,27 @@ Append-only log of significant steps and findings. New entries at the bottom.
   low for code dorks (screening vendors, not record custodians). No public
   pool counts for any provider. A **candidate queue** section was added to
   sources.md (mini-checks append, quarterly passes harvest).
+
+## Phase 2 M1: pdfme WVOE generation spike shipped + verified (2026-10-23, turn 2 cont.)
+- User order: after the prefill/landscape work, do the pdfme WVOE spike.
+  wvoe.html + wvoe.js (extension pages) + vendor/pdfme-generator.iife.min.js
+  (vendored, esbuild-minified IIFE of @pdfme/generator@latest — 1.9 MB,
+  greps clean for eval/new Function/WebAssembly, so it satisfies the MV3
+  no-remote-code CSP; verified in the real extension context). Bundled
+  one-page A4 WVOE template is inline in wvoe.js; M1 fills hardcoded values
+  (a catalog-coded row, Walmart / The Work Number 10108).
+- **pdfme v4 API gotchas learned by.validation-error rounds (recorded in
+  PHASE2-WVOE-form.md):** basePdf blank page REQUIRES padding [t,r,b,l];
+  each schema needs top-level name/width/height in addition to position;
+  generate() renders values keyed by inputs only — template `content`
+  strings are designer defaults, not rendered text-ish; fallback font
+  (Roboto) is embedded in the bundle, no font-base64 wiring needed.
+- **Headed verification, real extension context (tools/test_wvoe_spike.py):
+  EXIT 0.** CFT loads the unpacked extension, opens chrome-extension://<id>/
+  wvoe.html, clicks Generate; the download is pinned to /tmp via profile
+  Preferences (CDP Browser.setDownloadBehavior did not reliably catch
+  extension-page anchor downloads on this build — noted), PDF re-read with
+  pdftotext: every hardcoded field string present (8,992 bytes, %PDF-1.7).
+- Scope held to M1: no toast button yet (M2), no presets (M3), no template
+  editing. Follow-up flagged: tree-shake the bundle down to the Text plugin
+  (the only one the template needs) before M4 ships.
