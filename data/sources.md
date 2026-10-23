@@ -916,3 +916,35 @@ order: "work through the lead pools you identified, largest to smallest")
   already-harvested rows in bulk — the cheap lanes are exhausted; the
   remaining ~2,800 counties and ~33 fed entities need deliberate per-entity
   (state-letter or faction) sweeping rather than broad dorks.
+
+## Dork-sourcing pass 14 (2026-10-23 — continuing per-entity sweeps + queue-wall re-probes)
+- **Queue reconnects:** Concord Kannapolis resolved WITHOUT new work — the pass-14
+  candidate (Transdev North America 13173) had already been landed from the very
+  same ckrider safety-plan document in an earlier pass (same handbook appendix).
+  Baltimore 14629 and Palm Beach 11556 have no independent verbatim source yet —
+  their single providers (broadwayservices.com, pbcgov agenda bundle) still block
+  reads. Broward 13739: the archive.org availability API and CDX were down this
+  session (429/temporarily offline) — remains queued. Veolia/Essex still 403.
+- **11556 collision resolved responsibly:** The Club at Longview's own handbook
+  (theclubatlongview.com) states "Enter the Employer Code 11556" — landed
+  verbatim with an inline note that Palm Beach County's 2014 agenda snippet
+  claims the same code. Palm Beach stays queued until a verbatim county source
+  distinguishes the two.
+- **Newly landed verbatim rows:** The Club at Longview 11556 (own handbook),
+  Varex Imaging Corp 27429 (own handbook), Darden Restaurants 11533 (10-K
+  exhibit; parent of Olive Garden, same code), Arizona Public Service Company
+  11803 (APS in the Pinnacle West/APS 8-K exhibit — filer identity resolved from
+  the same document's cover page), Pro Unlimited 11586 (talentwise-hosted
+  employee sheet), Regina Coeli Child Development Center 110730 (own handbook),
+  University of Maine System 17807 (UMA system student-employment handbook,
+  code twice).
+- **Re-confirmed already-landed rows this pass:** NASA 11338 (official NSSC
+  Employment Verification PDF — verbatim again), Mount Carmel Health System
+  14229 (new-hire contacts sheet — Trinity Health parent code), UMG/Walmart
+  10108 (me.walmart.com associate sheet).
+- **Alabama counties slice worked per-entity** (Autauga, Baldwin, Calhoun,
+  Cullman, Elmore, Etowah, Houston, Jefferson, Madison, Mobile, Montgomery,
+  Talladega, Walker handbooks all fetched): NONE carry TWN guidance in text.
+  Alabama is recorded as a dry county lane.
+- **Index:** 15,770 → 15,775 records, coded 190 (TWN 184 + T&C 6). Build PASS,
+  11/11 sim, headed E2E ALL AUTOMATED CHECKS PASSED on the live index.

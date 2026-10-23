@@ -712,3 +712,11 @@ turn 4)
 - Index 15,762 → 15,770, coded 186 (TWN 180 + T&C 6). Build PASS; 20/20 alias-index sim over all new keys; headed core E2E ALL AUTOMATED CHECKS PASSED on the live 15,770-record service worker.
 - Bar extension recorded in sources.md: OCR of employer-authored text is acceptable ONLY with a second independent digit-source.
 - Honest queue for the next mini-check: Palm Beach County 11556 (48MB agenda bundle times out; snippet-only), Broward Health 13739 (employee-portal wall), City of Baltimore 14629 (third-party newsletter quote), Concord Kannapolis Area Transit (TWN confirmed, code not published), Veolia/Essex County NJ (403).
+
+## Dork-sourcing pass 14: queue reconnect + per-entity sweep (2026-10-23, turn 4)
+- User order: "do the recommended next steps" — continued from pass 13's recommendations.
+- Concord Kannapolis queue entry closed without landing: Transdev North America 13173 had already been harvested from that exact ckrider safety plan in an earlier pass.
+- Seven verbatim rows landed: The Club at Longview 11556 (inline note re the unresolved Palm Beach 11556 claim), Varex Imaging 27429, Darden Restaurants 11533 (Olive Garden parent, same code), Arizona Public Service 11803 (APS identity resolved off the 8-K cover), Pro Unlimited 11586, Regina Coeli CDC 110730, University of Maine System 17807.
+- NASA 11338 and Mount Carmel 14229 re-confirmed via additional official docs; Alabama recorded as a dry county lane after fetching 13 county handbooks.
+- Walls still honest: Baltimore 14629 (single-source newsletter, curl times out), Palm Beach 11556 (48MB bundle), Broward 13739 (portal wall; archive.org down this session), Veolia/Essex (403).
+- Index 15,770 → 15,775, coded 190 (TWN 184 + T&C 6). Build PASS, 11/11 sims, headed core E2E ALL AUTOMATED CHECKS PASSED on the live index.
