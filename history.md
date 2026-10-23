@@ -308,3 +308,37 @@ Append-only log of significant steps and findings. New entries at the bottom.
   (usability U_EXIT=0 incl. matrix 31/31; core E2E H_EXIT=0). Test-run doc
   note added explaining the toasts visibly swapping employers during B–G is
   the test sequence, not candidate cycling.
+
+## Sourcing pass 8 + quickstart prefill probe (2026-10-23)
+- **User follow-up:** (a) quickstart URL params shown after employer selection
+  — could we prefill? (b) fresh dork lanes for TWN/Equifax PDFs; (c) same for
+  Thomas & Company. Event pass authorized.
+- **Quickstart probe done live in the browser:** with the full triple
+  companyId+companyName+domain, Truework preselects the employer
+  ("<Name> — Change"); companyName (or domain) alone is ignored — no name-only
+  prefill. companyId is opaque per employer; the extension cannot derive it
+  from our data. A future enhancement could resolve name→id via Truework's
+  anonymous company-search endpoint at click time (needs host_permissions + a
+  SW fetch); recorded in sources.md as a phase-2-scale change, not built.
+- **New-dork lanes run through, per the landing bar:** 17 codes landed, all
+  self-read verbatim (plain fetches, browser-DOM reads on JS-rendered pages,
+  pdftotext on fetched PDFs; no snippet-only landings). TWN (11): Lockheed
+  Martin 11102, Collins Aerospace 13770, Goodwill Southern California 16363,
+  American Medical Response 20790 (entity-discerned vs. legacy AMR Corp 10101
+  = American Airlines' old parent, cross-noted), RXO 35966 (non-DOT only),
+  County of Orange CA 157185, Erlanger Health System 12995, San Antonio
+  Regional Hospital 19123, McGee Air Services 105029, Beneficial State Bank
+  10549908, Technology Service Corporation 107109 (TSC→Falcata rebrand, not
+  Tractor Supply). Thomas & Company (6, first code-bearing crop): L3Harris
+  L3H518 (own flyer PDF; supersedes carrier-adjacent sourcing), Populus Group
+  PGI584, ShiftMed SHIFT, Cinemark CINE15, Yellow Corporation YRC382
+  (landed VINTAGE — Yellow ceased freight 2023), Genesis Healthcare GENHC91.
+- **Discipline held:** 4 of 8 first-shortlist URLs were dead/bot-walled and
+  were re-homed to live employer pages before landing; Leidos (Cloudflare),
+  Mission Health (dead domain), HIRE Dynamics (image-only PDF), MLA Global
+  recorded as non-findings. Coded rows shadowed 5 uncoded bulk twins via the
+  build's first-seed-wins rule.
+- **Index rebuilt: 15,750 records, 143 coded (TWN 137, T&C 6); build checks
+  green; headed core E2E green on the new catalog.** Usability suite not
+  re-run — its matrix contains no selections that collide with the new
+  names/aliases (inspected), matcher mechanics unchanged.

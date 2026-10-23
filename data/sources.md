@@ -306,6 +306,99 @@ standing rules: rot never un-verifies — no Truework row came *from* these
 URLs (names came from the letter indexes, which still serve), and coded-row
 data is unaffected.
 
+## Quickstart deep-link prefill probe (2026-10-23, live-DOM verified)
+
+Follow-up to the quickstart repoint: what URL parameters does the Truework
+ordering page honor? Verified in a real browser against
+`app.truework.com/requester/quickstart` by reading the rendered DOM:
+
+- With the full triple `?companyId=<opaque>&companyName=<Name>&domain=<domain>`
+  the page **preselects the employer** ("<Name> — Change" rendered). `companyId`
+  is the load-bearing token; Truework issues it per employer.
+- `companyName` alone (or `domain` alone) is **ignored** — the page renders the
+  generic employer-search state with an empty search box, i.e. name-only
+  prefill does NOT work.
+- The search combobox is client-side; typing filters Truework's full catalog
+  live. There is no server-side prefilter parameter derived from `companyName`.
+
+Extension implication (recorded, NOT built): the bulk Truework rows carry only
+the bare quickstart link, so a user still types the employer name there. A
+future enhancement could resolve employer name → companyId at click time via
+Truework's anonymous company-search endpoint (POST
+`app.truework.com/api/company/companies/`, no auth, returns matching companies
+with id + domain) and construct the fully preselected deep link. Cost/notes:
+requires `host_permissions` for `app.truework.com`, a service-worker fetch on
+click, and caching — a phase-2-scale change, out of scope for v1. An interim
+improvement (no permissions change) is appending `companyName=<record name>`
+for humans to see in the URL, but it provably does not prefill — skip it.
+
+## Sourcing pass 8 — event pass: fresh dork lanes, first-ever Thomas & Company code-bearing crop (2026-10-23)
+
+User-authorized event pass (quarterly-style, outside the standing cadence).
+Two lanes ordered by the user: (a) new dork shapes for TWN/Equifax
+verification PDFs beyond pass-6 templates, (b) a first-ever Thomas & Company
+lane. Every landed code was again self-read verbatim in fetched text (plain
+fetch, rendered DOM via a real browser, or `pdftotext` on fetched PDFs from
+employer-owned/official hosts). No snippet-only landings; no gated surface
+penetrated.
+
+- **Started deliberately from readiness, not from a stale URL:** of the
+  researcher's first shortlist, 4 of 8 direct URLs were dead or bot-walled
+  (lockheedmartin.com VOE-page 404, erlanger.org careers-path 404,
+  arregionalhospital.org DNS-dead, mcgeeair.com DNS-dead) — each was re-homed
+  by targeted search to the employer's live page before landing; no row points
+  at a dead URL.
+- **TWN landed (11):** Lockheed Martin 11102 (code lives on
+  lockheedmartin.com/contact.html; salary key required for income+employment),
+  Collins Aerospace 13770 (rtx.com Collins contacts page), Goodwill Southern
+  California 16363 (goodwillsocal.org/contact-us), American Medical Response
+  20790 (amr.net; deliberately NOT aliased to "AMR", which belongs to the
+  legacy AMR Corp / American Airlines-parent row twn-10101), RXO 35966
+  (rxo.com/contact-us; non-DOT only — DOT-era Jacobson records route via
+  Tenstreet), County of Orange California 157185 (hrs.oc.gov — biggest county
+  government code in the catalog), Erlanger Health System 12995
+  (erlanger.org for-associates page), San Antonio Regional Hospital 19123
+  (sarh.org; the researcher's "arregionalhospital" domain was dead), McGee Air
+  Services 105029 (mcgeeairservices.com/contact; six-digit code), Beneficial
+  State Bank 10549908 (beneficialstatebank.com FAQ; eight-digit), Technology
+  Service Corporation 107109 (tsc.com verification page; rebranded Falcata,
+  TSC branding retained on the VOE page; NOT Tractor Supply).
+- **Thomas & Company landed (6; first code-bearing T&C crop):** L3Harris
+  Technologies L3H518 (employer's own verifications flyer PDF at
+  l3harris.com/resources: "Your company code (L3H518)" — this replaces the
+  earlier AA-carrier-adjacent sourcing for the same employer; already in the
+  index from the rolling batch), Populus Group PGI584 (Populus EWV FAQ PDF on
+  their own help hub), ShiftMed SHIFT (ShiftMed EWV process PDF via their CMS
+  asset host), Cinemark CINE15 (Cinemark EWV flyer PDF on media.cinemark.com),
+  Yellow Corporation YRC382 (myyellow.com EWV FAQ PDF — landed as VINTAGE:
+  Yellow ceased freight operations 2023; useful for legacy employees), Genesis
+  Healthcare GENHC91 (genesishcc.com flyer PDF + corroborating procedure PDF).
+- **New query shapes that paid (recorded for the quarterly pass):**
+  `"thomas & company" OR "tncverify.com" "company code" filetype:pdf` (the T&C
+  lane), `site:<employer-domain> "employer code"` contact-page harvesting for
+  employers whose dedicated VOE pages moved (Lockheed, Goodwill SoCal, RXO),
+  and code-in-snippet → employer-domain re-home drill (San Antonio Regional,
+  McGee). The pass-6 template shapes also resurfaced new T&C-hosted PDFs.
+- **Non-findings (recorded, no inference):** Leidos 12275 —
+  careers.leidos.com is Cloudflare-gated in-session (reload attempted, same
+  wall); Mission Health HCA747 — missionandme.mission-health.org dead DNS;
+  HIRE Dynamics HIRE59 — wage-verification PDF is image-only (no text layer);
+  MLA Global — no code served on the reachable surface. None landed.
+- **Dedupe/conflict checks before landing:** the pre-existing "AMR Corp 10101"
+  row is the pre-2015 American Airlines parent (per its own vintage note), a
+  different entity from American Medical Response — both stay, cross-noted.
+  Five uncoded bulk twins were shadowed by the new coded rows via the
+  first-seed-wins build (Lockheed, Collins Aerospace, Goodwill SoCal, Genesis
+  Healthcare, Rxo Inc).
+- **Index after rebuild: 15,750 records, 143 coded (TWN 137, T&C 6,
+  Truework 0).** `build_index.py` checks green; headed core E2E green on the
+  new catalog (match path incl. the same tiered matcher); the usability suite
+  was not re-run — no selection in its matrix collides with the new names or
+  aliases (verified by inspection), and the matcher mechanics are unchanged
+  data-only append.
+- **matcher spot-checks on the new rows:** all 13 codes resolve in employers.json
+  via exact/alias path with coded-first ordering (verified in-build above).
+
 ## Recurring re-check methodology (standing cadence — binding on future maintenance)
 
 The sourcing catalog represents the world as of 2026-10-22. Employers restructure,
