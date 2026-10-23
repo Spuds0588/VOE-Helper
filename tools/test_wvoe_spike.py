@@ -420,6 +420,132 @@ async def main():
                     if not st4.startswith("ok|"):
                         failures.append(f"P4: panel generate failed: {st4}")
 
+        # ---------- P5: side-panel provider sweep + local route save ----------
+        # Probe tab that stands in for the LOS tab: the sweep's card click
+        # must NAVIGATE IT (not open a new tab), prefill the Truework search
+        # param, auto-select the provider, and a Save writes a customEmployers
+        # row that findEmployer resolves immediately (sync-proof storage).
+        # The probe is created through chrome.tabs so the seeded tabId is a
+        # REAL numeric tab id (a CDP targetId is a hex string and Number()
+        # yields NaN — the panel would then navigate the wrong tab).
+        before_tids = {t["id"] for t in targets()}
+        sw_tok = next(t for t in targets()
+                      if t["type"] == "service_worker"
+                      and t["url"].startswith("chrome-extension://"))
+        async with Session(websockets.connect(
+                sw_tok["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
+            await s2.rpc("Runtime.enable")
+            probe_num = await s2.evaluate(
+                "chrome.tabs.create({url:'about:blank'}).then(t=>t.id)")
+            _ = await s2.evaluate(
+                "chrome.storage.local.set({panelView:'sweep',"
+                " voeSweepState:{query:'ACME Rocketry', tabId:" +
+                json.dumps(probe_num) + ", lastProvider:null, lastUrl:null}})")
+        probe_tid = None
+        for _ in range(20):
+            newt = [t for t in targets() if t["id"] not in before_tids
+                    and t["type"] == "page" and t["url"] == "about:blank"]
+            if newt:
+                probe_tid = newt[0]["id"]
+                break
+            await asyncio.sleep(0.4)
+        if not probe_tid:
+            failures.append("P5: probe tab never appeared")
+        async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
+            for t in [x for x in targets()
+                      if x["type"] == "page" and x["url"].endswith("/sidepanel.html")]:
+                # /json entries key on "id"; Target.* results key "targetId".
+                await b.rpc("Target.closeTarget", {"targetId": t["id"]})
+            await b.rpc("Target.createTarget",
+                        {"url": f"chrome-extension://{EXT_ID}/sidepanel.html"})
+        page5 = None
+        for _ in range(40):
+            page5 = next((t for t in targets() if t["type"] == "page"
+                          and t["url"].endswith("/sidepanel.html")), None)
+            if page5:
+                break
+            await asyncio.sleep(0.4)
+        if not page5:
+            failures.append("P5: sweep panel tab never opened")
+        else:
+            log("P5 panel target:", page5["url"])
+            async with Session(websockets.connect(
+                    page5["webSocketDebuggerUrl"], max_size=16 * 1024 * 1024)) as s5:
+                await s5.rpc("Runtime.enable")
+                for _ in range(20):
+                    ready5 = await s5.evaluate(
+                        "(() => { const v=document.getElementById('view-sweep');"
+                        " return v ? (!v.hidden && document.getElementById('sweepName').value) : false; })()")
+                    if ready5:
+                        break
+                    await asyncio.sleep(0.4)
+                mode5 = await s5.evaluate(
+                    "(() => { const v=document.getElementById('view-sweep');"
+                    " return v ? {sweepVisible: !v.hidden,"
+                    "  name: document.getElementById('sweepName').value,"
+                    "  cards: document.querySelectorAll('.sweep-card').length} : null; })()")
+                log("P5 sweep view:", mode5)
+                if not (mode5 and mode5.get("sweepVisible") and mode5.get("name") == "ACME Rocketry"
+                        and mode5.get("cards") == 5):
+                    failures.append(f"P5: sweep view not ready/prefilled/cards wrong: {mode5}")
+                # Card 1: Truework — the probe tab must navigate with the
+                # prefilled employer-name param.
+                await s5.evaluate("document.getElementById('sweep-card-truework').click()")
+                nav_url = None
+                for _ in range(30):
+                    tgt = next((t for t in targets()
+                                if t["id"] == probe_tid), None)
+                    if tgt and "app.truework.com" in tgt["url"]:
+                        nav_url = tgt["url"]
+                        break
+                    await asyncio.sleep(0.4)
+                log("P5 nav url:", nav_url)
+                if not (nav_url and "companyName=ACME" in nav_url):
+                    failures.append(f"P5: probe tab did not move to prefilled Truework: {nav_url}")
+                p5sel = None
+                for _ in range(16):
+                    p5sel = await s5.evaluate(
+                        "document.getElementById('saveProvider').value")
+                    if p5sel:
+                        break
+                    await asyncio.sleep(0.4)
+                if p5sel != "truework":
+                    failures.append(f"P5: provider auto-select after card click wrong: {p5sel!r}")
+                # Save without typing a code → uncoded custom row, matcher-local.
+                await s5.evaluate("document.getElementById('saveRoute').click()")
+                await asyncio.sleep(1.0)
+                async with Session(websockets.connect(
+                        sw_tok["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
+                    await s2.rpc("Runtime.enable")
+                    found = await s2.evaluate(
+                        "findEmployer('ACME Rocketry')")
+                    cnt = await s2.evaluate(
+                        "chrome.storage.local.get('customEmployers').then(g=>"
+                        "  (g.customEmployers||[]).length)")
+                log("P5 matcher:", found, "custom rows:", cnt)
+                if not (found and found.get("provider") == "Truework"
+                        and not found.get("provider_code") and found.get("custom")):
+                    failures.append(f"P5: saved route not resolvable: {found}")
+                if cnt != 1:
+                    failures.append(f"P5: expected exactly 1 custom row, got {cnt}")
+                # Repeat with a different provider → dedupe/update, not duplicate.
+                await s5.evaluate(
+                    "(()=>{document.getElementById('saveProvider').value='tc';"
+                    "document.getElementById('saveRoute').click();})()")
+                await asyncio.sleep(1.0)
+                async with Session(websockets.connect(
+                        sw_tok["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
+                    await s2.rpc("Runtime.enable")
+                    found2 = await s2.evaluate("findEmployer('ACME Rocketry')")
+                    cnt2 = await s2.evaluate(
+                        "chrome.storage.local.get('customEmployers').then(g=>"
+                        "  (g.customEmployers||[]).length)")
+                log("P5 dedupe matcher:", found2, "custom rows:", cnt2)
+                if cnt2 != 1:
+                    failures.append(f"P5: repeat save duplicated rows (got {cnt2})")
+                elif not (found2 and found2.get("provider") == "Thomas & Company"):
+                    failures.append(f"P5: repeat save did not UPDATE the provider: {found2}")
+
         # ---------- PDF verification (all downloads) ----------
         pdfs = []
         for _ in range(40):
@@ -450,6 +576,8 @@ async def main():
             log("pdftotext verification:", "FAILURES" if failures else "all fields present (P1+P2)")
 
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         failures.append(f"unhandled: {exc}")
     finally:
         if chrome:

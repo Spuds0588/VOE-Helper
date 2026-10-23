@@ -66,6 +66,35 @@ The local database must conform strictly to the following JSON schema:
 * **Match Precision:** > 95% on normalized exact and alias matches.
 * **Fault Tolerance:** If remote GitHub sync fails (network outage, GitHub rate limits), the extension silently continues operating on the locally cached dataset.
 
+## Addendum — 2026-10-23 pivots (all live, tested; supersedes the V2 deferrals above)
+
+Shipped v1.1 scope, per owner direction:
+
+* **Selection-optional right-click lookup:** the context menu registers for
+  selection AND page/frame/link/editable/image contexts. When nothing is
+  selected, `click-tracker.js` (MAIN-world content script at document_start)
+  stamps the right-click coordinates; the service worker turns the element
+  under the cursor (deepest text-bearing child) into the query.
+* **WVOE side panel:** the Form 1005 written-VOE collector lives in a pinned
+  `chrome.sidePanel` next to the LOS tab (draft in `chrome.storage`); the
+  full-page two-pane preview (`wvoe.html`) remains the big-screen variant,
+  sharing `wvoe-template.js` and consuming the panel draft. Manual-WVOE
+  buttons are offered ONLY for uncoded/no-match employers — coded
+  (electronic-provider) entries reject manual WVOE and get no button.
+* **Manual provider sweep panel:** an unmatched toast's "Manual VOE Search"
+  opens the side panel in sweep mode; provider cards (logo badge + name +
+  grey "previously …" line for renamed providers) move the CURRENT tab
+  top-down through the provider search pages, auto-select the last one
+  opened, and "Save this route" records the found provider/code as the
+  employer's local route (`customEmployers`, sync-proof through the 24h
+  upstream merge; optional prefilled GitHub match-report issue).
+* **voe-search.html is the fallback full-page sweep** (same five
+  providers + issue flow) for users who prefer tabs over the panel.
+
+Out of scope still: automatic DOM/LOS scraping and any provider-portal
+automation (TWN annual human-paced sweep remains governed by
+`data/sources.md`).
+
 ---
 
 # 2. Implementation Guide & Architecture

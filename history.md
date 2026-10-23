@@ -472,3 +472,45 @@ Append-only log of significant steps and findings. New entries at the bottom.
   tools/test_usability.py ALL CHECKS PASSED (matrix 31/31, C manual buttons,
   G coded/uncoded rule); tools/test_headed.py core E2E ALL PASS (H_EXIT=0)
   after the background.js changes.**
+
+## Provider sweep in the panel, logo cards, selection-optional right-click (2026-10-23,
+turn 4)
+- **PIVOT (user): the manual provider sweep also belongs in the side panel.**
+  Toast "Manual VOE Search" now relays OPEN_VOESWEEP_PANEL; the SW stamps
+  voeSweepState {query, sender tabId}; sidepanel.html gains a WVOE/Sweep tab
+  pair. Sweep cards MOVES THE CURRENT TAB top-down through the provider
+  search pages (chrome.tabs.update with a numeric-coerced tabId; a hex CDP
+  targetId seed made Number() NaN and navigated the wrong tab — the test now
+  creates the probe tab via chrome.tabs.create so the id is real). The last
+  opened provider is marked (dataset.opened) and auto-selected in the
+  "who turned out to have it?" select; "Save this route" stores a
+  customEmployers row (usr-<normkey>, provider + optional verbatim code)
+  that findEmployer resolves immediately and that survives the 24h upstream
+  sync (the SW merge is sync-proof); "Save + Report" also opens the prefilled
+  GitHub match-report issue. test_wvoe_spike P5 green: navigation
+  (?companyName= on Truework), auto-select, save + dedupe, immediate
+  matchability (user-fixed openProvider bug: it referenced the loop-scoped
+  card element and aborted right after tabs.update — the card is now passed
+  in as a param).
+
+- **Cards render as logos (user): brand-color monogram badge + provider
+  name**, with a subtle grey "previously …" line where a name change is
+  documented (TWN: previously TALX/UC; Vault Verify: acquired by Equifax Nov
+  2025 — now The Work Number).
+- **Right-click WITHOUT selection (user): the element under the cursor is
+  the query.** The context menu now registers one item across
+  selection+page+frame+link+editable+image/video/audio; selection text wins,
+  otherwise the SW resolves the query via executeScript(MAIN world) against
+  the point stamped by click-tracker.js (new MAIN-world content script,
+  document_start, all_frames — Chrome's contextMenus.onClicked carries no
+  coordinates). The finder takes the deepest single-child descent on
+  elementFromPoint and trims to 200 chars; 15s staleness window. Verified
+  end to end in test_headed.py's NEW no-selection phase: selection
+  collapsed, tracker cleared, REAL right-click on the element, popup
+  type-ahead click, toast title asserted — ALL AUTOMATED CHECKS PASSED.
+- **Docs moved to "home page" terminology (user):** README, AGENTS.md,
+  index.html (how-it-works/features/coverage refreshed for the panel +
+  no-selection right-click) and a dated PRD addendum recording the pivots
+  as shipped v1.1 scope.
+- Final: spike P1-P5 EXIT 0; usability ALL PASS; headed core E2E ALL PASS
+  (no-selection phase included).

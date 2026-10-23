@@ -123,4 +123,211 @@
     for (const f of FIELDS) draft[f] = el(f).value;
     return chrome.storage.local.set({ wvoeDraft: draft });
   }
+
+  // ================= manual provider sweep view =================
+  // Reveals a top-down list: clicking a card MOVES THE CURRENT TAB (the one
+  // the sweep was opened on) to that provider's public search page. Coming
+  // back, "Save this route" records the found provider as THE local route
+  // for the employer name string — one or two clicks total.
+  const sweepName = el('sweepName');
+  const saveProvider = el('saveProvider');
+  const saveCode = el('saveCode');
+  const sweepStatus = el('sweepStatus');
+  const setSweepStatus = (state, text) => {
+    sweepStatus.dataset.state = state;
+    sweepStatus.textContent = text;
+  };
+
+  // Provider logos as owned-style monogram badges (each provider's own
+  // accent color); the name is set in the panel's UI font next to it.
+  const PROVIDERS = [
+    { key: 'truework', name: 'Truework', glyph: 'tw', color: '#2563eb',
+      label: 'Truework — quickstart ordering',
+      url: 'https://app.truework.com/requester/quickstart',
+      prefillParam: 'companyName',
+      desc: 'When this tab arrives, the employer name is already typed in the search box; you still pick the employer.' },
+    { key: 'twn', name: 'The Work Number', glyph: 'tw', color: '#6d28d9',
+      label: 'The Work Number — employee portal',
+      former: 'previously TALX / TALX UC',
+      url: 'https://employees.theworknumber.com/',
+      desc: 'Public consumer front door; verifier ordering is behind the logged-in VsPortal — no public prefill.' },
+    { key: 'tc', name: 'Thomas & Co.', glyph: 'T&', color: '#0f766e',
+      label: 'Thomas & Company — tncverify portal',
+      url: 'https://tncverify.com/',
+      desc: 'Employee login exposes a public Company Code field; codes also circulate on employer EWV flyers.' },
+    { key: 'experian', name: 'Experian', glyph: 'ex', color: '#0284c7',
+      label: 'Experian Employer Services',
+      url: 'https://www.experian.com/employer-services',
+      desc: 'TRAP: employer-page codes there are EMPLOYEE access codes, not verifier codes.' },
+    { key: 'vaultverify', name: 'Vault Verify', glyph: 'vv', color: '#b45309',
+      label: 'Vault Verify (Equifax, ex-2025)',
+      former: 'acquired by Equifax Nov 2025 — now The Work Number',
+      url: 'https://www.vaultverify.com/',
+      desc: 'Acquired by Equifax Nov 2025; front door routes into The Work Number. Check currentness.' }
+  ];
+  const providerByKey = (k) => PROVIDERS.find(p => p.key === k) || null;
+  const normKey = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  // ---- card rendering + navigation ----
+  const cardsBox = el('sweepCards');
+  for (const p of PROVIDERS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sweep-card';
+    b.id = 'sweep-card-' + p.key;
+    b.innerHTML =
+      '<span class="glyph" aria-hidden="true"></span>' +
+      '<span class="what"><span class="nm"></span><span class="former"></span><span class="ds"></span></span>';
+    b.querySelector('.glyph').textContent = p.glyph;
+    b.querySelector('.glyph').style.background = p.color;
+    b.querySelector('.what .nm').textContent = p.name;
+    // Subtle grey "previously …" line for providers that changed names —
+    // only when one is documented in the catalog notes.
+    if (p.former) b.querySelector('.what .former').textContent = p.former;
+    else b.querySelector('.what .former').remove();
+    b.querySelector('.what .ds').textContent = p.desc;
+    b.addEventListener('click', (ev) => openProvider(p, ev.currentTarget));
+    cardsBox.appendChild(b);
+    const opt = document.createElement('option');
+    opt.value = p.key;
+    opt.textContent = p.label;
+    saveProvider.appendChild(opt);
+  }
+
+  async function resolveTargetTabId(state) {
+    // tabId may arrive as a number (SW relay) or a string (storage round-trip);
+    // chrome.tabs.update requires a number.
+    if (state && state.tabId) {
+      const n = Number(state.tabId);
+      if (Number.isFinite(n)) return n;
+    }
+    const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    return t?.id ?? null;
+  }
+
+  async function openProvider(p, cardEl) {
+    let state = null;
+    try {
+      state = (await chrome.storage.local.get('voeSweepState')).voeSweepState || {};
+    } catch { /* ignore */ }
+    const name = sweepName.value.trim();
+    const url = p.prefillParam && name
+      ? p.url + '?' + p.prefillParam + '=' + encodeURIComponent(name)
+      : p.url;
+    const tabId = await resolveTargetTabId(state);
+    if (!tabId || !chrome.tabs?.update) {
+      setSweepStatus('error', 'no current tab to move to this search');
+      return;
+    }
+    try {
+      await chrome.tabs.update(tabId, { url, active: true });
+    } catch (e) {
+      console.error('[VOE Helper sweep] navigate failed:', e);
+      setSweepStatus('error', 'could not move the current tab');
+      return;
+    }
+    const last = { ...state, lastProvider: p.key, lastUrl: url, tabId };
+    chrome.storage.local.set({ voeSweepState: last }).catch(() => {});
+    document.querySelectorAll('.sweep-card').forEach(c =>
+      c.dataset.opened = 'false');
+    if (cardEl) cardEl.dataset.opened = 'true';
+    saveProvider.value = p.key;
+    setSweepStatus('idle', 'Opened  ' + p.label + " — if it's a hit, Save below.");
+  }
+
+  // ---- save the found provider as THE local route ----
+  async function saveRoute(openIssue) {
+    const name = sweepName.value.trim();
+    const p = providerByKey(saveProvider.value);
+    if (!name || !p) {
+      setSweepStatus('error', 'need an employer name and a provider (click a card or pick one)');
+      return null;
+    }
+    const code = saveCode.value.trim();
+    const state = (await chrome.storage.local.get('voeSweepState')).voeSweepState || {};
+    const today = new Date().toISOString().slice(0, 10);
+    const url = state.lastUrl || p.url;
+    const rec = {
+      id: 'usr-' + normKey(name),
+      name,
+      provider: p.label.split(' — ')[0],
+      provider_code: code || '',
+      aliases: [],
+      portal_url: p.url,
+      notes: (code ? ('User-verified during VOE Helper sweep panel; employer code read verbatim on the provider page ' + url + ' (' + today + ').')
+                   : ('User-confirmed route during VOE Helper sweep panel (page: ' + url + ', ' + today + '); no employer code observed.')),
+      custom: true
+    };
+    const { customEmployers = [] } = await chrome.storage.local.get('customEmployers');
+    const kept = customEmployers.filter(e => normKey(e.name) !== normKey(name));
+    kept.push(rec);
+    await chrome.storage.local.set({ customEmployers: kept });
+    setSweepStatus('ok', 'Saved locally — the matcher routes \u201c' + name + '\u201d to '
+      + rec.provider + ' immediately (survives the 24h upstream sync).');
+    if (openIssue) openReportIssue(rec, url, today);
+    return rec;
+  }
+
+  function openReportIssue(rec, url, today) {
+    const body = [
+      '**Manual sweep match recorded locally via the VOE panel.**',
+      '',
+      '- Employer name: ' + rec.name,
+      '- Provider: ' + rec.provider,
+      '- Employer code (verbatim): ' + (rec.provider_code || '_(none observed)_'),
+      '- Source (page the panel sent the tab to): ' + url,
+      '- Date verified: ' + today,
+      '',
+      'Ground rule #4 applies to the repo catalog: a maintainer should re-read',
+      'the cited page before this enters verified_seeds.jsonl. The local record',
+      'already routes the user\'s install; this issue exists to merge the row',
+      'upstream.',
+      '',
+      '_(panel-stamped; interpreted by maintainer)_'
+    ].join('\n');
+    const params = new URLSearchParams();
+    params.set('template', 'match-report.md');
+    params.set('title', 'Match report: ' + rec.name);
+    params.set('body', body);
+    chrome.tabs.create(
+      { url: 'https://github.com/Spuds0588/VOE-Helper/issues/new?' + params.toString() });
+  }
+
+  el('saveRoute').addEventListener('click', () => saveRoute(false));
+  el('saveReport').addEventListener('click', () => saveRoute(true));
+
+  // ---- view switching (tabs + SW-stamped panelView) ----
+  const viewWvoe = el('view-wvoe');
+  const viewSweep = el('view-sweep');
+  let voeSweepStateRef = null;
+  function applyView(mode) {
+    const sweep = mode === 'sweep';
+    viewWvoe.hidden = sweep;
+    viewSweep.hidden = !sweep;
+    el('tab-wvoe').dataset.active = String(!sweep);
+    el('tab-sweep').dataset.active = String(sweep);
+  }
+  el('tab-wvoe').addEventListener('click', () => {
+    applyView('wvoe');
+    chrome.storage.local.set({ panelView: 'wvoe' }).catch(() => {});
+  });
+  el('tab-sweep').addEventListener('click', () => {
+    applyView('sweep');
+    chrome.storage.local.set({ panelView: 'sweep' }).catch(() => {});
+  });
+  chrome.storage.local.get(['panelView', 'voeSweepState']).then(({ panelView, voeSweepState } = {}) => {
+    voeSweepStateRef = voeSweepState || null;
+    if (panelView === 'sweep') {
+      applyView('sweep');
+      if (voeSweepStateRef?.query && !sweepName.value) sweepName.value = voeSweepStateRef.query;
+    }
+  }).catch(() => {});
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== 'local' || !changes.panelView) return;
+    const mode = changes.panelView.newValue;
+    if (mode === 'sweep' || mode === 'wvoe') applyView(mode);
+    if (mode === 'sweep' && voeSweepStateRef?.query && !sweepName.value) {
+      sweepName.value = voeSweepStateRef.query;
+    }
+  });
 })();

@@ -9,11 +9,13 @@ const CONFIG = {
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log(`[VOE Helper] Extension Lifecycle Event: ${details.reason}`);
 
-  // Create Context Menu Item
+  // Create Context Menu Item — one entry for everything: selection right
+  // away; otherwise the element the user right-clicked (tracked position,
+  // see click-tracker.js) supplies the query.
   chrome.contextMenus.create({
     id: 'voe-lookup-selection',
-    title: 'Lookup VOE Provider for "%s"',
-    contexts: ['selection']
+    title: 'Lookup VOE provider on this page',
+    contexts: ['selection', 'page', 'frame', 'link', 'editable', 'image', 'video', 'audio']
   }, () => {
     if (chrome.runtime.lastError) {
       console.error('[VOE Helper] Context Menu Setup Error:', chrome.runtime.lastError.message);
@@ -81,7 +83,15 @@ async function findEmployer(rawQuery) {
   const query = normalize(rawQuery);
   console.log(`[VOE Helper] Executing search for: "${rawQuery}" (Normalized: "${query}")`);
 
-  const { employers = [] } = await chrome.storage.local.get('employers');
+  // Locally saved provider rows (the sweep panel's "save this provider as
+  // _the_ route for this employer name") live in the separate
+  // 'customEmployers' key so the 24h GitHub-raw sync — which overwrites
+  // 'employers' wholesale — can never delete them. They are scanned FIRST
+  // (the user explicitly declared the route) while upstream coded rows still
+  // beat an uncoded local row on the same name via the pass-1 tie rule.
+  const { employers = [], customEmployers = [] } =
+    await chrome.storage.local.get(['employers', 'customEmployers']);
+  const allEmployers = [...customEmployers, ...employers];
   const startTime = performance.now();
 
   // Two-Pass Matcher: pass 1 exact name/alias (code-bearing wins), pass 2 substring
@@ -96,9 +106,9 @@ async function findEmployer(rawQuery) {
   // stand when no coded exact match exists anywhere). Substring matches keep
   // their lower precedence below every exact/alias match.
   let match = null;
-  for (let i = 0; i < employers.length; i++) {
-    if (!firstPass(employers[i])) continue;
-    if (!match || (!match.provider_code && employers[i].provider_code)) match = employers[i];
+  for (let i = 0; i < allEmployers.length; i++) {
+    if (!firstPass(allEmployers[i])) continue;
+    if (!match || (!match.provider_code && allEmployers[i].provider_code)) match = allEmployers[i];
     if (match.provider_code) break;
   }
 
@@ -114,7 +124,7 @@ async function findEmployer(rawQuery) {
   // coincidental mid-word substrings live ("uc" inside "truck").
   if (!match && query.length >= 4) {
     let tier = 99, keyLen = 0;
-    for (const e of employers) {
+    for (const e of allEmployers) {
       const coded = !!e.provider_code;
       const keys = [normalize(e.name), ...(e.aliases || []).map(normalize)]
         .filter(k => k && k.length >= (coded ? 3 : 4));
@@ -174,23 +184,54 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // path reachable via the extension page.
     (async () => {
       try {
-        await chrome.storage.local.set({ wvoePendingPrefill: msg.matchId || null });
-        let flags = sender.tab?.id ? { tabId: sender.tab.id } : null;
-        if (!flags) {
-          // Sender without a tab (extension page): pin the panel to the
-          // focused window.
-          const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
-          flags = t?.windowId ? { windowId: t.windowId } : null;
-        }
-        if (!flags || !chrome.sidePanel?.open) throw new Error('no side panel target');
-        await chrome.sidePanel.open(flags);
+        await chrome.storage.local.set({
+          wvoePendingPrefill: msg.matchId || null,
+          panelView: 'wvoe'
+        });
+        await openSidePanel(sender);
       } catch (e) {
         console.error('[VOE Helper] side panel open failed:', e);
       }
     })();
     return true;  // async work; no sendResponse
   }
+  if (msg?.type === 'OPEN_VOESWEEP_PANEL') {
+    // Manual VOE provider sweep, also in the side panel (user, 2026-10-23):
+    // the processor clicks provider cards top-down and the CURRENT tab (the
+    // LOS window they started in) moves to each search page — no new-tab
+    // pile-up. Stamp the failed query + the target tab id so the panel can
+    // navigate THEIR tab and "save this provider" for the employer string.
+    (async () => {
+      try {
+        await chrome.storage.local.set({
+          voeSweepState: {
+            query: String(msg.query || ''),
+            tabId: sender.tab?.id ?? null,
+            lastProvider: null,
+            lastUrl: null
+          },
+          panelView: 'sweep'
+        });
+        await openSidePanel(sender);
+      } catch (e) {
+        console.error('[VOE Helper] sweep panel open failed:', e);
+      }
+    })();
+    return true;
+  }
 });
+
+async function openSidePanel(sender) {
+  let flags = sender.tab?.id ? { tabId: sender.tab.id } : null;
+  if (!flags) {
+    // Sender without a tab (extension page): pin the panel to the focused
+    // window.
+    const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    flags = t?.windowId ? { windowId: t.windowId } : null;
+  }
+  if (!flags || !chrome.sidePanel?.open) throw new Error('no side panel target');
+  await chrome.sidePanel.open(flags);
+}
 
 // Default side panel content: defined once so sidePanel.open() has a panel
 // to show even before setOptions is ever called.
@@ -201,28 +242,68 @@ chrome.sidePanel.setOptions({ path: 'sidepanel.html' }).catch(e =>
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== 'voe-lookup-selection' || !tab?.id) return;
 
-  const rawSelection = (info.selectionText || '').trim();
-  console.log(`[VOE Helper] Event on tab ${tab.id}. Selected text: "${rawSelection}"`);
+  // Query resolution: selection text wins; with nothing selected take the
+  // text inside the element the user right-clicked (click-tracker.js — no
+  // more select-then-right-click dance to look an employer up).
+  let query = (info.selectionText || '').trim();
+  let source = 'selection';
+  if (!query) {
+    try {
+      const target = { tabId: tab.id, world: 'MAIN' };
+      if (typeof info.frameId === 'number') target.frameIds = [info.frameId];
+      target.func = finderForTrackedPoint;
+      const [res] = await chrome.scripting.executeScript({ target });
+      query = (res && res.result ? String(res.result.text) : '').trim();
+      source = 'right-click element';
+    } catch (err) {
+      console.error('[VOE Helper] element-under-cursor lookup failed:', err);
+    }
+  }
+  console.log(`[VOE Helper] Event on tab ${tab.id}. Query ("${source}"): "${query}"`);
 
-  if (!rawSelection) {
-    console.warn('[VOE Helper] Empty selection received. Action ignored.');
+  if (!query) {
+    console.warn('[VOE Helper] No query available (no selection, no element text under the right-click). Action ignored.');
     return;
   }
 
-  const result = await findEmployer(rawSelection);
+  const result = await findEmployer(query);
 
   // Inject UI Toast into target tab
   try {
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: injectToastUI,
-      args: [rawSelection, result]
+      args: [query, result]
     });
     console.log(`[VOE Helper] Injected toast into tab ${tab.id}`);
   } catch (err) {
     console.error(`[VOE Helper] Failed to inject UI script into tab ${tab.id}:`, err);
   }
 });
+
+// Runs in the page's MAIN world: turns the click-tracker.js coordinates into
+// the search string — the deepest child element at the right-click point.
+// Returns null when the stamp is stale (> 5s), the point hits nothing, or
+// there is no text (e.g. an input field).
+function finderForTrackedPoint() {
+  // Staleness window is generous (browsing the popup menu takes seconds;
+  // automated suites pause too). A stale point only risks hitting a
+  // different element after scroll — acceptable vs refusing the lookup.
+  // Navigation re-runs the tracker at document_start anyway.
+  const p = window.__voeRightClick;
+  if (!p || Date.now() - p.t > 15000) return null;
+  let el = document.elementFromPoint(p.x, p.y);
+  if (!el) return null;
+  // Descend while there is exactly one child that carries text — most rows
+  // are nested <div>/<span>/<b> wrappers around the visible employer name.
+  while (el.children.length === 1) {
+    const child = el.firstElementChild;
+    if (!(child.textContent || '').trim()) break;
+    el = child;
+  }
+  const text = (el.textContent || '').trim();
+  return text ? { text: text.slice(0, 200) } : null;
+}
 
 // Client DOM Injector (Executed directly inside active page)
 function injectToastUI(queryText, match) {
@@ -427,8 +508,8 @@ function injectToastUI(queryText, match) {
   // rows. The click is relayed to the service worker, which stamps any
   // pending prefill into storage and calls chrome.sidePanel.open()
   // (gesture-bearing message; chrome.sidePanel.* is not callable from a
-  // content script). The manual provider sweep page stays a deliberate new
-  // tab.
+  // content script). The manual provider sweep also opens the side panel
+  // (see the voeSearchBtn handler below).
   const wvoeBtn = shadow.getElementById('wvoe-btn');
   if (wvoeBtn) {
     const senderMatchId = (typeof match === 'object' && match?.id) ? match.id : null;
@@ -444,7 +525,18 @@ function injectToastUI(queryText, match) {
   }
   const voeSearchBtn = shadow.getElementById('voe-search-btn');
   if (voeSearchBtn) {
-    voeSearchBtn.onclick = () => window.open(chrome.runtime.getURL('voe-search.html'), '_blank');
+    // Sweep panel relay (user pivot: same side-panel surface; the CURRENT tab
+    // — the one the toast was raised on — is moved to each provider search
+    // page top-down, then a 1-click "save this provider" back in the panel).
+    voeSearchBtn.onclick = () => {
+      try {
+        chrome.runtime.sendMessage(
+          { type: 'OPEN_VOESWEEP_PANEL', query: String(queryText || '') },
+          () => { void chrome.runtime.lastError; });
+      } catch (e) {
+        console.error('[VOE Helper] sweep relay failed:', e);
+      }
+    };
   }
 
   const copyBtn = shadow.getElementById('copy-btn');

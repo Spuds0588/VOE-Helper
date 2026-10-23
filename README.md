@@ -2,7 +2,7 @@
 
 A zero-latency Manifest V3 Chrome Extension engineered for mortgage loan processors, underwriters, and verification specialists. It resolves company names into actionable Verification of Employment/Income (VOE/VOI) providers and specific Employer Codes in under 50ms without leaving the active workflow.
 
-**Live sales page:** [spuds0588.github.io/VOE-Helper](https://spuds0588.github.io/VOE-Helper/)
+**Home page:** [spuds0588.github.io/VOE-Helper](https://spuds0588.github.io/VOE-Helper/)
 (current alpha)
 
 **Download the current alpha release:** [VOE-Helper-main.zip](https://github.com/Spuds0588/VOE-Helper/archive/refs/heads/main.zip)
@@ -16,14 +16,22 @@ A zero-latency Manifest V3 Chrome Extension engineered for mortgage loan process
 
 ## Use
 
-1. Highlight an employer name on any web page.
-2. Right-click the selection and choose **Lookup VOE Provider...**
-3. A toast shows the provider (The Work Number, Thomas & Company, or Truework), the employer code where known, and a deep link to the provider portal. If no match is found, a Form 1005 fallback hint appears.
+1. Just right-click an employer name — selecting it first is optional, the
+   extension reads the text under the click — and choose **Lookup VOE provider**.
+2. A toast shows the provider (The Work Number, Thomas & Company, or Truework), the employer code where known, and a deep link to the provider portal. If no match is found, a Form 1005 fallback hint appears.
+3. Unmatched employer? The same toast opens a side panel that works down the
+   provider search pages with you (the panel moves your current tab from one
+   provider to the next) and, when you find the hit, records that provider as
+   the local route for that employer in one or two clicks.
+4. Manual WVOE (written verification) needed? The panel collects the six
+   Form 1005 fields next to your LOS tab and downloads the filled PDF.
 
 ## How it works
 
 - A local index of 15,600+ employers ships with the extension; all lookups are resolved on-device in milliseconds.
 - Once a day, the extension refreshes the index from this repository's `employers.json` on GitHub Raw, so updates flow without re-installing. If the refresh fails, the last good index keeps working.
+- Providers you confirm yourself (manual VOE sweep) are stored locally and
+  survive the daily sync without a repo round-trip.
 
 ## Development
 

@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOE Helper | Instant VOE Provider &amp; Employer Code Lookup</title>
-    <meta name="description" content="A free Chrome extension for mortgage processors: right-click any employer name to instantly see the VOE/VOI provider and employer code. 15,000+ employers indexed. No login, no API key, works offline.">
+    <meta name="description" content="A free Chrome extension for mortgage processors: right-click any employer name to instantly see the VOE/VOI provider and employer code, run the manual provider sweep from a side panel, and generate written-VOE PDFs. No login, no API key, works offline.">
     <meta property="og:title" content="VOE Helper | Instant VOE Provider &amp; Employer Code Lookup">
-    <meta property="og:description" content="Right-click any employer name to instantly see the VOE/VOI provider and employer code. 15,000+ employers indexed, free and open source.">
+    <meta property="og:description" content="Right-click any employer name (no selection needed) to instantly see the VOE/VOI provider and employer code. Side panel collects written-VOE PDFs and runs the provider search sweep. Free and open source.">
     <meta property="og:type" content="website">
 
     <link rel="icon" href="icons/icon128.svg" type="image/svg+xml">
@@ -122,7 +122,7 @@
         <img class="logo" src="icons/icon128.svg" alt="VOE Helper logo">
         <h1>Know the <span class="accent">VOE provider</span> instantly.</h1>
         <p class="sub">VOE Helper is a free Chrome extension for mortgage processors and underwriters.
-        Highlight any employer name, right-click, and get the VOE/VOI provider and employer code in under 50 ms — no tabs, no portals, no re-type.</p>
+        Right-click any employer name — no need to select first — and get the VOE/VOI provider and employer code in under 50 ms. A side panel runs the provider sweep and written-VOE PDFs next to your LOS tab.</p>
         <a class="btn btn-primary" href="#install">Install the Extension</a>
         <a class="btn btn-secondary" href="https://github.com/Spuds0588/VOE-Helper">View Source on GitHub</a>
     </header>
@@ -147,9 +147,9 @@
         <div class="section-subtitle">How It Works</div>
         <div class="section-title">Three steps. No learning curve.</div>
         <div class="cards three">
-            <div class="card"><div class="stepnum">1</div><h3>Highlight</h3><p>Select any employer name in your LOS, web mail, or a PDF viewer.</p></div>
-            <div class="card"><div class="stepnum">2</div><h3>Right-click</h3><p>Choose "Lookup VOE Provider" from the context menu.</p></div>
-            <div class="card"><div class="stepnum">3</div><h3>Act</h3><p>A toast shows the provider, the employer code (one-click copy), and a deep link to the portal.</p></div>
+            <div class="card"><div class="stepnum">1</div><h3>Right-click</h3><p>Click the employer name itself — highlighting is optional; the text under the cursor is the query.</p></div>
+            <div class="card"><div class="stepnum">2</div><h3>Read the toast</h3><p>The provider, the employer code (one-click copy), and a deep link to the portal appear instantly.</p></div>
+            <div class="card"><div class="stepnum">3</div><h3>When it's unmatched</h3><p>The side panel sweeps the provider search pages top-down, moving your current tab along — and one or two clicks record the hit as the employer's local route.</p></div>
         </div>
     </section>
 
@@ -162,6 +162,7 @@
             <div class="card"><div class="icon">🔌</div><h3>Works offline</h3><p>The full index lives in the extension. If the network is down, lookups keep working from the local cache.</p></div>
             <div class="card"><div class="icon">🔁</div><h3>Daily auto-sync</h3><p>Once a day the extension silently reconciles against the open GitHub index. Failed syncs never interrupt work.</p></div>
             <div class="card"><div class="icon">🛡️</div><h3>Respects the page</h3><p>Results render in an isolated Shadow DOM card — no LOS styling, no DOM scraping, no auto-flagging.</p></div>
+            <div class="card"><div class="icon">🧾</div><h3>Manual WVOE, in-panel</h3><p>Side panel collects the Form 1005 fields beside your LOS tab and downloads the filled PDF — and employers already registered with an electronic clearinghouse are never offered the manual form.</p></div>
             <div class="card"><div class="icon">🆓</div><h3>Free &amp; open source</h3><p>MIT-licensed. No account, no API key, no data leaves your browser.</p></div>
         </div>
     </section>
@@ -170,7 +171,7 @@
         <div class="section-subtitle">Coverage</div>
         <div class="section-title">Who's in the index?</div>
         <p class="section-lead">15,686+ employers covered, including seeded verified codes for high-volume employers.
-        If an employer isn't registered with an electronic clearinghouse, the extension says so — and points you at the manual Written VOE (Form 1005) path.</p>
+        If an employer isn't registered with an electronic clearinghouse, the extension says so and opens the side-panel sweep — the manual path for Written VOE (Form 1005) and provider lookup, working top-down through the public search pages.</p>
         <div class="badges">
             <span class="badge">The Work Number (Equifax)</span>
             <span class="badge">Thomas &amp; Company</span>
@@ -186,7 +187,7 @@
             <li><strong>Download</strong>: get the repository ZIP from <a href="https://github.com/Spuds0588/VOE-Helper/archive/refs/heads/main.zip">github.com/Spuds0588/VOE-Helper</a> and unzip it.</li>
             <li><strong>Open the extensions page</strong>: visit <code>chrome://extensions</code> in Chrome.</li>
             <li><strong>Enable Developer mode</strong> (toggle, top right).</li>
-            <li><strong>Load the extension</strong>: click "Load unpacked" and select the unzipped <code>voe-helper</code> folder. That's it — highlight an employer name, right-click, and look up.</li>
+            <li><strong>Load the extension</strong>: click "Load unpacked" and select the unzipped <code>voe-helper</code> folder. That's it — right-click any employer name and look up.</li>
         </ol>
     </section>
 
