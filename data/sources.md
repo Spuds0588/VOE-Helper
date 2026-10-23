@@ -513,8 +513,8 @@ searches with natural breaks, and record whether coverage for rows we track
 changed. Anything useful still has to pass the landing bar. This is a
 drift-check, not a harvest pipeline; if it ever grows automation, it stops.
 
-**First run (2026-10-23, drift-check verdict): surface drifted; searches
-blocked to the working agent — human step required.**
+**First run — SESSION 1 (2026-10-23): surface re-homed + reCAPTCHA-gated;
+  agent declined to solve the bot check, basket not yet runnable.**
 
 - The "Find Your Employer" search is LIVE and login-free, but it has moved
   hosts: `secure.eeservices.equifax.com/ewsweb/auth/employersearchopen`
@@ -523,9 +523,8 @@ blocked to the working agent — human step required.**
   new URL.
 - The search is reCAPTCHA-gated ("Please check the box to indicate you are
   not a robot"). Per rule 2 and the absolute landing bar, the working agent
-  does NOT solve bot checks: no representative searches could be executed by
-  the agent today. NOTHING was harvested; zero code-bearing data crossed
-  the bar.
+  does NOT solve bot checks. NOTHING was harvested; zero code-bearing data
+  crossed the bar.
 - Second material drift finding (employee front door,
   employees.theworknumber.com, read verbatim today): "**You no longer need
   an employer code to log in.**" Employee registration is identity-verified
@@ -533,15 +532,65 @@ blocked to the working agent — human step required.**
   employer-lookup step now comes AFTER that personal-data gate, so it is
   not agent-executable by construction — it is a HUMAN pace step or
   nothing.
-- Sweep protocol for the next pass (unchanged in substance, new pointers):
-  open the employersearchopen URL in a headed browser, solve the bot check
-  as a real human, run a handful of representative single searches
-  (suggested basket unchanged: one coded-giant, one coded restaurant, one
-  county-gov, one long-code format, one historically uncoded chain, one
-  small private employer), record matched/not-matched per basket row, land
-  nothing without the normal bar.
-- Today's record: drift-check verdict only — coverage-change status:
-  **UNKNOWN (blocked at the gate)**. Not a harvest; no -1 rows.
+
+**First run — SESSION 2 (2026-10-23, same day): COMPLETED. The OWNER solved
+  the reCAPTCHA in the shared headed browser; the agent then ran the
+  representative searches ONE AT A TIME and read every result verbatim
+  from the results table. Drift-check completed; NOTHING harvested; the
+  catalog was NOT edited.**
+
+- Basket results (search text → verbatim surface outcome; catalog code in
+  parens):
+  - "Wal-Mart" → **MATCH**: code 10108, displayed canonical name
+    "Wal-Mart" (+ WALMART CANADA 20108). Catalog row twn-10108
+    **confirmed**.
+  - "Home Depot" → **DRIFT, MATERIAL**: surface shows **87843**; catalog
+    carries **11116**, read verbatim on the official page. Flagged below
+    for the maintainer's landing decision; catalog not touched today.
+  - "Olive Garden" → **MATCH**: 11533. Catalog row twn-11533 **confirmed**.
+  - "Target", then exact "Target Corporation" → **NOT SURFACED** (catalog
+    10115): the fuzzy "Target" search returned only unrelated employers
+    (TriNet alias "On Target Health" 13096, Warner Bros. Discovery alias
+    "MNI Targeted Media" 12406, Anschutz alias "TARGET CENTER" 12317); the
+    exact name returned "No records found". This was a CONTROL probe —
+    see the aggregate verdict.
+  - Verizon → **NOT SURFACED** (catalog 10303): 4 variants tried (Verizon,
+    Verizon Wireless, Cellco Partnership, Verizon Theatre); only
+    "Verizon Theatre" matched, a different employer.
+  - Stoughton Health → **NOT SURFACED** (catalog 10720867): 6 variants
+    tried (Stoughton, Stoughton Health, Stoughton Hospital, SSM Health
+    Stoughton, SSM Health, SSM Health Care) — all "No records found";
+    bare "Stoughton" matched only a TriNet PEO alias
+    ("PURELIFE RENAL STOUGHTON", 13096 under TriNet HR Corporation).
+  - Dallas County → **NOT SURFACED** (catalog 15311): "Dallas County" and
+    "County of Dallas" both "No records found".
+  - Farmer Focus → **NOT SURFACED** (catalog 679792): exact name → "No
+    records found".
+- **Aggregate verdict: this public search is a PARTIAL index of The Work
+  Number's employer list, not a complete one.** Codes we hold verbatim
+  from employer-owned sources (Target 10115, Verizon 10303, Dallas County
+  15311, Stoughton 10720867, Farmer Focus 679792) do not surface, while
+  big consumer-visible employers do (Walmart, Darden brands) and Home
+  Depot surfaces with a DIFFERENT code than our catalog.
+  **Binding rule for every future sweep: a "No records found" on this
+  surface can never be used to delete, demote, or re-code a catalog
+  row.** Negatives speak about the surface's index breadth, not about the
+  row; only a live verbatim surface match may confirm or update a row,
+  and always through the normal landing bar.
+- Fuzz caveat for the next maintainer: the search matches main name AND
+  aliases with loose substring ranking, so short queries pull in
+  unrelated small employers ("Stoughton" → TriNet PEO alias;
+  "Target" → several alias hits). Read the Employer Name column, not just
+  the code, before treating a row as matched.
+- Material drift candidate for the NEXT pass (not landed today, needs the
+  human verbatim re-read under the normal bar): Home Depot code 87843
+  seen on the official surface vs catalog 11116.
+- Sweep protocol for the next pass (annual reuse): unchanged in substance
+  — solve the bot check as a real human, run single searches one at a
+  time with natural breaks, record matched/not-matched per basket row,
+  land nothing without the normal bar. Consider re-running the five
+  NOT-SURFACED rows above as negative controls: they should stay negative
+  unless the index grows; a changed result is its own finding.
 
 ## Portal-surface prefill + iframe probe (2026-10-23, live-DOM verified)
 

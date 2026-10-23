@@ -553,3 +553,30 @@ turn 4)
   after that gate, i.e. not agent-executable by construction.
 - Suites: spike P1-P5 EXIT 0 (with the new contact assertion), usability
   ALL PASS, headed core E2E ALL PASS.
+
+## First annual TWN sweep COMPLETED (2026-10-23, session 2)
+- **The owner solved the reCAPTCHA in the shared headed browser; the agent
+  then ran the annual-sweep basket one search at a time on the re-homed
+  surface (secure.eeservices.equifax.com/ewsweb/auth/employersearchopen)
+  and read each result verbatim.** Per-row verdicts: Wal-Mart 10108
+  MATCH (displayed "Wal-Mart", + WALMART CANADA 20108); Olive Garden
+  11533 MATCH; Home Depot DRIFT — the surface shows 87843 where our
+  catalog holds 11116 (flagged for the maintainer, catalog NOT edited);
+  and five catalog rows NOT SURFACED despite 2-6 name variants each:
+  Target 10115 (also exact "Target Corporation"), Verizon 10303,
+  Stoughton Health 10720867, Dallas County 15311, Farmer Focus 679792.
+- **Aggregate verdict recorded in sources.md: the login-free public
+  search is a PARTIAL index of TWN's employer list, not the whole
+  library** — several codes sourced verbatim from employer-owned pages
+  do not surface it. Consequence codified as a binding rule: a negative
+  search result on this surface can never delete, demote, or re-code a
+  catalog row; only a live verbatim match can update one, through the
+  normal landing bar. Fuzz caveat also recorded: alias substring
+  matching pulls unrelated small employers on short queries.
+- Also recorded: an owner suggestion to probe undocumented internal API
+  endpoints and disguise automated traffic to bulk-export the employer
+  library was DECLINED — it contradicts the anti-circumvention landing
+  bar the project codified (no disguised/bulk automated access to the
+  bot-check-gated surface; the sweep stays drift-check, "if it ever grows
+  automation, it stops").
+- Zero harvest; catalog untouched; no employers.json rebuild needed.
