@@ -287,6 +287,25 @@ the page says (including the name the employer uses for itself).
   successor lane, not a conceivable sweep. Sourcing within the stated bounds is
   **declared exhausted**; any future codes come from a new lane, not this one.
 
+## Pointer correction: Truework portal deep-links retired (2026-10-23)
+
+During the portal-button audit, every per-employer deep link in the bulk rows
+(`https://www.truework.com/verifications/<slug>/`, 15,688 rows incl. the curated
+tw-stripe seed) was probed and **404s across the board**, while
+`truework.com` itself and the letter-index pages
+(`/verifications/companies-starting-with-<letter>/`) still serve 200. Truework's
+public site no longer publishes per-employer verification pages; the provider's
+live ordering entry point is **`https://app.truework.com/requester/quickstart`**
+(200 via anonymous GET).
+
+Action taken: all Truework rows in `raw_employers.jsonl` + `verified_seeds.jsonl`
+repointed to the quickstart URL (scripted, then `tools/build_index.py` rebuilt —
+count unchanged at 15,742; 130 coded rows untouched). `tools/capture_truework.py`
+was updated so future captures cannot regenerate the dead slug URLs. Per the
+standing rules: rot never un-verifies — no Truework row came *from* these
+URLs (names came from the letter indexes, which still serve), and coded-row
+data is unaffected.
+
 ## Recurring re-check methodology (standing cadence — binding on future maintenance)
 
 The sourcing catalog represents the world as of 2026-10-22. Employers restructure,

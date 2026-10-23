@@ -12,11 +12,18 @@ Checks (all via live Chrome-for-Testing on DISPLAY):
   A. matcher matrix — findEmployer over ~30 selection shapes
   B. real context-menu flow on a punctuation-trailing selection
   C. no-match toast with a long single-token selection (overflow check)
-  D. copy-code click (clipboard read-back + failure-path behavior)
+  D. copy-code click (offscreen doc — no clipboard read-back) + portal deep-link
   E. duplicate-toast guard (second trigger removes the first host)
   F. long-notes row rendering (wrap check)
+  G. portal deep-link correctness across all three providers (button href must
+     equal the matched record's own ordering URL, target=_blank)
 
-Run:  DISPLAY=:1 python3 tools/test_usability.py
+NOTE for anyone watching the browser live: the toast is expected to swap
+looking like it "rotates through employers" — each check B–G re-triggers the
+real injector with a different selection/match on the same page, one after
+another. It is the test sequence, not the matcher cycling matches.
+
+Run:  DISPLAY=:1 timeout 500 python3 tools/test_usability.py  # stays in fg
 Exit 0 = all automated checks passed. Screenshots land in data/test/.
 """
 import asyncio
@@ -336,6 +343,16 @@ async def main():
                 log("D copy button after click:", btnstate)
                 if btnstate != "Copied!":
                     failures.append(f"D: offscreen copy didn't confirm (button: {btnstate!r})")
+            dportal = await toast_probe(ps, """const a=r.querySelector('a.btn-portal');
+                    return a ? {href:a.href,
+                                resolved:a ? new URL('https://theworknumber.com', location.href).href : null,
+                                target:a.target} : null""")
+            log("D portal link:", dportal)
+            # a.href is the browser-resolved form (adds the final '/'); compare
+            # against the URL the browser would actually open on click.
+            if not (dportal and dportal.get("href") == dportal.get("resolved")
+                    and dportal.get("target") == "_blank"):
+                failures.append(f"D: portal deep-link wrong for coded TWN match: {dportal}")
 
             # ---- E: duplicate-toast guard ----
             _ = await inject_via_shipped_path(sw_url, tab_id, "Ryder", None)
@@ -364,6 +381,36 @@ async def main():
                 failures.append("F: notes row never rendered for coded match")
             elif f and (f.get("cardOverflow") or f.get("boxOverflow")):
                 failures.append(f"F CONFIRMED BUG: long notes overflow the toast {f}")
+
+            # ---- G: portal deep-link correctness across all three providers ----
+            # The button must open the matched record's own ordering page — its
+            # href is asserted against the record's portal_url (and target=_blank).
+            for sel in ("Walmart", "L3Harris", "Worldwide Express"):
+                mrow = await sw_eval(sw_url,
+                                     "findEmployer(" + json.dumps(sel) + ")")
+                if not mrow:
+                    failures.append(f"G: '{sel}' resolved to no match")
+                    continue
+                await inject_via_shipped_path(sw_url, tab_id, sel, mrow)
+                time.sleep(0.3)
+                want = mrow.get("portal_url")
+                g = await toast_probe(
+                    ps,
+                    "const a=r.querySelector('a.btn-portal');\n"
+                    "const expected=" + json.dumps(want) + ";\n"
+                    "return a ? {href:a.href,\n"
+                    "            resolved:a && expected ?"
+                    " new URL(expected, location.href).href : null,\n"
+                    "            target:a.target} : null")
+                # a.href is the browser-resolved form (adds the final '/');
+                # compare against the URL the browser would open on click.
+                okp = bool(g) and g.get("resolved") is not None \
+                    and g.get("href") == g.get("resolved") \
+                    and g.get("target") == "_blank"
+                log(f"G [{sel}] {mrow['provider']}: portal={g} expect {want}")
+                if not okp:
+                    failures.append(
+                        f"G: {mrow['provider']} portal link wrong: got {g} want {want}")
 
         ley = "pg-7-usability-final.png"
         try:

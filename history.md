@@ -278,3 +278,33 @@ Append-only log of significant steps and findings. New entries at the bottom.
   credentialed state collections), not another sweep.
 - No data or index changes this pass; no rebuild needed (last index 15,742
   records / 130 coded, already shipped and serving).
+
+## Portal deep-link audit (2026-10-23)
+- User question: does the toast offer a button to open the corresponding VOE
+  provider's ordering page, and is it tested? Answer recorded + fixed below.
+- **What ships:** every match toast renders an "Open Verification Portal"
+  link from the matched record's own `portal_url` (TWN rows inward to
+  theworknumber.com, Thomas & Company to tncverify.com, Truework rows to
+  provider/employer URLs). No-match toast has no button (Form 1005 fallback).
+- **Test gap found:** the core E2E only asserted "an https link exists"; the
+  usability suite did not assert the portal link at all; nobody verified the
+  URL is the right provider's ordering page.
+- **Real defect found by the live probe:** ALL 15,688 Truework per-employer
+  deep links (`truework.com/verifications/<slug>/`) 404 across the board —
+  Truework retired the public per-employer pages while the letter indexes
+  still serve. The provider's live ordering entry is
+  `app.truework.com/requester/quickstart` (200). theworknumber.com and
+  tncverify.com verified live.
+- **Fix:** all Truework rows in raw_employers.jsonl + verified_seeds.jsonl
+  repointed to the quickstart URL (scripted; never hand-edited employers.json),
+  index rebuilt — 15,742 records, provider counts unchanged (15,612/129/1),
+  130 coded rows untouched. capture_truework.py updated to emit the quickstart
+  URL for future captures; dated pointer-correction note added to sources.md.
+- **Tests tightened:** test_headed match-path probe now asserts
+  portal href == the matched record's portal_url (URL-normalized via
+  `new URL`) + target=_blank. Usability suite: D asserts the coded TWN portal
+  link; NEW G step checks all three providers (Walmart / L3Harris /
+  Worldwide Express) through the real injector. Both suites ALL PASS
+  (usability U_EXIT=0 incl. matrix 31/31; core E2E H_EXIT=0). Test-run doc
+  note added explaining the toasts visibly swapping employers during B–G is
+  the test sequence, not candidate cycling.

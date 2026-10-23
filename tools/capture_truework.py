@@ -5,6 +5,12 @@ Crawls the 26 alphabetical index pages (a-z), extracts company slugs, and append
 one record per company to data/raw_employers.jsonl. Records are raw: no codes
 (directory has none) - the index build handles validation/dedup.
 
+NOTE (2026-10-23): Truework retired the public per-employer pages — every
+/verifications/<slug>/ URL 404s while the letter indexes still serve. New records
+therefore carry the provider-level ordering entry point (requester quickstart)
+as portal_url, matching the 2026-10-23 repoint of the existing 15,688 rows.
+Per-slug deep links must not be regenerated.
+
 Run: python3 tools/capture_truework.py [--letters a-z] (letters defaults to all)
 """
 import json
@@ -74,7 +80,7 @@ def main() -> int:
                 "aliases": [],
                 "provider": "Truework",
                 "provider_code": "",
-                "portal_url": f"https://www.truework.com/verifications/{rid[3:]}/",
+                "portal_url": "https://app.truework.com/requester/quickstart",
                 "notes": "",
                 "updated_at": today,
             })
