@@ -737,3 +737,12 @@ turn 4)
 - Wayback down again this session (availability API 404s to the temporary-offline shell, CDX 503s) — the pass-15/16 session pair confirms archive.org availability is the session-flakiest dependency; flapping handled honestly by requeue.
 - Duck-lane dry session: Hawaii (4 dork shapes), Alaska (2 dork shapes), Anchorage direct-host probes — misses recorded, pools remain per-state frontier (pool_progress next-up: AZ/CA/CO/CT/FL/GA/IL).
 - No rows landed, code unchanged; index 15,775 / coded 191 (TWN 185 + T&C 6) rebuilt and re-validated after note-only edits.
+
+## Sourcing pass 17 + alpha release prep (2026-10-23, turn 7)
+- User order: mission "confirm refining and exploring the recommended steps refining available employer data pool" — Started pass 17 in the established pass shape (anchor /home/coreyb/Coding Projects/Extensions/VOE-Helper).
+- Wayback window opened after ~4 min of 429 backoff: Broadway Services, Inc. 14629 landed verbatim from an official-document Wayback snapshot, CORRECTS the earlier "City of Baltimore 14629" queue attribute (City of Baltimore's own code is UNVERIFIED); Baltimore City 18599 stays the only Baltimore government row.
+- Polk County OR 3026524: live host refuses connections; pointer re-homed to a 2025-12-17 Wayback snapshot of the same official HR page (verbatim re-confirmation).
+- Palm Beach County 11556 stays queued (no reproducing snippet, no CDX path).
+- Per-state frontier: United Musculoskeletal Partners 4560601, Cooper University Health Care 19455, Lithia & Driveway 26474 landed from their own official handbooks; Spartanburg Regional 10275642 reconfirmed from the newer 2025 guide; Georgia county crop recorded dry this session.
+- Index 15,776 → 15,778, coded 198 (TWN 192 + T&C 6). Build PASS; headed E2E ALL AUTOMATED CHECKS PASSED on the live 15,778-record service worker.
+- Alpha release packaged after the pass (see RELEASES.md; tag v0.10.0-alpha).
