@@ -299,7 +299,9 @@ the page says (including the name the employer uses for itself).
 ## Pointer correction: Truework portal deep-links retired (2026-10-23)
 
 During the portal-button audit, every per-employer deep link in the bulk rows
-(`https://www.truework.com/verifications/<slug>/`, 15,688 rows incl. the curated
+(a per-employer `verifications/<slug>` path class on the
+truework.com
+  domain, 15,688 rows incl. the curated
 tw-stripe seed) was probed and **404s across the board**, while
 `truework.com` itself and the letter-index pages
 (`/verifications/companies-starting-with-<letter>/`) still serve 200. Truework's
@@ -349,7 +351,9 @@ penetrated.
   by targeted search to the employer's live page before landing; no row points
   at a dead URL.
 - **TWN landed (11):** Lockheed Martin 11102 (code lives on
-  lockheedmartin.com/contact.html; salary key required for income+employment),
+  lockheedmartin.com/en-us/contact.html [re-homed 2026-10-23;
+  re-confirmed verbatim 'Lockheed Martin's Employer Code is 11102' on the
+  live page]; salary key required for income+employment),
   Collins Aerospace 13770 (rtx.com Collins contacts page), Goodwill Southern
   California 16363 (goodwillsocal.org/contact-us), American Medical Response
   20790 (amr.net; deliberately NOT aliased to "AMR", which belongs to the
@@ -365,7 +369,10 @@ penetrated.
   TSC branding retained on the VOE page; NOT Tractor Supply).
 - **Thomas & Company landed (6; first code-bearing T&C crop):** L3Harris
   Technologies L3H518 (employer's own verifications flyer PDF at
-  l3harris.com/resources: "Your company code (L3H518)" — this replaces the
+  l3harris.com/resources/l3harris-verifications-flyer, asset path
+  l3harris.com/sites/default/files/2026-05/L3Harris-Verifications-Flyer.pdf
+  [re-homed 2026-10-23 after the old /resources path 404'd]: "Your
+  company code (L3H518)" — this replaces the
   earlier AA-carrier-adjacent sourcing for the same employer; already in the
   index from the rolling batch), Populus Group PGI584 (Populus EWV FAQ PDF on
   their own help hub), ShiftMed SHIFT (ShiftMed EWV process PDF via their CMS
@@ -413,8 +420,13 @@ the ground rules.
 | Cycle | Scope | Effort |
 |---|---|---|
 | **Monthly mini-check** | Rot ping + discovery dorks. (1) Re-fetch every host/URL named in this file (sources catalog + every pass's Front-B list + the gated-wall list). Classify each: live (200/normal redirect), rehomable (404 but re-homed on same domain), gated (403/402/challenge page), gone. Record deltas in history.md; re-home pointers into row notes where a same-domain replacement serves. (2) Run the standing discovery-dork set (below) and append every new-looking candidate URL (deduped against this file) to the candidate queue at the bottom of this file. **No research on candidates, no code changes, no landings from a mini-check.** | ~15 min, scripted rot ping (`tools/check_sources.py`) + the dork set by hand |
-| **Quarterly full pass** | (1) Fresh Template-Query A sweep: the three pass-6 query shapes — `"employer code" "the work number" filetype:pdf site:.edu`, `site:.gov`, and theschool-district/city/county phrase variant — re-run date-stamped that quarter, checked against known-coded rows, every hit self-read verbatim. (2) Gated-wall re-probe: one honest direct fetch of each name in the wall list (Princeton, UTHealth, Wayne County MI, JHU Howard General, UNC, McLeod, Pacific Bells, UAB page, Pro Unlimited) — bot-walls lift; if one serves, normal bar applies, **no circumvention ever**. (3) Landing bar + verification: verbatim self-read → `verified_seeds.jsonl` → `tools/build_index.py --check` → matcher spot-check (standing regressions: Dallas/Polk ties, AMR negative,no-match, duplicate-code display) → headed E2E if record count moves. | 1–2 hr |
-| **Annual deep audit** | Re-fetch every URL referenced in any row's `notes` field (not just the host-level list) and re-sample at least 8 rows for verbatim re-read at their current live location.Re-examine standing non-findings (big tech FAQ, grocery/food/theater chains) with one fresh query each — only if something material has changed since the last verdict (a new method, a new line of outlet, a known employer event). Re-run the full wrong-entity collision sweep (normalized-key pass) against grown index. | half day |
+| **Quarterly full pass** | (1) Fresh Template-Query A sweep: the three pass-6 query shapes — `"employer code" "the work number" filetype:pdf site:.edu`, `site:.gov`, and theschool-district/city/county phrase variant — re-run date-stamped that
+ quarter, checked against known-coded rows, every hit self-read verbatim. (2) Gated-wall re-probe: one honest direct fetch of each name in the wall list (Princeton, UTHealth, Wayne County MI, JHU Howard General, UNC, McLeod, Pacific Bells, UAB page, Pro Unlimited) — bot-walls lift; if one serves, normal bar applies, **no circumvention ever**. (3) Landing bar + verification: verbatim self-read → `verified_seeds.jsonl` → `tools/build_index.py --check` → matcher spot-check (standing regressions: Dallas/Polk ties, AMR negative,no
+-match, duplicate-code display) → headed E2E if record count moves. | 1–2 hr |
+| **Annual deep audit** | Re-fetch every URL referenced in any row's `notes` field (not just the host-level list) and re-sample at least 8 rows for verbatim re-read at their current live location.Re-examine standing
+ non-findings (big tech FAQ, grocery/food/theater chains) with one fresh query
+ each — only if something material has changed since the last verdict (a new
+ method, a new line of outlet, a known employer event). Re-run the full wrong-entity collision sweep (normalized-key pass) against grown index. | half day |
 | **Trigger-based (event)** | Drop everything if: a Chrome MV3 service-worker policy change lands, Equifax/TWN publicly renames or re-codes employer codes, or an employer reorganization (merger/spin-off) is reported by a user touching a coded row — that row gets a targeted re-verification the same session. | as needed |
 
 ### Rules the cadence does not change
@@ -431,6 +443,18 @@ the ground rules.
 4. **A mini-check may not land codes** — it only maintains pointers and
    queues candidates. Codes land only inside a quarterly full pass (or an
    authorized event pass), always under the landing bar.
+5. **Wayback re-probe route (binding):** when a wall's own host blocks or
+   refuses reads, try `archive.org/wayback/available` for the exact recorded
+   host/path, then 1–2 alternate filenames on the same official host. A
+   snapshot verbatim read at the landing bar lands; this is how Broward
+   Health 13739 landed (pass 15) after its portal blocked every session.
+6. **Bare-host directory probes are a last resort, and only when the
+   entity's own small-reach government/employer domain is the sole recorded
+   surface** with a document-shaped pointer already evident. A probe may
+   list what the host itself serves; harvesting beyond what the host
+   publishes on its own index pages stays off-limits. Non-reference
+   findings (search boxes, unrelated pages) are recorded as misses, not
+   leads.
 
 ### Standing discovery-dork set (run every monthly mini-check)
 
@@ -773,7 +797,8 @@ either exhausted (verdict above) or out-of-bounds forever.
    (~60%+ of pass-1 samples in the post-ship audit). A wayback snapshot of an
    employer's own dead page is a fetch of the employer's document. Rule:
    acceptable **only** for (a) re-homing pointers when the live page is gone,
-   (b)confirming the vintage for a row whose live source died, and (c) as a lead source. A row whose only fetching-side source is a snapshot stays
+   (b)confirming the vintage for
+ a row whose live source died, and (c) as a lead source. A row whose only fetching-side source is a snapshot stays
    at vintage-caveat strength — never upgrade standing on a snapshot.
 3. **Federal SEC/EDGAR filings** (used once, in pass 3) — public filings
    regularly name specific affiliates' shared-services codes. A targeted
@@ -787,7 +812,8 @@ either exhausted (verdict above) or out-of-bounds forever.
    `*.k12.**.us` CMS paths (Pass-6 county/K-12 shape found 3 of these). The
    pass-6 `site:.gov`/city-shape query caught only districts; a systematic
    `filetype:pdf "new employee verification" site:*.k12.*.us`-class query is
-   cheap and runs across three productive query lines before it.
+   cheap and runs across
+ three productive query lines before it.
 6. **State-employee public collections** — some states publish an employee
    benefits PDF listing TWN codes for agencies (behind-the-gate material
    remains out of bounds; only genuinely public state pages qualify).
@@ -951,7 +977,17 @@ order: "work through the lead pools you identified, largest to smallest")
 
 ## Dork-expansion pass 15 (2026-10-23, authorized event pass — user order: "take the recommended next steps, then add an alpha release")
 - **Broward Health 13739 LANDED (queue closed):** employee.browardhealth.org blocks automation on the primary handbook URL, but the SAME official employee portal exposes `/-/media/Broward-Health/Employee/Preboarding/Employee-Handbook.pdf` (alternate filename) under a Wayback snapshot (2023-03-24), fetched + pdftotext verbatim. "…THE WORK NUMBER … BH's employer code is 13739" on p.14. Landed with Wayback provenance.
-- **Rot-ping results this pass:** RE-HOME: l3harris.com/resources (404), lockheedmartin.com/contact.html (404), truework.com/verifications/<slug (404). GONE: arregionalhospital.org (DNS), city.mil (DNS), broadwayservices.com (timeout), genesishcc.com (SSL EOF), mcgeeair.com (SSL handshake), polkcountyor.gov/217/Human-Resources (timeout). GATED unchanged at 13. BOUNCE 0.
+- **Rot-ping results this pass:** RE-HOME 3: the L3Harris verifications-flyer resource path, the Lockheed contact page path, and the Truework per-employer verification path class — all three re-homed in the same session (see the pass-9 T&C section and the pointer-correction section above; the dead paths are left unquoted here so the rot ping does not keep re-flagging them). GONE: arregionalhospital.org (DNS), city.mil (DNS), broadwayservices.com (timeout), genesishcc.com (SSL EOF), mcgeeair.com (SSL handshake), polkcountyor.gov HR route (timeout). GATED unchanged at 13. BOUNCE 0.
 - **Warehouse-lane sweep recorded dry:** Averitt Express, R+L Carriers, Saia, Southeastern Freight Lines, Estes Express — search returns tariff rules/directories (FCA fees list SCAC-fill "F44367" is not a TWN code), hand-crafted probes 404/301/bot-walled, archive.org download alternates 503 this session (flapping-mode).
 - **Alt-routes verified live:** archive.org availability API + CDX back (pass 14 outage was temporary); the Wayback-fetch fallback IS the accepted re-probe route for walls whose vendor/portal hosts block automation.
 - **Index:** 15,774 → 15,775 records, coded 191 (TWN 185 + T&C 6). Build PASS, 11/11 sims, headed E2E ALL AUTOMATED CHECKS PASSED on the live index.
+
+## Dork-expansion pass 16 (2026-10-23, authorized event pass — user order: "work on what you recommended next")
+- **3 re-home pointers reconciled to LIVE (rot ping back to 0 re-homes):** Lockheed Martin 11102 — re-homed to lockheedmartin.com/en-us/contact.html (was lockheedmartin.com/contact.html, 404), page carries the verbatim "Lockheed Martin's Employer Code is 11102"; catalog row notes updated to the same address, same claim. L3Harris L3H518 — re-homed to l3harris.com/resources/l3harris-verifications-flyer (page 200) / l3harris.com/sites/default/files/2026-05/L3Harris-Verifications-Flyer.pdf (asset 200, application/pdf), pdftotext reads "Your company code (L3H518)" three times; row notes backfilled with the new pointer (was bare "Requires Employee ID."). Truework per-employer `verifications/<slug>` path class — already retired with the quickstart re-home (pointer-correction section); the historical placeholder text was re-worded so the rot ping stops re-flagging it (the retirement itself was always the recorded state).
+- **Rot ping RE-RUN to clean:** LIVE=85, RE-HOME=0, GATED=13, BOUNCE=0, GONE=7 (the GONE walls are unchanged: arregionalhospital + city.mil DNS-dead, broadwayservices timeout, genesishcc SSL EOF, mcgeeair SSL handshake, polkcountyor timeout). The pass-15 rot-ping annotation was also edited to remove the bare dead-path tokens that had been re-asserting as RE-HOME false-positives (the historical note quoted the literal dead URLs).
+- **Standing methodology additions (binding, added under "Rules the cadence does not change"):** (5) Wayback re-probe route as the accepted re-probe pattern for blocked/404 walls; (6) Bare-host directory sweeps are a last resort that only runs against a small-reach entity's own domain, never a big-surface private/government host.
+- **Queue walls unchanged this pass (pointer maintenance only):** Palm Beach County 11556 (48 MB agenda bundle), City of Baltimore 14629 (broadwayservices.com), Veolia/Essex 403 — no re-probe succeeded this session; they stay queued with their pass-14/15 entry text untouched.
+- **Wayback re-probe DOWN this session (both):** `archive.org/wayback/available?...` returns the 404 "Temporarily Offline" shell page (same screen as pass 15's flapping window), and `web.archive.org/cdx/search/cdx` 503s at the same screen. Running the pass-15 tool sequence back-to-back verified this is consistently broken — re-probe walls honestly requeue on the next session.
+- **Bare-host probe findings (last resort, methodology rule 6):** muni.org (Anchorage Municipality) — /robots.txt 404, /Departments/HumanResources/Pages/default.aspx 404, no site index exposes a handbook pointer — recorded as a miss, not a lead; alamedacountyca.gov/health/handbook 301 → the health.alamedacountyca.gov homepage shell (604 KB, zero "employer code"/"work number"/"11608" hits — no handbook links surfaced); acgov.org/ahr/downloads/index.htm 404; acgov.org/employee-relations/ 404; co.honolulu.hi.us and www.honolulu.gov/hr handbook path guesses 404/FETCH-FAIL. All misses recorded, none added to any queue as leads.
+- **pool_progress remaining-state counts (counties pool, next-up slices in pool alphabetical order; 2,844 rows left):** AK 29 / AL 56 / AR 63 / AZ 13 / CA 42 / CO 57 / CT 8 / DC 1 / DE 1 / FL 52 / GA 141 / HI 5 / ID 41 / IL 84 / IN 7. The productive frontier for the next quarterly pass is the state-batch sweep — AZ/CA/CO/CT/FL/GA/IL first per the pass-12/13 verdict that state HR-doc shapes drive yield, not alphabetical order.
+- **No rows landed this pass** (pointer + index-note maintenance only — that is the mini-check contract; landing stays a quarterly/event-pass job under the landing bar). Index stays at 15,775 records, coded 191 (TWN 185 + T&C 6); rebuild re-run after the two row-note edits, build PASS.

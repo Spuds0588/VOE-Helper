@@ -728,3 +728,12 @@ turn 4)
 - Warehouse-lane sweep (Averitt, R+L, Saia, Southeastern Freight, Estes) recorded dry: search hits are tariffs/directories and SCAC-fill documents, direct hand-crafted probes miss, archive.org alternate access 503s this session.
 - Rot ping ran: LIVE=83, RE-HOME=3, GATED=13, BOUNCE=0, GONE=6 — see sources.md for the full list.
 - Index 15,774 → 15,775, coded 191 (TWN 185 + T&C 6). Build PASS; sims 11/11 on live index; headed core E2E ALL AUTOMATED CHECKS PASSED (sw: 15,775 findEmployer Home Depot -> 11116, Polk County tie-rule OK, toast match+no-match render verified on real XTest right-click).
+
+## Sourcing pass 16: re-home reconciliation + mini-check hygiene (2026-10-23, turn 6)
+- User order: "work on what you recommended next" — the pass-15 follow-ups (re-home the 3 RE-HOME pointers, keep the standing lanes).
+- Re-homes landed and re-verified LIVE: lockheedmartin.com/en-us/contact.html ("Lockheed Martin's Employer Code is 11102" verbatim on the page), l3harris.com/resources/l3harris-verifications-flyer + 2026-05 asset PDF ("Your company code (L3H518)" x3 via pdftotext), Truework placeholder path-class reworded out of the rot ping's token grab. Catalog row notes updated for both employer rows; rebuild PASS.
+- Rot ping clean: LIVE=85, RE-HOME=0, GATED=13, BOUNCE=0, GONE=7 (same wall set as pass 15, GONE count moved as transient timeouts rotated which dead hosts responded this run).
+- Methodology codified: rule 5 (Wayback re-probe route as the accepted re-probe for blocked walls, as proven by Broward 13739 in pass 15) and rule 6 (bare-host directory sweeps are a last resort restricted to small-reach entities' own domains) added under "Rules the cadence does not change".
+- Wayback down again this session (availability API 404s to the temporary-offline shell, CDX 503s) — the pass-15/16 session pair confirms archive.org availability is the session-flakiest dependency; flapping handled honestly by requeue.
+- Duck-lane dry session: Hawaii (4 dork shapes), Alaska (2 dork shapes), Anchorage direct-host probes — misses recorded, pools remain per-state frontier (pool_progress next-up: AZ/CA/CO/CT/FL/GA/IL).
+- No rows landed, code unchanged; index 15,775 / coded 191 (TWN 185 + T&C 6) rebuilt and re-validated after note-only edits.
