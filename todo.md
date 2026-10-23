@@ -39,6 +39,8 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 
 | 8.9 | Usability pass (headed): matcher matrix 31 selections + toast render checks | done - 2 wrong-entity substring bugs fixed (tied to tie rule via tiered pass 2), no-match overflow fixed, copy button routed through extension-owned offscreen doc (manifest clipboardWrite+offscreen) so host pages can never prompt/block; test harness right-click + clipboard verification made prompt-free; both suites ALL PASS |
 
+| 9.19 | Dork pass 10 - partner-vendor sweep (Paylocity premise check + Tyler/Workday/Trimble/isolved angles): 6 codes landed under the bar | done - YMCA Middle TN 15323, Bi-State Development 13148 (vintage), Catholic Health CH Services 17878, UofL 11443, IES 16219, PG&E 13391 (vintage). Index 15,756 (TWN 149 + T&C 6), build PASS, head E2E ALL AUTOMATED CHECKS PASSED; six more candidates queued (Monroe S3-host, RVU codeless, Transdev served-drift, 2 gated walls). Paylocity-TWN integration verified as 2021-2022 (not new); Tyler/Munis + Trimble construction sectors flagged as fresh watch lanes |
+
 | 9.2 | Phase 2 scope: PDFme WVOE form generator | done (scope/plan only, in PHASE2-WVOE-form.md; build deferred until requested) |
 
 | 9.3 | Portal deep-link audit (user question: is the ordering-page button there + tested?) | done - button confirmed (a.btn-portal per record portal_url); audit found ALL 15,688 Truework per-slug URLs 404 (directory retired) - repointed to live app.truework.com/requester/quickstart, rebuilt (15,742, counts intact); tests now assert portal href == matched record's ordering URL + target=_blank across all 3 providers (test_headed match path + usability D + new G step); both suites ALL PASS |

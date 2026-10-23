@@ -614,3 +614,41 @@ turn 4)
   bot-check-gated surface; the sweep stays drift-check, "if it ever grows
   automation, it stops").
 - Zero harvest; catalog untouched; no employers.json rebuild needed.
+
+## Sourcing pass 10 — partner-vendor dork sweep (2026-10-23)
+
+- Owner asked to expand the dorks for employers that self-identify as on TWN,
+  having noticed "the Paylocity integration." Premise check first: the
+  Paylocity↔TWN interface is NOT new (2021–2022; marketplace page + employee
+  PSA). What IS new: a partner-integration wave — Tyler Technologies (May
+  2025, gov ERP/Munis), Workday EV Connector (Aug 2024, live 2025),
+  Trimble Vista/Spectrum (Jun 2026, construction ERP), isolved (2021), IRIS.
+  Directions recorded in sources.md as watch lanes.
+- Dork shapes sorted honestly: `"<vendor>" "employer code" filetype:pdf`
+  comes up empty for Paylocity/isolved/Workday (vendors and codes never
+  co-occur); the productive shape is vendor name + plain "the work number"
+  pulling employee handbooks whose code sits inside the fetched doc. A new
+  gov-budget/MOU "we pay for The Work Number" lead-signal shape is recorded.
+- Six codes landed under the bar, every one fetched and read verbatim on
+  employer-owned/official domains: YMCA of Middle Tennessee 15323
+  (ymcamidtn.org 2019 procedure PDF), Bi-State Development 13148
+  (bistatedev.org 2012 trifold, vintage note), Catholic Health (CH Services)
+  17878 (catholichealthli.org handbook; entity-specific, verbatim on page),
+  University of Louisville 11443 (service.louisville.edu KB page),
+  Innovative Employee Solutions 16219 (hr.innovativeemployeesolutions.com
+  Jan 2023 handbook), PG&E 13391 (myportal.pge.com 2011 retiree newsletter,
+  vintage note).
+- Not landed, recorded in the queue: Monroe Staffing 17410 (S3-hosted
+  self-naming guide, no official-domain hit), Rocky Vista University (TWN
+  route confirmed on its handbook subdomain, code not published), Transdev
+  13173 (served May-2023 handbook contains no TWN section — snippet drift),
+  MaineGeneral and City of Pasadena (403 gated walls, queued honestly),
+  UM Partners (served page has no TWN text), Hellertown (image-only scan).
+- Trinity Health rejection note recorded: the 2025 trinity-health.org PDF is
+  a scan; its snippet code 14229 belongs to Mount Carmel (Trinity ministry)
+  and is already in catalog as twn-14229 — 14229 is NOT a Trinity-wide code.
+- Index 15,753 → 15,756 records; coded 155 (TWN 149 + T&C 6). build PASS.
+  Matcher sim 14/16 exact-alias (the two apparent misses are sim artifacts,
+  not shipped-matcher behavior); headed core E2E ALL AUTOMATED CHECKS
+  PASSED with the 15,756-record index live, tie rules green, scan latency
+  2.50ms.

@@ -510,6 +510,11 @@ dork-expansion pass 9)
 - [2026-10-23] ascendnps.org/wp-content/uploads/2023/03/Work-Number-Employer-Code-by-Agency-eff-7.1.25.pdf (dork: pass-9 sweep) — multi-row "Agency Employer Code" table (10 codes, CFH/Arts+/AJC/SA/HC/RWCI/MCAI/UWCC/RAIN/SSMC); suspect Charlotte-area nonprofit consortium under Ascend NPS. Per-entry landing needs the official member-name mapping from ascendnps.org.
 - [2026-10-23] city.milwaukee.gov/ImageLibrary/Groups/derAuthors/Benefits-/TheWorkNumber.pdf (dork: pass-9 sweep) — City of Milwaukee employee sheet (distinct from catalog's Milwaukee County row); fetch 403'd. Direct honest re-fetch only, per the gated-wall rule.
 - [2026-10-23] commerce.gov/hr/employees/benefits/employment-and-income-verifications (dork: pass-9 sweep) — Dept. of Commerce page is Cloudflare-bot-walled from this network. No verification attempted beyond the honest fetch.
+- [2026-10-23] Monroe Staffing Services 17410 (dork: pass-10 partner sweep) — verification-instructions PDF self-names "Monroe Staffing Services employer code: 17410" but lives on a generic S3 bucket (oliver-dev.s3.amazonaws.com) + Scribd mirror only; no employer-owned hit on any Monroe domain. Land only from an official-domain self-read.
+- [2026-10-23] Rocky Vista University (dork: pass-10 partner sweep) — official employee-handbook subdomain (employeehandbook.rvu.edu) states all verifications go to The Work Number (iSolved payroll), but publishes NO code on the page. Route confirmed; needs a code-specific query before anything can land.
+- [2026-10-23] Transdev North America 13173 (dork: pass-10 partner sweep) — Google snippet shows "Transdev Employer Code: 13173" but the SERVED May-2023 employee handbook (transdevna.com) contains no Work Number section at all; the indexed copy drifted. Treat snippet as stale; land only on a fetched verbatim self-read.
+- [2026-10-23] MaineGeneral Health (mainegeneral.org employment-verification PDF) — 403 Access Denied on honest direct fetch (gated-wall list). Direct re-fetch only when the wall lifts.
+- [2026-10-23] City of Pasadena personnel-rules PDF (cityofpasadena.net) — 403 on honest fetch; document names "The Work Number for Everyone" + the verifier number in Google's text cache. Gated-wall list. Direct re-fetch only.
 
 ## Dork-expansion pass 9 (2026-10-23, authorized event pass — user order: "expand
 
@@ -539,6 +544,57 @@ google dorks or alike")
   --check PASS; live matcher sim 11/11 (six new rows resolve coded, standing
   regressions + AMR negative intact); headed core E2E ALL AUTOMATED CHECKS
   PASSED (15,753 records live, scan latency 2.50ms).
+
+## Dork-expansion pass 10 — partner-vendor sweep (2026-10-23, authorized event
+
+pass — user order: "expand google dorks ... find companies that self identify
+as being on TWN, verify manually")
+
+- **Premise check for the owner's theory (recorded so the next session doesn't
+  re-litigate):** the Paylocity↔TWN interface is NOT new — it dates to
+  2021–2022 (marketplace page + employee PSA Apr 2022). But TWN has a genuine
+  new partner-integration wave to mine: **Tyler Technologies (May 2025, gov
+  ERP/Munis)**, **Workday Employment Verification Connector (Aug 2024, live
+  2025)**, **Trimble Vista/Spectrum (Jun 2026, construction ERP)**, plus the
+  established isolved (2021) and IRIS. The extension dork thesis the owner
+ articulated is correct in direction: an employer that names its payroll
+  vendor on an employee page is self-identifying as a TWN candidate, and
+  verifier docs often sit beside the code.
+- **What the shapes taught (recorded so future passes don't re-run duds):**
+  - DEAD shapes: `"<vendor>" "employer code" filetype:pdf` for Paylocity,
+    isolved, and Workday connector — all zero hits. Employers do not normally
+    name the vendor and the code on the same page.
+  - PRODUCTIVE shape: vendor name paired with plain "the work number"
+    WITHOUT "employer code" — that pulled employee handbooks/FAQs that
+    self-identify as TWN employers (the code then lives in the fetched doc).
+  - NEW lead-signal shape worth keeping: government BUDGET/MOU documents that
+    line-item "The Work Number" payments (Sampson County NC; Marin County MOU;
+    City of Doral; Panhandle RPC invoices) — a fiduciary self-identification
+    of TWN subscription, and safe indexing territory.
+- **Sector-first trend to watch (not yet a dork):** Trimble's Jun 2026 launch
+  means construction/aggregates/infrastructure employers are freshly joining
+  TWN; expect their verifier PDFs to appear over the coming quarters. Tyler's
+  2025 launch does the same for counties/municipalities/schools using Munis.
+- **Six codes landed under the bar (all fetched + pdftotext verbatim on
+  employer-owned/official-domain documents):** YMCA of Middle Tennessee 15323
+  (ymcamidtn.org 2019 procedure), Bi-State Development 13148 (bistatedev.org
+  2012 trifold — vintage), Catholic Health (CH Services) 17878
+  (catholichealthli.org handbook; code is per-entity, others have their own),
+  University of Louisville 11443 (service.louisville.edu KB page), Innovative
+  Employee Solutions 16219 (hr.innovativeemployeesolutions.com Jan 2023
+  handbook), PG&E 13391 (myportal.pge.com 2011 retiree newsletter — vintage).
+- Non-findings this pass (all recorded in the queue or here): Trinity Health
+  trinity-health.org PDF is a scanned image AND its snippet code 14229 belongs
+  to Mount Carmel (a Trinity ministry) — already in catalog as twn-14229;
+  do NOT treat 14229 as Trinity Health system-wide. MaineGeneral 403;
+  City of Pasadena 403; UM Partners page serves no TWN text (snippet from a
+  different rendering); Hellertown doc is a 4-page image-only scan; Transdev
+  served handbook has no TWN section (see queue).
+- **Index after pass 10: 15,756 records, coded 155 (TWN 149 + T&C 6).** Build
+  PASS; matcher sim 14/16 exact-alias (the 2 apparent misses are plain-map
+  artifacts of the sim, not the shipped tiered matcher; tie rules live-test
+  green); headed core E2E ALL AUTOMATED CHECKS PASSED (15,756 live),
+  scan latency 2.50ms.
 
 ## Provider-landscape verdict (2026-10-23, researched + examples verified)
 
