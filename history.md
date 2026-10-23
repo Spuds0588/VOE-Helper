@@ -514,3 +514,42 @@ turn 4)
   as shipped v1.1 scope.
 - Final: spike P1-P5 EXIT 0; usability ALL PASS; headed core E2E ALL PASS
   (no-selection phase included).
+
+## Community WVOE contacts + match-report workflow + first annual TWN sweep (2026-10-23, turn 5)
+- **Community WVOE-contact lane (user: "the library can expand to meet every
+  employer if the community participates"):** records may carry optional
+  wvoe_email / wvoe_fax / wvoe_mail — the publicly published place manual
+  Form 1005s get sent. The sweep panel's save box gains a collapsible
+  "Add the manual-WVOE submission address" fields; stored on the
+  customEmployers row (P5 asserts the email round-trips); both panel views
+  surface a green "Send manual WVOE to: …" line when a row (saved route or
+  catalog) has contacts — in the WVOE view on prefill, in the sweep view as
+  the name is typed. The match-report issue template (and both issue-body
+  builders: voe-search page and sweep panel) carries the optional contact
+  field.
+- **match-report → draft-PR workflow shipped:**
+  .github/workflows/match-report.yml triggers on issues labeled
+  `match-report`, parses employer name/provider/code/source URL/date + the
+  WVOE contact line (accepts both the template's bolded fields and the
+  panel's plain fields), writes a DRAFT record with draft:true +
+  issue:number under data/community_drafts/ on a branch
+  match-report/<issue>-<slug>, and opens a PR whose body states it is
+  scaffolding: a maintainer must re-read the cited page (ground rule 4),
+  fix provider/portal_url, then land or reject. Nothing auto-lands; the
+  workflow skips docking invalid/duplicate branches gracefully.
+- **First annual TWN public-portal sweep — drift-check verdict only
+  (very carefully, zero harvest):** (1) "Find Your Employer" is live and
+  login-free but re-homed to
+  secure.eeservices.equifax.com/ewsweb/auth/employersearchopen (the bare
+  host recorded last pass is DNS-dead here); (2) the search is now
+  reCAPTCHA-gated — per rule 2 / the absolute bar the agent does not solve
+  bot checks, so the representative basket searches could not be executed
+  by the agent; coverage-change status recorded UNKNOWN (blocked at the
+  gate), nothing landed, pointers updated in sources.md with a full
+  human-paceable protocol for the next pass; (3) second material drift
+  finding read verbatim today on employees.theworknumber.com: "You no
+  longer need an employer code to log in" — employee registration is
+  identity-verified (name/DOB/SSN/email/mobile) and employer lookup comes
+  after that gate, i.e. not agent-executable by construction.
+- Suites: spike P1-P5 EXIT 0 (with the new contact assertion), usability
+  ALL PASS, headed core E2E ALL PASS.

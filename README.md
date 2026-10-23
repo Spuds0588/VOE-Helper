@@ -32,6 +32,10 @@ A zero-latency Manifest V3 Chrome Extension engineered for mortgage loan process
 - Once a day, the extension refreshes the index from this repository's `employers.json` on GitHub Raw, so updates flow without re-installing. If the refresh fails, the last good index keeps working.
 - Providers you confirm yourself (manual VOE sweep) are stored locally and
   survive the daily sync without a repo round-trip.
+- Want the library to cover more employers? Report what you found — the
+  match-report issue template can also carry the publicly published email /
+  fax / mailing address where manual WVOEs get sent, and a GitHub workflow
+  turns each labeled report into a draft row for a maintainer to land.
 
 ## Development
 

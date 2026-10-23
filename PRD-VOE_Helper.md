@@ -90,6 +90,16 @@ Shipped v1.1 scope, per owner direction:
   upstream merge; optional prefilled GitHub match-report issue).
 * **voe-search.html is the fallback full-page sweep** (same five
   providers + issue flow) for users who prefer tabs over the panel.
+* **Community WVOE-contact lane (2026-10-23):** records may carry optional
+  `wvoe_email` / `wvoe_fax` / `wvoe_mail` fields — the publicly published
+  place a manual written-VOE (Form 1005) can be sent for that employer.
+  Locally saved via the sweep panel's save form; upstream rows arrive via
+  match-report issues (optional field) and the `match-report` workflow
+  opens a draft-JSONL PR for each labeled issue (`data/community_drafts/`).
+  Landing a draft row into `verified_seeds.jsonl` stays human (ground rule
+  4); the extension renders known contacts in both panel views as a
+  "Send manual WVOE to: …" line. Fields are optional — existing rows and
+  the §1.6 schema are unchanged.
 
 Out of scope still: automatic DOM/LOS scraping and any provider-portal
 automation (TWN annual human-paced sweep remains governed by

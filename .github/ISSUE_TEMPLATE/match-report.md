@@ -14,3 +14,4 @@ a maintainer. Fill in exactly what the page shows — no inference.
 - **Employer code (verbatim):**
 - **Source URL (the exact page you read it on):**
 - **Date verified:**
+- **Where can manual WVOEs be sent (optional — only what their page publishes publicly):** email: / fax: / mailing address:

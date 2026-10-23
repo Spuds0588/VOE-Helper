@@ -1,0 +1,121 @@
+# Match-report → draft JSONL row (never auto-landed).
+#
+# When an issue is created with the `match-report` label, this workflow
+# derives a DRAFT employer record from the issue body and opens a pull
+# request carrying it under data/community_drafts/. The mapping into
+# verified_seeds.jsonl stays human: a maintainer re-reads the cited source
+# page verbatim (data/sources.md ground rule 4) before landing. This PR is
+# scaffolding, not a merge.
+
+name: match-report draft row
+
+on:
+  issues:
+    types: [opened, labeled]
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: write
+
+jobs:
+  draft-row:
+    if: contains(github.event.issue.labels.*.name, 'match-report')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse issue, write draft row, open PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+            const title = issue.title || '';
+
+            // Title: "Match report: <employer name>". Both body styles are
+            // parsed: the template's bolded fields and the side panel's
+            // plain fields.
+            let name = title.replace(/^Match report:\s*/i, '').trim();
+            const clean = (s) => (s || '').replace(/^_+|_+$/g, '').trim();
+            const field = (label) => {
+              const m = body.match(new RegExp('-\\s*\\*{0,2}' + label + '[^:\\n]*:\\s*([^\\n]*)'));
+              return clean(m ? m[1] : '');
+            };
+            if (!name) name = field('Employer name');
+            const rawProvider = field('Provider');
+            const code = field('Employer code \\(verbatim\\)');
+            const url = field('Source');
+            const verified = field('Date verified');
+            const wvoe = field('Where can manual [Ww][Vv][Oo][Ee]s be sent');
+
+            if (!name) {
+              core.notice(`Issue #${issue.number}: no employer name parsed; no draft row.`);
+              return;
+            }
+
+            // Provider is decided by a maintainer at landing; keep the raw
+            // text in notes. Draft rows are NOT validated against PRD §1.6
+            // provider checks (they are scaffolding, not records).
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+              .slice(0, 60) || 'employer';
+            const branch = `match-report/${issue.number}-${slug}`;
+            const path = `data/community_drafts/${issue.number}-${slug}.jsonl`;
+
+            const contacts = wvoe ? ` WVOE-submission contact shared: ${wvoe} (origin: report; needs the same verbatim page-check as any code).` : '';
+            const notes = `Community match report (issue #${issue.number}); provider as reported: ${rawProvider || 'unspecified'}; code reported ${code ? 'verbatim: ' + code : 'none'}; reporter date ${verified || 'not given'}.${contacts} Landing requires maintainer verbatim re-read of the cited source per data/sources.md ground rule 4.`;
+            const rec = {
+              id: `community-${slug}`,
+              name,
+              aliases: [],
+              provider: rawProvider && /Truework|Work Number|Thomas & Company/i.test(rawProvider)
+                ? rawProvider : '',
+              provider_code: code || '',
+              portal_url: url || '',
+              notes,
+              updated_at: new Date().toISOString().slice(0, 10),
+              draft: true,
+              issue: issue.number,
+            };
+
+            const fs = require('fs');
+            fs.mkdirSync('data/community_drafts', { recursive: true });
+            fs.writeFileSync(path, JSON.stringify(rec) + '\n');
+
+            // Branch + commit via the git data API (no token plumbing).
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const baseRef = await github.rest.repos.getBranch({ owner, repo, branch: context.payload.repository.default_branch });
+            const baseSha = baseRef.data.commit.sha;
+            try {
+              await github.rest.repos.createBranch({ owner, repo, branch, from_branch: context.payload.repository.default_branch });
+            } catch (e) {
+              if (!String(e).includes('already exists')) throw e;
+              core.notice(`Branch ${branch} already exists; skipping restore.`);
+              return;
+            }
+            const blob = await github.rest.git.createBlob({ owner, repo, content: Buffer.from(JSON.stringify(rec) + '\n').toString('base64'), encoding: 'base64' });
+            const baseTree = baseRef.data.commit.commit.tree.sha;
+            const tree = await github.rest.git.createTree({ owner, repo, base_tree: baseTree, tree: [{ path, mode: '100644', type: 'blob', sha: blob.data.sha }] });
+            const commit = await github.rest.git.createCommit({ owner, repo, message: `Draft row from match-report issue #${issue.number}: ${name}`, tree, parents: [baseSha] });
+            await github.rest.git.updateRef({ owner, repo, ref: `heads/${branch}`, sha: commit.data.sha, force: true });
+
+            const pr = await github.rest.pulls.create({
+              owner, repo,
+              head: branch,
+              base: context.payload.repository.default_branch,
+              title: `Match-report draft: ${name} (issue #${issue.number})`,
+              body: [
+                `Draft row from [issue #${issue.number}](${issue.html_url}) — generated automatically.`,
+                '',
+                '**This PR is scaffolding, never a landing.** A maintainer must:',
+                `1. Re-read the cited source page (${url || '_URL missing from the report_'}) verbatim (ground rule 4).`,
+                '2. Decide the provider field; fix the portal_url.',
+                '3. Move the row into `data/verified_seeds.jsonl` or reject this draft.',
+                '',
+                '```json',
+                JSON.stringify(rec, null, 2),
+                '```'
+              ].join('\n')
+            });
+            core.notice(`Draft PR opened: ${pr.data.html_url}`);

@@ -59,6 +59,7 @@
           // one-shot: clear so a later bare-panel open doesn't re-apply
           chrome.storage.local.remove('wvoePendingPrefill').catch(() => {});
           setStatus('idle', 'Pre-filled from catalog: ' + rec.name);
+          renderContact('wvoeContact', rec);
           saveDraft();
         } else {
           setStatus('error', 'catalog row gone: ' + wvoePendingPrefill);
@@ -247,6 +248,11 @@
     const state = (await chrome.storage.local.get('voeSweepState')).voeSweepState || {};
     const today = new Date().toISOString().slice(0, 10);
     const url = state.lastUrl || p.url;
+    // Community lane: wherever the provider/employer page publishes a place
+    // to send manual WVOEs, share it (email / fax / mail address).
+    const mail = el('saveMail').value.trim();
+    const fax = el('saveFax').value.trim();
+    const email = el('saveEmail').value.trim();
     const rec = {
       id: 'usr-' + normKey(name),
       name,
@@ -258,17 +264,43 @@
                    : ('User-confirmed route during VOE Helper sweep panel (page: ' + url + ', ' + today + '); no employer code observed.')),
       custom: true
     };
+    if (mail) rec.wvoe_mail = mail;
+    if (fax) rec.wvoe_fax = fax;
+    if (email) rec.wvoe_email = email;
     const { customEmployers = [] } = await chrome.storage.local.get('customEmployers');
     const kept = customEmployers.filter(e => normKey(e.name) !== normKey(name));
     kept.push(rec);
     await chrome.storage.local.set({ customEmployers: kept });
     setSweepStatus('ok', 'Saved locally — the matcher routes \u201c' + name + '\u201d to '
       + rec.provider + ' immediately (survives the 24h upstream sync).');
+    renderContact('sweepContact', rec);
     if (openIssue) openReportIssue(rec, url, today);
     return rec;
   }
 
+  // ---- "send the WVOE here" line (catalog or locally saved contacts) ----
+  function contactLines(rec) {
+    const parts = [];
+    if (rec.wvoe_email) parts.push('email ' + rec.wvoe_email);
+    if (rec.wvoe_fax) parts.push('fax ' + rec.wvoe_fax);
+    if (rec.wvoe_mail) parts.push('mail ' + rec.wvoe_mail);
+    return parts;
+  }
+  function renderContact(id, rec) {
+    const box = el(id);
+    if (!box) return;
+    const parts = contactLines(rec);
+    if (parts.length) {
+      box.hidden = false;
+      box.textContent = 'Send manual WVOE to: ' + parts.join('  ·  ');
+    } else {
+      box.hidden = true;
+      box.textContent = '';
+    }
+  }
+
   function openReportIssue(rec, url, today) {
+    const contacts = contactLines(rec);
     const body = [
       '**Manual sweep match recorded locally via the VOE panel.**',
       '',
@@ -277,6 +309,8 @@
       '- Employer code (verbatim): ' + (rec.provider_code || '_(none observed)_'),
       '- Source (page the panel sent the tab to): ' + url,
       '- Date verified: ' + today,
+      ...contacts.length ? [
+        '- Where can manual WVOEs be sent (as published): ' + contacts.join('  ·  ') ] : [],
       '',
       'Ground rule #4 applies to the repo catalog: a maintainer should re-read',
       'the cited page before this enters verified_seeds.jsonl. The local record',
@@ -295,6 +329,19 @@
 
   el('saveRoute').addEventListener('click', () => saveRoute(false));
   el('saveReport').addEventListener('click', () => saveRoute(true));
+
+  // ---- sweep view: surface any known WVOE submission address for the name ----
+  async function showSweepContact(name) {
+    const key = normKey(name);
+    if (!key) { renderContact('sweepContact', {}); return; }
+    const { employers = [], customEmployers = [] } =
+      await chrome.storage.local.get(['employers', 'customEmployers']);
+    const probe = customEmployers.concat(employers);
+    const rec = probe.find(e => e && (normKey(e.name) === key ||
+      (e.aliases || []).some(a => normKey(a) === key)));
+    renderContact('sweepContact', rec || {});
+  }
+  sweepName.addEventListener('input', () => { showSweepContact(sweepName.value.trim()); });
 
   // ---- view switching (tabs + SW-stamped panelView) ----
   const viewWvoe = el('view-wvoe');
@@ -319,7 +366,10 @@
     voeSweepStateRef = voeSweepState || null;
     if (panelView === 'sweep') {
       applyView('sweep');
-      if (voeSweepStateRef?.query && !sweepName.value) sweepName.value = voeSweepStateRef.query;
+      if (voeSweepStateRef?.query && !sweepName.value) {
+        sweepName.value = voeSweepStateRef.query;
+        showSweepContact(sweepName.value.trim());
+      }
     }
   }).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -328,6 +378,7 @@
     if (mode === 'sweep' || mode === 'wvoe') applyView(mode);
     if (mode === 'sweep' && voeSweepStateRef?.query && !sweepName.value) {
       sweepName.value = voeSweepStateRef.query;
+      showSweepContact(sweepName.value.trim());
     }
   });
 })();

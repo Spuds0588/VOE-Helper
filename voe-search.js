@@ -26,6 +26,7 @@
       '- Employer code (verbatim): _',
       '- Source URL (the exact page you read it on): _',
       '- Date verified: ' + new Date().toISOString().slice(0, 10),
+      '- Where can manual WVOEs be sent (optional — only what their page publishes publicly): _email: / fax: / mailing address:_',
       '',
       'Reminder per ground rule #4: this code only enters `verified_seeds.jsonl`',
       'once it has been re-read verbatim from the cited page by a maintainer.',

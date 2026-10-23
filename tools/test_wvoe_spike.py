@@ -512,6 +512,10 @@ async def main():
                 if p5sel != "truework":
                     failures.append(f"P5: provider auto-select after card click wrong: {p5sel!r}")
                 # Save without typing a code → uncoded custom row, matcher-local.
+                # Also fill the new community-lane field: where manual WVOEs
+                # can be sent (email) — it must round-trip into the stored row.
+                await s5.evaluate(
+                    "document.getElementById('saveEmail').value='hr@acmerocketry.example'")
                 await s5.evaluate("document.getElementById('saveRoute').click()")
                 await asyncio.sleep(1.0)
                 async with Session(websockets.connect(
@@ -526,6 +530,8 @@ async def main():
                 if not (found and found.get("provider") == "Truework"
                         and not found.get("provider_code") and found.get("custom")):
                     failures.append(f"P5: saved route not resolvable: {found}")
+                if not (found and found.get("wvoe_email") == "hr@acmerocketry.example"):
+                    failures.append(f"P5: WVOE contact email not stored in the row: {found}")
                 if cnt != 1:
                     failures.append(f"P5: expected exactly 1 custom row, got {cnt}")
                 # Repeat with a different provider → dedupe/update, not duplicate.

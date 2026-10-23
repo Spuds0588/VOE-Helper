@@ -513,6 +513,36 @@ searches with natural breaks, and record whether coverage for rows we track
 changed. Anything useful still has to pass the landing bar. This is a
 drift-check, not a harvest pipeline; if it ever grows automation, it stops.
 
+**First run (2026-10-23, drift-check verdict): surface drifted; searches
+blocked to the working agent — human step required.**
+
+- The "Find Your Employer" search is LIVE and login-free, but it has moved
+  hosts: `secure.eeservices.equifax.com/ewsweb/auth/employersearchopen`
+  (the bare `eeservices.equifax.com` path recorded last pass DNS-dead from
+  this network). Surface class unchanged — for the sweep protocol, use the
+  new URL.
+- The search is reCAPTCHA-gated ("Please check the box to indicate you are
+  not a robot"). Per rule 2 and the absolute landing bar, the working agent
+  does NOT solve bot checks: no representative searches could be executed by
+  the agent today. NOTHING was harvested; zero code-bearing data crossed
+  the bar.
+- Second material drift finding (employee front door,
+  employees.theworknumber.com, read verbatim today): "**You no longer need
+  an employer code to log in.**" Employee registration is identity-verified
+  (first/last name, DOB, SSN/ITIN, personal email, mobile). The
+  employer-lookup step now comes AFTER that personal-data gate, so it is
+  not agent-executable by construction — it is a HUMAN pace step or
+  nothing.
+- Sweep protocol for the next pass (unchanged in substance, new pointers):
+  open the employersearchopen URL in a headed browser, solve the bot check
+  as a real human, run a handful of representative single searches
+  (suggested basket unchanged: one coded-giant, one coded restaurant, one
+  county-gov, one long-code format, one historically uncoded chain, one
+  small private employer), record matched/not-matched per basket row, land
+  nothing without the normal bar.
+- Today's record: drift-check verdict only — coverage-change status:
+  **UNKNOWN (blocked at the gate)**. Not a harvest; no -1 rows.
+
 ## Portal-surface prefill + iframe probe (2026-10-23, live-DOM verified)
 
 Follow-up to the quickstart prefill: could the extension prefill the OTHER
