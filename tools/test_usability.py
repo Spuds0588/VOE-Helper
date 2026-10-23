@@ -33,6 +33,7 @@ import subprocess
 import sys
 import time
 import urllib.request
+import urllib.parse
 
 import websockets
 
@@ -384,7 +385,8 @@ async def main():
 
             # ---- G: portal deep-link correctness across all three providers ----
             # The button must open the matched record's own ordering page — its
-            # href is asserted against the record's portal_url (and target=_blank).
+            # href is asserted against portal_url (browser-normalized, plus the
+            # shipped Truework search-prefill param) and target=_blank.
             for sel in ("Walmart", "L3Harris", "Worldwide Express"):
                 mrow = await sw_eval(sw_url,
                                      "findEmployer(" + json.dumps(sel) + ")")
@@ -394,6 +396,10 @@ async def main():
                 await inject_via_shipped_path(sw_url, tab_id, sel, mrow)
                 time.sleep(0.3)
                 want = mrow.get("portal_url")
+                # Mirror the shipped prefill rule: Truework quickstart rows get
+                # their matched name appended as the search-prefill param.
+                if want.startswith("https://app.truework.com/requester/quickstart"):
+                    want += "?companyName=" + urllib.parse.quote(mrow["name"])
                 g = await toast_probe(
                     ps,
                     "const a=r.querySelector('a.btn-portal');\n"

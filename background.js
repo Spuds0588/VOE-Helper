@@ -320,7 +320,19 @@ function injectToastUI(queryText, match) {
   // so all dynamic values are HTML-escaped first.
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 
+  // Portal-link prefill (2026-10-23): Truework's requester quickstart only
+  // preselects an employer via its opaque companyId triple; adding the
+  // matched employer's name as a companyName param is ignored by their app
+  // but is consumed by our content script (truework-prefill.js), which types
+  // it into the employer-search box on load. Ordering pages of the other
+  // providers have no public, safely prefillable search form.
+  let portalHref = '';
   if (match) {
+    if (match.portal_url.startsWith('https://app.truework.com/requester/quickstart') && !match.portal_url.includes('companyName=')) {
+      portalHref = match.portal_url + '?companyName=' + encodeURIComponent(match.name);
+    } else {
+      portalHref = match.portal_url;
+    }
     container.innerHTML = `
       <div class="header">
         <h4 class="title">${esc(match.name)}</h4>
@@ -338,7 +350,7 @@ function injectToastUI(queryText, match) {
         ${match.provider_code ? `<button class="btn-copy" id="copy-btn">Copy Code</button>` : ''}
       </div>
       ${match.notes ? `<div class="notes-box">ℹ️ ${esc(match.notes)}</div>` : ''}
-      <a class="btn-portal" href="${esc(match.portal_url)}" target="_blank" rel="noopener noreferrer">Open Verification Portal</a>
+      <a class="btn-portal" href="${esc(portalHref)}" target="_blank" rel="noopener noreferrer">Open Verification Portal</a>
     `;
   } else {
     container.innerHTML = `
