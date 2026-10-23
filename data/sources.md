@@ -512,9 +512,9 @@ dork-expansion pass 9)
 - [2026-10-23] commerce.gov/hr/employees/benefits/employment-and-income-verifications (dork: pass-9 sweep) — Dept. of Commerce page is Cloudflare-bot-walled from this network. No verification attempted beyond the honest fetch.
 - [2026-10-23] Monroe Staffing Services 17410 (dork: pass-10 partner sweep) — verification-instructions PDF self-names "Monroe Staffing Services employer code: 17410" but lives on a generic S3 bucket (oliver-dev.s3.amazonaws.com) + Scribd mirror only; no employer-owned hit on any Monroe domain. Land only from an official-domain self-read.
 - [2026-10-23] Rocky Vista University (dork: pass-10 partner sweep) — official employee-handbook subdomain (employeehandbook.rvu.edu) states all verifications go to The Work Number (iSolved payroll), but publishes NO code on the page. Route confirmed; needs a code-specific query before anything can land.
-- [2026-10-23] Transdev North America 13173 (dork: pass-10 partner sweep) — Google snippet shows "Transdev Employer Code: 13173" but the SERVED May-2023 employee handbook (transdevna.com) contains no Work Number section at all; the indexed copy drifted. Treat snippet as stale; land only on a fetched verbatim self-read.
 - [2026-10-23] MaineGeneral Health (mainegeneral.org employment-verification PDF) — 403 Access Denied on honest direct fetch (gated-wall list). Direct re-fetch only when the wall lifts.
 - [2026-10-23] City of Pasadena personnel-rules PDF (cityofpasadena.net) — 403 on honest fetch; document names "The Work Number for Everyone" + the verifier number in Google's text cache. Gated-wall list. Direct re-fetch only.
+- [2026-10-23] essexcountyofnj.com/scdrtransport.pdf (dork: pass-11 Trimble/watch-lane sweep) — Essex County NJ senior/disabled transit subrecipient doc quotes The Work Number; 403 on honest direct fetch (gated-wall list). Direct re-fetch only when the wall lifts.
 
 ## Dork-expansion pass 9 (2026-10-23, authorized event pass — user order: "expand
 
@@ -595,6 +595,52 @@ as being on TWN, verify manually")
   artifacts of the sim, not the shipped tiered matcher; tie rules live-test
   green); headed core E2E ALL AUTOMATED CHECKS PASSED (15,756 live),
   scan latency 2.50ms.
+
+## Watch-lane harvest pass 11 — Tyler/Munis + Trimble (2026-10-23, authorized
+
+event pass — user order: "harvest the tyler/munis and trimble watch lanes")
+
+- **Tyler/Munis lane verdict: NOT a code lane so far.** Four shapes —
+  `site:.gov "munis" "the work number" "employer code" filetype:pdf`,
+  `("Munis" OR "Tyler Technologies") "verification of employment" ... site:.gov`,
+  `"munis" "employer code" "the work number" filetype:pdf`, plus pass-10's
+  base shape — produced zero code-bearing hits. Munis-using governments post
+  ERP admin docs, not verifier guides. Keep as a passive watch (their
+  benefits/HR pages still reach the standing dorks); no more dedicated
+  Munis-linked queries without a new idea.
+- **Trimble/construction lane: productive via ADJACENT surfaces.** No
+  Trimble-customer doc printed a code yet (their July 2026 activation is too
+  fresh), but the sector-first query caught three landable rows:
+  - **Apache Industrial Services 29061** — employer-owned 22-page HR guideline
+    PDF (apacheip.com): "All employment verification... referred to The Work
+    Number... Employer code: 29061" (fetched + pdftotext).
+  - **Transdev North America 13173** — RESOLVES the pass-10 queue entry: the
+    verbatim "Transdev North America, Inc. Employer Code: 13173" tables
+    (employees/verifiers/social-services) sit in the 2017 Transdev Employee
+    Handbook embedded as Appendix I of Concord Kannapolis Area Transit's 2025
+    official safety plan (ckrider.com). Recorded CAVEAT: Transdev's own served
+    2023 handbook contains no TWN code section — verify currentness before
+    ordering.
+  - **Oasis Outsourcing (Paychex Oasis) 11556** — FIRST PEO ROW: co-employment
+    handbook in a Palm Beach County 2014 agenda backup (pbcgov.com) states
+    "Enter the Employer Code - 11556" with the Salary Key procedure. Oasis is
+    the Administrative Employer / Employer of Record for its worksite
+    employees; any worksite employer served by this PEO verifiables through
+    this code. VINTAGE 2013/14: Paychex acquired Oasis; verify currentness.
+- **NEW lead-signal shape recorded: official-agency documents that EMBED an
+  employer-authored handbook.** FTA-required safety plans, procurement
+  contracts, and council agenda backups routinely append full third-party
+  (contractor/PEO) handbooks to the public record on the agency's own domain.
+  Query classes to periodically re-run: `site:<govdomain> "employee handbook"
+  "the work number" filetype:pdf` and transit-operations terms
+  (paratransit/transdev/contract operator) + "employer code".
+- Non-findings: Essex County NJ subrecipient transit doc builds 403 (queued);
+  several generic .gov/manual aggregates mentioned TWN without codes.
+- **Index after pass 11: 15,757 records, coded 158 (TWN 152 + T&C 6).**
+  Net +1 record: two Truework name-rows were displaced by the new coded rows
+  matching the same employer keys (coded wins, per the tie rule). Build PASS;
+  new-row matcher sim 6/6 (12 exact/alias probes incl. names); headed core
+  E2E ALL AUTOMATED CHECKS PASSED (15,757 live).
 
 ## Provider-landscape verdict (2026-10-23, researched + examples verified)
 

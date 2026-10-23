@@ -652,3 +652,34 @@ turn 4)
   not shipped-matcher behavior); headed core E2E ALL AUTOMATED CHECKS
   PASSED with the 15,756-record index live, tie rules green, scan latency
   2.50ms.
+
+## Sourcing pass 11 — watch-lane harvest: Tyler/Munis + Trimble (2026-10-23)
+
+- Owner ordered the two watch lanes from pass 10 harvested.Tyler/Munis
+  verdict: NOT a code lane — four dedicated shapes produced zero
+  code-bearing hits (Munis-using governments post ERP admin docs, not
+  verifier guides); documented in sources.md as a passive watch with no
+  more dedicated queries absent a new idea.
+- Trimble/construction verdict: productive through ADJACENT surfaces
+  (Trimble's own customers are too fresh, July 2026, to have published
+  codes yet), but the construction-sector query caught Apache Industrial
+  Services 29061 on its own domain.
+- Transdev pass-10 queue entry RESOLVED: the "Transdev North America,
+  Inc. Employer Code: 13173" tables read verbatim in the 2017 Transdev
+  Employee Handbook embedded as Appendix I of Concord Kannapolis Area
+  Transit's 2025 official Public Transportation Agency Safety Plan
+  (ckrider.com). Served-drift caveat recorded: Transdev's own 2023
+  handbook (transdevna.com) contains no TWN code section; currentness to
+  be verified before ordering.
+- First PEO row landed: Oasis Outsourcing (Paychex Oasis) 11556, verbatim
+  in the co-employment handbook inside Palm Beach County's 2014 agenda
+  backup (pbcgov.com). Usesite-employer verifications route through the
+  PEO under this code. Vintage 2013/14 + Paychex acquisition caveat.
+- NEW lead-signal shape recorded in sources.md: official-agency documents
+  (FTA safety plans, contracts, agenda backups) that embed employer-
+  authored handbooks — agency domain, employer content, verbatim code.
+  Query class noted for future passes.
+- Index 15,756 → 15,757 records; coded 158 (TWN 152 + T&C 6). Net +1:
+  two Truework name-rows displaced by new coded rows on the same
+  employer keys (coded wins). Build PASS, new-row sim 6/6, headed core
+  E2E ALL AUTOMATED CHECKS PASSED on the live 15,757 index.
