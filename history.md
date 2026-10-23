@@ -704,3 +704,11 @@ turn 4)
   Index 15,757 → 15,762, coded 173 (TWN 167 + T&C 6). Build PASS, sims,
   headed core E2E ALL AUTOMATED CHECKS PASSED on the live index.
 - Shipped as the data/lead_pools/ + tools changes + bookkeeping in one commit.
+
+## Dork-sourcing pass 13: walls cleared + counties/fed sweep (2026-10-23, turn 3)
+- User order: "take all of the recommended next steps" — wall re-probes, counties state sweep, fed pool sweep.
+- All four queued walls from pass 12 resolved under the bar: Trinity Health 14229 (official article, screenshot-verified), City of Milwaukee 11692 (PDF.js text layer of the live city PDF + 2026-03 Who-To-Contact cross-confirm), Manpower 90508 (Marshall-U RFP handbook section, OCR + second snippet source), USDA Forest Service 10284 (downloaded the energy.gov scanned PDF and tesseract-OCR'd it — the "image-only wall" fell to OCR on its own bytes).
+- Thirteen rows landed across three lanes (counties: Norfolk 28152, Seattle 11874, Harris Health 12990; fed: Department of Defense 10365 via PDF.js read of the Ramstein .mil handbook — curl gets a JS interstitial, USPS 12946 via the about.usps.com FOIA page verbatim; private: Wiley 26316, WebMD 13556, Renhill 15108, Apache Industrial 29061, IES 16219, TouchPoint 11366 — Compass Group brand, same code, own WisDWD WARN notice).
+- Index 15,762 → 15,770, coded 186 (TWN 180 + T&C 6). Build PASS; 20/20 alias-index sim over all new keys; headed core E2E ALL AUTOMATED CHECKS PASSED on the live 15,770-record service worker.
+- Bar extension recorded in sources.md: OCR of employer-authored text is acceptable ONLY with a second independent digit-source.
+- Honest queue for the next mini-check: Palm Beach County 11556 (48MB agenda bundle times out; snippet-only), Broward Health 13739 (employee-portal wall), City of Baltimore 14629 (third-party newsletter quote), Concord Kannapolis Area Transit (TWN confirmed, code not published), Veolia/Essex County NJ (403).

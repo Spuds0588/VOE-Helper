@@ -870,3 +870,49 @@ order: "work through the lead pools you identified, largest to smallest")
   genuinely under-mined: county lanes produced 4+ rows in this one session
   and fed lane 3. Next dedicated pass should run counties slice-fed again
   (state-by-state letter sweep is cheap) and the fed pool by faction list.
+
+## Dork-sourcing pass 13 (2026-10-23 — user order: "take all of the recommended next steps")
+- **Wall re-probes (standing-cadence queue): ALL FOUR RESOLVED.** Trinity Health 14229
+  (official trinity-health.org verifier article, screenshot-verified in-browser);
+  City of Milwaukee 11692 (city Who-To-Contact 2026-03-31 list confirms the Aug-2026
+  records-guide code; PDF.js text-layer read of the live Cloudflare-served PDF);
+  Manpower 90508 (associate handbook section in the Marshall University staffing-RFP
+  submission, tesseract OCR + Google-snippet dual digit-source); USDA Forest Service
+  10284 (the pass-12 image-only energy.gov "article" was actually a scanned PDF —
+  downloaded it and OCR'd the page: "USDA Forest Service Employer Code: 10284".
+  Lesson recorded: an image-only wall first needs an OCR attempt on its own bytes).
+- **Counties lane, slice-fed state batches:** net-new verbatim rows —
+  City of Norfolk 28152 (city Exit Guide, norfolk.gov), City of Seattle 11874
+  (city 2026 Exit Guide, seattle.gov), Harris Health System 12990 (Harris Health
+  benefits guidebook, harrishealth.org). Re-confirmed already-landed: Nashville
+  Metro 22559 (county form), Riverside 12421, SF 11403, Shelby 15934, Harford
+  15815, Howard County 14673, Wayne 13675, Ventura 13009, Milwaukee 11692.
+  Palm Beach 11556 (2014 agenda quote; 48MB bundle timed out twice — snippet-only,
+  queued). Lucas County OH: no TWN content in the doc — dropped.
+- **Fed lane:** Department of Defense 10365 (official Ramstein AFB civilian-personnel
+  handbook, ramstein.af.mil — .mil serves a JS interstitial to curl; PDF.js
+  text-layer read of the full in-browser document, P53-P54, code repeats six
+  times) and United States Postal Service 12946 (about.usps.com FOIA page,
+  fetched verbatim HTML: "The requester must use Employer code 12946").
+- **Private-employer lane (incidental finds from the same dorks):** John Wiley &
+  Sons 26316 (own separation-agreement exhibit in the Wiley 10-Q), WebMD Health
+  Corp 13556 (own handbook, March 2022), Renhill Group 15108 (own handbook),
+  Apache Industrial Services 29061 (own verification guideline), Innovative
+  Employee Solutions 16219 (own January 2023 contingent handbook), TouchPoint
+  Services 11366 (own WisDWD WARN notice; Compass Group brand, same code).
+  Broward Health 13739 queued snippet-only (employee-portal wall; browser tabs
+  did not attach this session).
+- **New bar-compliant evidence path recorded:** tesseract OCR of an employer-
+  authored PDF section is accepted when a second independent digit-source
+  (e.g. a Google snippet or rendered screenshot) corroborates the same digits —
+  used for Manpower and USDA FS. OCR-only with one digit-source is NOT enough.
+- **Index:** 15,762 → 15,770 records; coded 186 (TWN 180 + T&C 6); +8 net-new
+  coded rows in this pass (Trinity, Milwaukee, Manpower pre-pass + Norfolk,
+  Seattle, Wiley, Harris Health, TouchPoint + DoD, USPS + IES, WebMD, Renhill,
+  Apache = 13 landed rows; several displaced Truework name-rows). Build PASS,
+  20/20 sim over the new keys via the alias index, headed core E2E ALL
+  AUTOMATED CHECKS PASSED on the live 15,770-record service worker.
+- **Pool verdict update:** casual county/fed dork lanes now return
+  already-harvested rows in bulk — the cheap lanes are exhausted; the
+  remaining ~2,800 counties and ~33 fed entities need deliberate per-entity
+  (state-letter or faction) sweeping rather than broad dorks.
