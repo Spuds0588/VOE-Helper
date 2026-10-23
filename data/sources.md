@@ -948,3 +948,10 @@ order: "work through the lead pools you identified, largest to smallest")
   Alabama is recorded as a dry county lane.
 - **Index:** 15,770 → 15,775 records, coded 190 (TWN 184 + T&C 6). Build PASS,
   11/11 sim, headed E2E ALL AUTOMATED CHECKS PASSED on the live index.
+
+## Dork-expansion pass 15 (2026-10-23, authorized event pass — user order: "take the recommended next steps, then add an alpha release")
+- **Broward Health 13739 LANDED (queue closed):** employee.browardhealth.org blocks automation on the primary handbook URL, but the SAME official employee portal exposes `/-/media/Broward-Health/Employee/Preboarding/Employee-Handbook.pdf` (alternate filename) under a Wayback snapshot (2023-03-24), fetched + pdftotext verbatim. "…THE WORK NUMBER … BH's employer code is 13739" on p.14. Landed with Wayback provenance.
+- **Rot-ping results this pass:** RE-HOME: l3harris.com/resources (404), lockheedmartin.com/contact.html (404), truework.com/verifications/<slug (404). GONE: arregionalhospital.org (DNS), city.mil (DNS), broadwayservices.com (timeout), genesishcc.com (SSL EOF), mcgeeair.com (SSL handshake), polkcountyor.gov/217/Human-Resources (timeout). GATED unchanged at 13. BOUNCE 0.
+- **Warehouse-lane sweep recorded dry:** Averitt Express, R+L Carriers, Saia, Southeastern Freight Lines, Estes Express — search returns tariff rules/directories (FCA fees list SCAC-fill "F44367" is not a TWN code), hand-crafted probes 404/301/bot-walled, archive.org download alternates 503 this session (flapping-mode).
+- **Alt-routes verified live:** archive.org availability API + CDX back (pass 14 outage was temporary); the Wayback-fetch fallback IS the accepted re-probe route for walls whose vendor/portal hosts block automation.
+- **Index:** 15,774 → 15,775 records, coded 191 (TWN 185 + T&C 6). Build PASS, 11/11 sims, headed E2E ALL AUTOMATED CHECKS PASSED on the live index.

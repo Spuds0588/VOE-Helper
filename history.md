@@ -720,3 +720,11 @@ turn 4)
 - NASA 11338 and Mount Carmel 14229 re-confirmed via additional official docs; Alabama recorded as a dry county lane after fetching 13 county handbooks.
 - Walls still honest: Baltimore 14629 (single-source newsletter, curl times out), Palm Beach 11556 (48MB bundle), Broward 13739 (portal wall; archive.org down this session), Veolia/Essex (403).
 - Index 15,770 → 15,775, coded 190 (TWN 184 + T&C 6). Build PASS, 11/11 sims, headed core E2E ALL AUTOMATED CHECKS PASSED on the live index.
+
+## Sourcing pass 15: Broward wall falls + warehouse lane dry (2026-10-23, turn 5)
+- User order: "take the recommended next steps, then add an alpha release."
+- Broward Health 13739 LANDED verbatim: "…or 1-800-367-2884. BH's employer code is 13739" on p.14 of the Broward Health Employee Handbook via the 2023-03-24 Wayback snapshot of the official employee portal.
+- Palm Beach 11556 (48MB agenda bundle) and Baltimore 14629 (broadwayservices.com reset) remain honestly queued; Veolia/Essex not re-probed this session.
+- Warehouse-lane sweep (Averitt, R+L, Saia, Southeastern Freight, Estes) recorded dry: search hits are tariffs/directories and SCAC-fill documents, direct hand-crafted probes miss, archive.org alternate access 503s this session.
+- Rot ping ran: LIVE=83, RE-HOME=3, GATED=13, BOUNCE=0, GONE=6 — see sources.md for the full list.
+- Index 15,774 → 15,775, coded 191 (TWN 185 + T&C 6). Build PASS; sims 11/11 on live index; headed core E2E ALL AUTOMATED CHECKS PASSED (sw: 15,775 findEmployer Home Depot -> 11116, Polk County tie-rule OK, toast match+no-match render verified on real XTest right-click).
