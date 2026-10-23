@@ -20,18 +20,40 @@
   };
 
   // ---------- shared generation core ----------
+  // Printed on the official Fannie Mae Form 1005 (bundled asset; see
+  // wvoe-template.js for the measured part-I placement).
+  let form1005BytesPromise = null;
+  function loadForm1005() {
+    if (!form1005BytesPromise) {
+      form1005BytesPromise =
+        fetch(chrome.runtime.getURL(VOE_FORM1005_ASSET))
+          .then(r => {
+            if (!r.ok) throw new Error('Form 1005 asset HTTP ' + r.status);
+            return r.arrayBuffer();
+          })
+          .then(buf => new Uint8Array(buf));
+      // A failed fetch must not be cached — the next Generate retries.
+      form1005BytesPromise.catch(() => { form1005BytesPromise = null; });
+    }
+    return form1005BytesPromise;
+  }
+
   const collectValues = () => {
     const values = {};
     for (const f of FIELDS) {
       const v = el(f).value.trim();
-      if (v) values[f] = v;
+      if (v && WVOE_PRINTED_FIELDS.includes(f)) values[f] = v;
     }
     return values;
   };
 
   async function render(values) {
+    const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
     return window.pdfmeGenerate({
-      template: structuredClone(VOE_WVOE_TEMPLATE),
+      template: {
+        basePdf,
+        schemas: voeForm1005Schema()
+      },
       inputs: [values]
     });
   }

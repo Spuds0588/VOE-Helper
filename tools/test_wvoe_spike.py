@@ -9,7 +9,7 @@ extension (see PHASE2-WVOE-form.md). M2 adds the editable form:
   P2 prefill mode: wvoe.html?employer=<catalog row id> — the employer name is
      pre-filled from the matched record (the toast's "Generate WVOE Form"
      path), Generate runs, and the PDF must carry the record's name + code.
-  P3 voe-search.html — the manual provider sweep page: 6 provider cards, no
+  P3 voe-search.html — the manual provider sweep page: 5 provider cards, no
      link on the DNS-dead InVerify card, and the report button builds a
      pre-filled GitHub issue URL (window.open intercepted, never leaves
      Chrome).
@@ -186,6 +186,10 @@ async def main():
                 failures.append(f"P1: preview pane missing/initial state wrong: {layout}")
             vals = {"employmentTitle": "Position: M2 manual mode check",
                     "employerName": "Employer: ACME Rocketry (manual)",
+                    "employerContact": "702 SW 8th St, Bentonville, AR 72716\nPhone: (800) 411-2884",
+                    "verifierBlock": "Attn: Processing - Spuds Lending LLC\n1200 Main St\nColumbia, MO 65201",
+                    "lenderNumber": "Loan #991233",
+                    "applicantName": "Applicant: J. Doe (manual)",
                     "providerBlock": "Provider filled by hand: Truework"}
             # Fill the form in-page (manual path: no ?employer= param) and generate.
             await s.evaluate(
@@ -297,7 +301,7 @@ async def main():
                 ncards = await s3.evaluate(
                     "document.querySelectorAll('#cards .card').length")
                 log("P3 provider cards:", ncards)
-                if ncards != 6:
+                if ncards != 5:
                     failures.append(f"P3: expected 6 provider cards, found {ncards}")
                 dead = await s3.evaluate(
                     "document.querySelector('#card-inverify a') !== null")
@@ -486,7 +490,7 @@ async def main():
                     "  cards: document.querySelectorAll('.sweep-card').length} : null; })()")
                 log("P5 sweep view:", mode5)
                 if not (mode5 and mode5.get("sweepVisible") and mode5.get("name") == "ACME Rocketry"
-                        and mode5.get("cards") == 5):
+                        and mode5.get("cards") == 4):
                     failures.append(f"P5: sweep view not ready/prefilled/cards wrong: {mode5}")
                 # Card 1: Truework — the probe tab must navigate with the
                 # prefilled employer-name param.
@@ -567,18 +571,27 @@ async def main():
                 r = subprocess.run(["pdftotext", str(pdf), "-"], capture_output=True, text=True)
                 alltext += r.stdout + "\n"
                 log("pdf:", pdf.name, pdf.stat().st_size, "bytes")
+            # Overlay onto the bundled official Form 1005: the base's own text
+            # layer must survive (pdftotext of the output needs "Fannie"/
+            # "1005" from the form footer) and every printed field must be
+            # present. providerBlock is reference-only now — it must NOT print.
             checks = {
+                "form 1005 base": "Fannie",
                 "manual employer": "ACME Rocketry (manual)",
-                "manual provider": "Truework",
+                "manual lender #": "991233",
+                "manual contact": "Bentonville, AR 72716",
+                "manual lender block": "Columbia, MO 65201",
+                "manual applicant": "J. Doe (manual)",
                 "manual title": "M2 manual mode check",
                 "prefill employer": row["name"] if row else "",
-                "prefill provider": "10108",
                 "prefill title": "M2 prefill",
                 "panel title": "side panel collector",
             }
             for label, needle in checks.items():
                 if needle and needle not in alltext:
                     failures.append(f"pdftotext missing [{label}]: {needle!r}")
+            if "Provider filled by hand: Truework" in alltext:
+                failures.append("pdftotext: providerBlock printed but must stay internal")
             log("pdftotext verification:", "FAILURES" if failures else "all fields present (P1+P2)")
 
     except Exception as exc:

@@ -22,7 +22,7 @@
       '**Manual match found via the voe-search page.**',
       '',
       '- Employer name (as shown on provider page): ' + (name || '_(fill in)_'),
-      '- Provider: _(Truework / The Work Number / Thomas & Company / Vault Verify / other)_',
+      '- Provider: _(Truework / The Work Number / Thomas & Company / other)_',
       '- Employer code (verbatim): _',
       '- Source URL (the exact page you read it on): _',
       '- Date verified: ' + new Date().toISOString().slice(0, 10),

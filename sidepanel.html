@@ -85,31 +85,36 @@
   <section id="view-wvoe">
   <h1>WVOE — collect in place</h1>
   <h2>
-    Fill this next to the LOS — nothing steals its tab. Values sync live to
-    <strong>Download PDF</strong> (final output) and to the two-pane page
-    behind <strong>Open full-page preview</strong>, the only context switch,
-    and it is yours.
+    Fill this next to the LOS — nothing steals its tab. Download PDF prints the
+    <strong>official Fannie Mae Form 1005</strong> with your values on it; the
+    collector fields sync live to the two-pane page behind
+    <strong>Open full-page preview</strong>, the only context switch, and it is
+    yours.
   </h2>
 
   <form id="editor" autocomplete="off">
     <label for="date">Date</label>
     <input id="date" type="text" placeholder="YYYY-MM-DD">
 
-    <label for="verifierBlock">Verifier block (company, attn, loan #)</label>
-    <textarea id="verifierBlock" rows="4" placeholder="Verifier&#10;Spuds Lending LLC&#10;Attn: Processing&#10;Loan #123456"></textarea>
+    <label for="verifierBlock">Lender block (company, attn) — printed in Item 2 “From”</label>
+    <textarea id="verifierBlock" rows="4" placeholder="Attn: Processing — Spuds Lending LLC&#10;1200 Main St&#10;Columbia, MO 65201"></textarea>
+
+    <label for="lenderNumber">Lender's number (loan/file #, Item 6) — optional</label>
+    <input id="lenderNumber" type="text" placeholder="Loan #1240001">
 
     <label for="employerName">Employer name</label>
     <input id="employerName" type="text" placeholder="From the match, or type it">
 
-    <label for="employerContact">Employer contact (address / phone) — optional</label>
-    <textarea id="employerContact" rows="3"></textarea>
-
-    <label for="providerBlock">Provider block (provider, code, caveats)</label>
+    <label for="employerContact">Employer address / phone — printed in Item 1 “To”</label>
+    <textarea id="employerContact" rows="3"></textarea>      <label for="providerBlock">Provider block (internal reference — not printed on the form)</label>
     <textarea id="providerBlock" rows="3"></textarea>
     <div class="contact-line" id="wvoeContact" hidden></div>
 
-    <label for="employmentTitle">Position / title — optional</label>
+    <label for="employmentTitle">Present position (Item 10) — optional</label>
     <input id="employmentTitle" type="text">
+
+    <label for="applicantName">Borrower name (Item 7, + employee/badge # if known)</label>
+    <input id="applicantName" type="text" placeholder="Jane Doe — employee #4451">
 
     <div class="actions">
       <button class="btn-main" id="generate">Download PDF</button>
@@ -134,9 +139,11 @@
 
     <div id="sweepCards"></div>
 
-    <p class="muted-note">InVerify is retired (decommissioned 2022, domain dead) and
-      is not offered as a card. Careful on Experian pages: codes there are
-      employee ACCESS codes, never record them as employer codes.</p>
+    <p class="muted-note">Vault Verify is The Work Number now (Equifax acquisition, Nov 2025) and
+      InVerify is retired (decommissioned 2022, domain dead) — neither is offered
+      as a card; the Work Number card above covers those employers. Careful on
+      Experian pages: codes there are employee ACCESS codes, never record them as
+      employer codes.</p>
 
     <div class="savebox">
       <label for="saveProvider">Who turned out to have it?</label>

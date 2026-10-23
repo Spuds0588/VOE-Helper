@@ -745,4 +745,39 @@ turn 4)
 - Palm Beach County 11556 stays queued (no reproducing snippet, no CDX path).
 - Per-state frontier: United Musculoskeletal Partners 4560601, Cooper University Health Care 19455, Lithia & Driveway 26474 landed from their own official handbooks; Spartanburg Regional 10275642 reconfirmed from the newer 2025 guide; Georgia county crop recorded dry this session.
 - Index 15,776 → 15,778, coded 198 (TWN 192 + T&C 6). Build PASS; headed E2E ALL AUTOMATED CHECKS PASSED on the live 15,778-record service worker.
-- Alpha release packaged after the pass (see RELEASES.md; tag v0.10.0-alpha).
+- Alpha release packaged after the pass (see RELEASES.md; tag v1.1.0-alpha).
+
+## User bug round from testing v1.1.0-alpha + patch release v1.1.1 (2026-10-23, turn 8)
+- User reports from a real Chrome profile: (1) the side panel never opens on a toolbar-icon
+  left-click (only via the icon's right-click "Open side panel"); (2) the WVOE output was a
+  blank white sheet — the form should be the actual Fannie Mae Form 1005; (3) Vault Verify
+  is The Work Number now, remove those entries.
+- Side panel fix: chrome.sidePanel.setPanelBehavior({openPanelOnActionClick: true}) at SW
+  startup; the panel path stays sidepanel.html (a plain left click now opens it).
+- WVOE rebuilt on the official form: downloaded Fannie Mae Form 1005
+  (singlefamily.fanniemae.com/media/13861, 126 KB, US Letter scanned paper-capture) and
+  bundled it as assets/fannie-mae-form-1005.pdf; wvoe.js + sidepanel.js fetch it as a
+  Uint8Array and pass it as template.basePdf (pdfme v4 custom-PDF mode — no new vendor
+  dependency). wvoe-template.js rewritten with measured mm coordinates (pdftotext -bbox
+  anchors ÷ 2.8346): overlays cover only the LENDER's Part I — Item 1 (employer name +
+  address), Item 2 (lender block), Item 5 (date), Item 6 (lender's file/loan number, NEW
+  field in both editors), Item 7 (borrower name, NEW field) — plus a courtesy prefill of
+  Item 10 (Present Position). employer sections (Part II–IV) stay blank for the employer.
+  providerBlock is collected and kept in the draft but never printed (internal reference
+  only). lineHeight 1.3 on the multiline cells keeps 3–4-line blocks inside their boxes.
+- Vault Verify removed per user: sweep PROVIDERS card (sidepanel.js), voe-search.html card,
+  both GitHub issue-builder provider lists (voe-search.js + match-report template). The
+  panel's muted note now says Vault Verify = The Work Number (Equifax, Nov 2025).
+- Tests: test_wvoe_spike.py P1–P5 ALL PASSED — new permanent assertions: lender number +
+  applicant name + multiline contact/lender-block print; "Fannie" from the base PDF's
+  footer survives in pdftotext of the output (proves the official base carried through);
+  providerBlock asserted NOT printed; card counts updated (voe-search 5, sweep 4).
+  Overlay placement visually verified by rendering the generated PDFs to PNG (items 1, 2,
+  5, 6 under "(Optional)", 7, 10 all land inside their cells; an Item-6 y-collision with
+  "(Optional)" found this way and fixed). test_headed.py core E2E ALL AUTOMATED CHECKS
+  PASSED after the background.js change.
+- Patch release v1.1.1: manifest 1.1.0 → 1.1.1, RELEASES.md section added, extension zip
+  rebuilt (26 files incl. the form asset; manifest JSON validated), tag v1.1.1 published
+  as a GitHub release. Also corrected the pass-17 history line that misnamed its tag
+  ("v0.10.0-alpha" → the actual v1.1.0-alpha).
+- No catalog/data changes this round: index stays 15,778 records / 198 coded.

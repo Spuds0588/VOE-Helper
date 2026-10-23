@@ -238,6 +238,11 @@ async function openSidePanel(sender) {
 chrome.sidePanel.setOptions({ path: 'sidepanel.html' }).catch(e =>
   console.error('[VOE Helper] sidePanel.setOptions failed:', e));
 
+// Clicking the toolbar icon opens the side panel (user report 2026-10-23: the
+// panel was only reachable via the icon's right-click context menu).
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(e =>
+  console.error('[VOE Helper] sidePanel.setPanelBehavior failed:', e));
+
 // Context Menu Event Listener
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== 'voe-lookup-selection' || !tab?.id) return;

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "VOE Helper",
-  "version": "1.1.0",
-  "version_name": "1.1.0-alpha",
+  "version": "1.1.1",
+  "version_name": "1.1.1",
   "description": "Instant VOE/VOI provider and employer code lookup.",  "permissions": [
   "contextMenus",
   "storage",

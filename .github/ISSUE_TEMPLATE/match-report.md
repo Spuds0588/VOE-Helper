@@ -10,7 +10,7 @@ labels: match-report
 a maintainer. Fill in exactly what the page shows — no inference.
 
 - **Employer name (as shown on provider page):**
-- **Provider:** _Truework / The Work Number / Thomas & Company / Vault Verify / other_
+- **Provider:** _Truework / The Work Number / Thomas & Company / other_
 - **Employer code (verbatim):**
 - **Source URL (the exact page you read it on):**
 - **Date verified:**

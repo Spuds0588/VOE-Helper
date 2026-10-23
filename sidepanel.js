@@ -15,11 +15,30 @@
     status.textContent = text;
   };
 
+  // ---------- generation (official Fannie Mae Form 1005) ----------
+  // The bundled assets/fannie-mae-form-1005.pdf is the base; the schema in
+  // wvoe-template.js overlays the lender's Part I fields (measured positions).
+  let form1005BytesPromise = null;
+  function loadForm1005() {
+    if (!form1005BytesPromise) {
+      form1005BytesPromise =
+        fetch(chrome.runtime.getURL(VOE_FORM1005_ASSET))
+          .then(r => {
+            if (!r.ok) throw new Error('Form 1005 asset HTTP ' + r.status);
+            return r.arrayBuffer();
+          })
+          .then(buf => new Uint8Array(buf));
+      // A failed fetch must not be cached — the next Generate retries.
+      form1005BytesPromise.catch(() => { form1005BytesPromise = null; });
+    }
+    return form1005BytesPromise;
+  }
+
   const collectValues = () => {
     const values = {};
     for (const f of FIELDS) {
       const v = el(f).value.trim();
-      if (v) values[f] = v;
+      if (v && WVOE_PRINTED_FIELDS.includes(f)) values[f] = v;
     }
     return values;
   };
@@ -85,8 +104,12 @@
         setStatus('error', 'nothing to generate — fill at least one field');
         return;
       }
+      const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
       const bytes = await window.pdfmeGenerate({
-        template: structuredClone(VOE_WVOE_TEMPLATE),
+        template: {
+          basePdf,
+          schemas: voeForm1005Schema()
+        },
         inputs: [values]
       });
       const blob = new Blob([bytes], { type: 'application/pdf' });
@@ -159,12 +182,7 @@
     { key: 'experian', name: 'Experian', glyph: 'ex', color: '#0284c7',
       label: 'Experian Employer Services',
       url: 'https://www.experian.com/employer-services',
-      desc: 'TRAP: employer-page codes there are EMPLOYEE access codes, not verifier codes.' },
-    { key: 'vaultverify', name: 'Vault Verify', glyph: 'vv', color: '#b45309',
-      label: 'Vault Verify (Equifax, ex-2025)',
-      former: 'acquired by Equifax Nov 2025 — now The Work Number',
-      url: 'https://www.vaultverify.com/',
-      desc: 'Acquired by Equifax Nov 2025; front door routes into The Work Number. Check currentness.' }
+      desc: 'TRAP: employer-page codes there are EMPLOYEE access codes, not verifier codes.' }
   ];
   const providerByKey = (k) => PROVIDERS.find(p => p.key === k) || null;
   const normKey = (v) => String(v || '').toLowerCase().replace(/[^a-z0-9]/g, '');

@@ -57,31 +57,42 @@
     </div>
     <form id="editor" autocomplete="off">
       <p class="hint">
-        Everything stays local: preview + download are rendered client-side via the
-        vendored <code>@pdfme/generator</code> bundle. Empty fields are omitted from
-        the PDF.
+        Prints the <strong>official Fannie Mae Form 1005</strong> (bundled;
+        everything stays local — no network calls). Empty fields are left
+        blank on the form; Part II–IV stay open for the employer.
       </p>
 
   <fieldset>
     <legend>Verifier / loan</legend>
     <label for="date">Date</label>
     <input id="date" type="text" placeholder="YYYY-MM-DD">
-    <label for="verifierBlock">Verifier block (company, attn, loan #)</label>
-    <textarea id="verifierBlock" rows="4" placeholder="Verifier&#10;Spuds Lending LLC&#10;Attn: Processing&#10;Loan #123456"></textarea>
+    <label for="verifierBlock">Lender block (company, attn) — printed in Item 2 “From”</label>
+    <textarea id="verifierBlock" rows="4" placeholder="Attn: Processing — Spuds Lending LLC&#10;1200 Main St&#10;Columbia, MO 65201"></textarea>
+    <label for="lenderNumber">Lender's number (loan/file #, Item 6) — optional</label>
+    <input id="lenderNumber" type="text" placeholder="Loan #1240001">
   </fieldset>
 
   <fieldset>
-    <legend>Employer</legend>
+    <legend>Employer — Item 1 “To”</legend>
     <label for="employerName">Employer name</label>
     <input id="employerName" type="text" placeholder="From the match, or type it">
-    <label for="employerContact">Employer contact (address / phone) — optional</label>
-    <textarea id="employerContact" rows="3" placeholder="Wal-Mart Stores, Inc.&#10;702 SW 8th St, Bentonville, AR 72716&#10;Phone: (800) 411-2884"></textarea>
-    <label for="employmentTitle">Position / title — optional</label>
+    <label for="employerContact">Employer address / phone</label>
+    <textarea id="employerContact" rows="3" placeholder="702 SW 8th St&#10;Bentonville, AR 72716&#10;Phone: (800) 411-2884"></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Applicant — Item 7 / 8</legend>
+    <label for="applicantName">Borrower name (+ employee/badge number if known)</label>
+    <input id="applicantName" type="text" placeholder="Jane Doe — employee #4451">
+  </fieldset>
+
+  <fieldset>
+    <legend>Position — Item 10 (courtesy prefill)</legend>
     <input id="employmentTitle" type="text" placeholder="Regular PT/FT, Onbook">
   </fieldset>
 
   <fieldset>
-    <legend>Provider</legend>
+    <legend>Provider — internal reference, not printed</legend>
     <label for="providerBlock">Provider block (provider, code, caveats)</label>
     <textarea id="providerBlock" rows="3" placeholder="Electronic VOE provider: The Work Number&#10;Employer Code: 10108"></textarea>
   </fieldset>
