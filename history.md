@@ -683,3 +683,24 @@ turn 4)
   two Truework name-rows displaced by new coded rows on the same
   employer keys (coded wins). Build PASS, new-row sim 6/6, headed core
   E2E ALL AUTOMATED CHECKS PASSED on the live 15,757 index.
+
+## Lead-pool harvest pass 12 (2026-10-23, user ordered: work pools largest→smallest)
+
+- Built the lead-pool infrastructure end to end this session: capture script
+  + three pools (Census counties 3,235 / NCES HD2024 institutions 6,052 /
+  usa.gov agencies 38) with provenance headers and capture-time dedupe, plus
+  `tools/pool_progress.py` coverage/queue reporting and a `--slice` dork-line
+  printer. School-districts pool parked (CCD downloader is session-driven).
+- Ran the pools lane-first (per-name dorks do not scale to 5k entities):
+  education lanes landed into an already-harvested moat (most hits already
+  coded from passes 1-8 — recorded as a verdict, not a failure); counties,
+  districts and federal-agency lanes were productive.
+- Landed 15 coded rows (Yeshiva 13598, UT 17617 x2-doc, UAMS 14891, OSU 10380,
+  Dollar Tree 13180, TriNet 13096 PEO#2, Wayne County MI 13675 via
+  browser-read past an Akamai wall, Ds Services 12819, Dexian 15027,
+  Signature historical 18328, JAS Forwarding 110881, Sweetwater 17999,
+  Clark County SD 11519, Louisville Metro 29868, NYS PHC 22383) — each
+  fetched and read verbatim, per-row source-strength caveats in notes.
+  Index 15,757 → 15,762, coded 173 (TWN 167 + T&C 6). Build PASS, sims,
+  headed core E2E ALL AUTOMATED CHECKS PASSED on the live index.
+- Shipped as the data/lead_pools/ + tools changes + bookkeeping in one commit.

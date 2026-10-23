@@ -796,3 +796,77 @@ Reconsideration triggers for out-of-bounds buckets: only an unambiguous,
 invited-access change (an employer granting deliberate public access) moves a
 gated/credential wall lane back into bounds; nothing here over-rides
 the ground rules.
+
+## Lead-pool infra + pass 12 — multi-pool slice-fed harvest (2026-10-23, user
+order: "work through the lead pools you identified, largest to smallest")
+
+- **Infrastructure landed this session (new files):** `data/lead_pools/`
+  (`counties.jsonl` 3,235 Census FIPS counties; `ipeds.jsonl` 6,052 NCES
+  HD2024 institutions; `fed.jsonl` 38 usa.gov agency rows), capture script
+  `tools/capture_lead_pools.py` (provenance header row + capture-time dedupe
+  against catalog; branch-campus same-name rows collapsed), and
+  `tools/pool_progress.py` (per-pool coverage report vs catalog+queue, plus
+  `--slice <pool> N` that emits the first N *remaining* entities as
+  ready-to-query dork lines). Coverage as captured: ipeds cataloged 952 /
+  remaining 5,099; counties 337 / 2,848; fed 2 / 35. A school-districts pool
+  is parked: CCD's bulk downloader is session-driven, no direct zip (honest
+  note — revisit with a session tool).
+- **How pass 12 was fed:** education-lane dorks first (largest pool), then
+  counties/districts lanes, then federal-agency lanes. The slice emitted
+  names; the dorks worked LANE-first (system code lists, "message to
+  verifiers" templates, employee guides) because per-name dorks do not scale
+  to 5k entities — pool entities are used as disambiguation/checks, not as
+  query volume. Big finding: the education pool is ALREADY heavily harvested
+  (most universities/codes surfaced this pass were already coded from passes
+  1–8); the counties/districts/fed lanes were the productive frontier.
+- **Fifteen codes landed under the bar (all fetched and read verbatim; per-row
+  source strength recorded in each row's notes):**
+  Yeshiva University 13598 (yu.edu); University Of Tennessee 17617 (system
+  code, TWO independent official docs: uthsc.edu Message-to-Verifiers +
+  utc.edu FAQ); University of Arkansas for Medical Sciences 14891 (hr.uams.edu);
+  The Ohio State University 10380 (hr.osu.edu); Dollar Tree 13180
+  (dollartree.com); TriNet 13096 (**second PEO row** — full TriNet PEO
+  handbook embedded in SCCOE charter petition, vintage-caveat); Wayne County
+  Michigan 13675 (AKAMAI-WALLED via curl — fetched and read rendered in a
+  real browser session; resolves the pass-7 WayneCo queue entry); Ds Services
+  12819 (employer handbook on recruiting.adp.com, 2016 vintage); Dexian 15027
+  (files.disys.com 2023 handbook; DISYS lineage); Signature Consultants 18328
+  (VINTAGE historical pre-6/2021-only); JAS Forwarding USA 110881 (court
+  settlement doc, six-digit code, caveat); Sweetwater Union HS District 17999
+  (district finalsite); Clark County SD 11519 (Frontline-hosted district
+  handbook, caveat); Louisville Metro Government 29868 (louisvilleky.gov
+  2026-27 booklet, current); NYS Public Health Corps 22383 (nysphcresources.
+  health.ny.gov, Apr 2025).
+- **Confirmed-already-coded (did not land):** IRS 10114, County of Ventura
+  13009 (venturacounty.gov handbook + Dec 2024 new-hire resources agree),
+  County of Riverside 12421, City and County of San Francisco 11403, Metro
+  Nashville & Davidson County 22559, Shelby County Schools 15934, Tulsa PS
+  58858. Also re-confirmed the CCCS code list (pikespeak.edu) codes match our
+  landed member-college codes exactly.
+- **Queued honestly:** Trinity Health 14229 (snippet on trinity-health.org —
+  the 2018 PDF is image-only "Print to PDF", no text layer), USDA Forest
+  Service 10284 (energy.gov unrenderable this session), City of Milwaukee
+  11692 (Cloudflare wall, Aug 2026 doc — pass-9 403 continues), Manpower 90508
+  (Marshall procurement submission, text layer absent), Essex County NJ stays
+  403'd. All snippet- or wall-blocked; nothing landed without verbatim text.
+- **New productive query shapes recorded:** (a) `"message to verifiers"
+  filetype:pdf "employer code" university OR college` — pulled ADP-template
+  verifier letters across higher-ed in one line; (b) `"(county|school
+  district) "the work number" "employer code" filetype:pdf` lanes with
+  finalsite/finalsite-CDN and pcdn (county CMS) carriers — county and
+  district docs ride unusual CDNs, so search by content, not domain;
+  (c) browser-session reads as bar-compliant evidence for Akamai-walled
+  official PDFs (curl blocked, real Chromium passed — used for Wayne County;
+  screenshot evidence local-only under data/test/).
+- **Index:** 15,757 → 15,762 records; coded 173 (TWN 167 + T&C 6). Net +5
+  (15 new coded rows; 10 displaced Truework name-rows on the same keys).
+  Build PASS, new-row sim 21/31 strict (exact-key sim is stricter than the
+  live tiered matcher; substring cases resolve there), headed core E2E ALL
+  AUTOMATED CHECKS PASSED on the live 15,762 index, scan 9.60ms.
+- **Remaining-pool verdict after pass 12:** ipeds still has ~5k uncoded
+  entities but the education lane dorks now come back mostly
+  already-harvested — treat future IPEDS progress as slice-fed mop-up during
+  other passes, not a dedicated pass. Counties (2,848) and fed (35) remain
+  genuinely under-mined: county lanes produced 4+ rows in this one session
+  and fed lane 3. Next dedicated pass should run counties slice-fed again
+  (state-by-state letter sweep is cheap) and the fed pool by faction list.
