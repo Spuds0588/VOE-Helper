@@ -303,7 +303,9 @@ async def main():
                     const card=r.querySelector('.toast-card');
                     return {present:!!t, overflow:t? t.scrollWidth>t.clientWidth+1:false,
                             cardOverflow:!!card&&(card.scrollWidth>card.clientWidth+1),
-                            text:t?t.textContent.slice(0,60):null}""")
+                            text:t?t.textContent.slice(0,60):null,
+                            wvoe:!!r.querySelector('#wvoe-btn'),
+                            voeSearch:!!r.querySelector('#voe-search-btn')}""")
             log("C long no-match toast:", c)
             if not (c and c.get("present")):
                 failures.append("C: no-match toast missing for long selection")
@@ -311,6 +313,8 @@ async def main():
                 failures.append(
                     f"C CONFIRMED BUG: long selection overflows the no-match toast {c}")
                 key("Escape")  # leave the broken render visible in screenshot
+            elif not (c.get("wvoe") and c.get("voeSearch")):
+                failures.append(f"C: no-match toast missing manual buttons: {c}")
 
             # ---- D: copy-code click ----
             r = await inject_via_shipped_path(
@@ -400,23 +404,39 @@ async def main():
                 # their matched name appended as the search-prefill param.
                 if want.startswith("https://app.truework.com/requester/quickstart"):
                     want += "?companyName=" + urllib.parse.quote(mrow["name"])
+                # WVOE button rule (user, 2026-10-23): manual WVOE shows ONLY
+                # where no electronic provider match exists — no-match and
+                # uncoded rows. A coded employer rejects manual WVOE, so its
+                # toast must NOT offer the form. Coded -> expect absent;
+                # uncoded -> expect "Start Manual WVOE"
+                # (the panel prefill happens via the SW relay + storage, so
+                # there is no deep-link URL to assert anymore).
+                if mrow.get("provider_code"):
+                    want_wvoe = None
+                else:
+                    want_wvoe = "Start Manual WVOE"
                 g = await toast_probe(
                     ps,
                     "const a=r.querySelector('a.btn-portal');\n"
+                    "const wb=r.querySelector('#wvoe-btn');\n"
                     "const expected=" + json.dumps(want) + ";\n"
                     "return a ? {href:a.href,\n"
                     "            resolved:a && expected ?"
                     " new URL(expected, location.href).href : null,\n"
-                    "            target:a.target} : null")
+                    "            target:a.target,\n"
+                    "            wvoe: wb ? wb.textContent : null} : null")
                 # a.href is the browser-resolved form (adds the final '/');
                 # compare against the URL the browser would open on click.
                 okp = bool(g) and g.get("resolved") is not None \
                     and g.get("href") == g.get("resolved") \
                     and g.get("target") == "_blank"
-                log(f"G [{sel}] {mrow['provider']}: portal={g} expect {want}")
+                okw = bool(g) and g.get("wvoe") == want_wvoe
+                log(f"G [{sel}] {mrow['provider']}: portal={g} expect {want} wvoe={want_wvoe}")
                 if not okp:
                     failures.append(
                         f"G: {mrow['provider']} portal link wrong: got {g} want {want}")
+                if not okw:
+                    failures.append(f"G: {mrow['provider']} WVOE button wrong: {g}")
 
         ley = "pg-7-usability-final.png"
         try:

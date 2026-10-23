@@ -8,6 +8,15 @@
 2. **No scraping of Equifax / The Work Number / TALX services.** We never fetch
    from theworknumber.com's verifier portal, Equifax services, or any
    authenticated/paywalled surface. no bulk ToS-violating crawling.
+   **Exception (authorized by the project owner, 2026-10-23):** TWN's public,
+   login-free "Find Your Employer" surface (eeservices.equifax.com corporate
+   search — verified live 2026-10-23) may be swept ONCE A YEAR inside the
+   *annual deep audit*, by hand in a headed browser, to check whether the
+   no-login search coverage has materially changed (employer added/removed).
+   Pacing: human-paced single searches with natural breaks; no automation, no
+   bulk paging, no capture beyond what a landed row needs, and the normal
+   landing bar applies to anything harvested. Never extends to any logged-in
+   or verifier-facing TWN/Equifax surface.
 3. **robots.txt respected.** This method is a handful of individual page visits
    during data-authoring passes, not automated bulk crawling; we still honor
    robots directives on the pages we read.
@@ -493,6 +502,16 @@ Mini-checks append; quarterly full passes (or authorized event passes)
 harvest under the normal landing bar and delete harvested lines.
 
 (empty as of 2026-10-23 — first mini-check populates it)
+
+### Annual TWN public-portal sweep (added 2026-10-23)
+
+The owner authorized a once-a-year, human-paced manual look at TWN's public
+login-free employer search ( Ground rule 2 exception above). It is part of the
+**annual deep audit**, not the monthly/quarterly cycles: open the public
+search in a headed browser, run a handful of representative employer-name
+searches with natural breaks, and record whether coverage for rows we track
+changed. Anything useful still has to pass the landing bar. This is a
+drift-check, not a harvest pipeline; if it ever grows automation, it stops.
 
 ## Portal-surface prefill + iframe probe (2026-10-23, live-DOM verified)
 

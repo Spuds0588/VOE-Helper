@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VOE Helper — Manual VOE Search</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         margin: 0; padding: 24px; background: #f9fafb; color: #1f2937; }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  h2 { font-size: 13px; font-weight: 500; color: #6b7280; margin: 0 0 20px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  a.card {
+    display: block; background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+    padding: 14px 16px; text-decoration: none; color: inherit;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  a.card:hover { border-color: #2563eb; box-shadow: 0 1px 4px rgba(37, 99, 235, .12); }
+  .card .name { font-weight: 700; font-size: 14px; color: #1f2937; }
+  .card .desc { font-size: 12px; color: #6b7280; margin-top: 4px; line-height: 1.45; }
+  .card .url { font-size: 11px; color: #9ca3af; margin-top: 6px; font-family: monospace; word-break: break-all; }
+  .workflow {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+    padding: 10px 14px; font-size: 12px; color: #1e40af; line-height: 1.55; margin-bottom: 18px;
+  }
+  .btn-report {
+    display: inline-block; background: #16a34a; color: #fff; border: 1px solid #15803d;
+    padding: 9px 18px; border-radius: 5px; font-weight: 600; font-size: 13px;
+    text-decoration: none; cursor: pointer;
+  }
+  .btn-report:hover { background: #15803d; }
+  .reportlbl { font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 6px; }
+  input#foundName {
+    width: 300px; font: inherit; font-size: 13px; border: 1px solid #d1d5db;
+    border-radius: 4px; padding: 7px 9px; color: #1f2937;
+  }
+  .muted { font-size: 12px; color: #6b7280; margin-top: 10px; line-height: 1.5; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>Manual VOE Search</h1>
+    <h2>No match in the local catalog? Work the provider search pages by hand:
+      open → search → back → open → search → back, working down this list.</h2>
+
+    <div class="workflow">
+      Found a match? Note the provider + employer code exactly as shown, then use
+      <strong>Report this match</strong> below (or the full rule out-loud in the
+      repo issue template). Only codes you can see yourself on the provider's own
+      page count — the catalog stores nothing unverified.
+    </div>
+
+    <div class="grid" id="cards">
+      <a class="card" id="card-truework" href="https://app.truework.com/requester/quickstart" target="_blank" rel="noopener noreferrer">
+        <div class="name">Truework — quickstart ordering</div>
+        <div class="desc">Public ordering flow. When you arrive from this link the extension already types the employer name into the search box; you still pick the employer.</div>
+        <div class="url">app.truework.com/requester/quickstart</div>
+      </a>
+      <a class="card" id="card-twn" href="https://employees.theworknumber.com/" target="_blank" rel="noopener noreferrer">
+        <div class="name">The Work Number — employee portal</div>
+        <div class="desc">Public consumer front door (registration/login). Verifier ordering lives behind the logged-in VsPortal — no public prefill is possible on any TWN surface.</div>
+        <div class="url">employees.theworknumber.com</div>
+      </a>
+      <a class="card" id="card-tc" href="https://tncverify.com/" target="_blank" rel="noopener noreferrer">
+        <div class="name">Thomas &amp; Company — tncverify portal</div>
+        <div class="desc">Employee login has a public Company Code field (the processor's EWV order form is client-side). Codes circulate on employer EWV flyers — see the catalog notes.</div>
+        <div class="url">tncverify.com</div>
+      </a>
+      <a class="card" id="card-experian" href="https://www.experian.com/employer-services" target="_blank" rel="noopener noreferrer">
+        <div class="name">Experian Employer Services</div>
+        <div class="desc">Public front door. Caution: codes that appear on employer pages are employee ACCESS codes, not verifier codes — never record one as a company code.</div>
+        <div class="url">experian.com/employer-services</div>
+      </a>
+      <a class="card" id="card-vaultverify" href="https://www.vaultverify.com/" target="_blank" rel="noopener noreferrer">
+        <div class="name">Vault Verify (Equifax, ex-2025)</div>
+        <div class="desc">Acquired by Equifax in Nov 2025; the front door now routes into The Work Number. Employer pages may still show a Company Code — check currentness before trusting one.</div>
+        <div class="url">vaultverify.com</div>
+      </a>
+      <div class="card" id="card-inverify" style="opacity:.55">
+        <div class="name">InVerify — legacy (DNS dead)</div>
+        <div class="desc">Decommissioning lane: CSUN moved off it in 2022, Equifax routes former users into PeopleHQ, and inverify.net no longer resolves (re-checked 2026-10-23). Kept for historical reference only — no link.</div>
+      </div>
+    </div>
+
+    <p class="reportlbl">Report a match you just found (optional but this is how the catalog grows):</p>
+    <input id="foundName" type="text" placeholder="Employer name as shown on the provider page">
+    <a class="btn-report" id="reportMatch" href="#">Report this match — pre-filled GitHub issue</a>
+    <p class="muted">
+      Opens a new GitHub issue on <code>Spuds0588/VOE-Helper</code> with the
+      provider-agnostic checklist: employer name, provider, employer code
+      verbatim, source URL, and who verified it. A maintainer merges it into the
+      JSONL and the next repo sync (24h alarm) brings it to every install.
+    </p>
+  </main>
+
+  <script src="voe-search.js"></script>
+</body>
+</html>

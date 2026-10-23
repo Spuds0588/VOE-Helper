@@ -165,7 +165,37 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     copyViaOffscreen(msg.text).then(ok => sendResponse({ ok })).catch(() => sendResponse({ ok: false }));
     return true;  // async sendResponse
   }
+  if (msg?.type === 'OPEN_WVOE_PANEL') {
+    // Side-panel relay from the toast (function injectToastUI cannot call
+    // chrome.sidePanel.* itself). Stamp any pending prefill first so the
+    // panel loads with the matched row, then open it pinned to the sender's
+    // tab — this runs from a click-initiated message (user gesture). If the
+    // gesture is rejected by an older Chrome, log and leave the manual WVOE
+    // path reachable via the extension page.
+    (async () => {
+      try {
+        await chrome.storage.local.set({ wvoePendingPrefill: msg.matchId || null });
+        let flags = sender.tab?.id ? { tabId: sender.tab.id } : null;
+        if (!flags) {
+          // Sender without a tab (extension page): pin the panel to the
+          // focused window.
+          const [t] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+          flags = t?.windowId ? { windowId: t.windowId } : null;
+        }
+        if (!flags || !chrome.sidePanel?.open) throw new Error('no side panel target');
+        await chrome.sidePanel.open(flags);
+      } catch (e) {
+        console.error('[VOE Helper] side panel open failed:', e);
+      }
+    })();
+    return true;  // async work; no sendResponse
+  }
 });
+
+// Default side panel content: defined once so sidePanel.open() has a panel
+// to show even before setOptions is ever called.
+chrome.sidePanel.setOptions({ path: 'sidepanel.html' }).catch(e =>
+  console.error('[VOE Helper] sidePanel.setOptions failed:', e));
 
 // Context Menu Event Listener
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -301,6 +331,23 @@ function injectToastUI(queryText, match) {
       box-sizing: border-box;
     }
     .btn-portal:hover { background: #1d4ed8; }
+    .btn-wvoe {
+      display: block;
+      width: 100%;
+      text-align: center;
+      background: #eef2ff;
+      color: #4338ca;
+      border: 1px solid #c7d2fe;
+      padding: 7px 0;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 12px;
+      box-sizing: border-box;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    .btn-wvoe:hover { background: #e0e7ff; }
     .not-found-text {
       color: #4b5563;
       font-size: 12px;
@@ -351,6 +398,7 @@ function injectToastUI(queryText, match) {
       </div>
       ${match.notes ? `<div class="notes-box">ℹ️ ${esc(match.notes)}</div>` : ''}
       <a class="btn-portal" href="${esc(portalHref)}" target="_blank" rel="noopener noreferrer">Open Verification Portal</a>
+      ${!match.provider_code ? `<button class="btn-wvoe" id="wvoe-btn">Start Manual WVOE</button>` : ''}
     `;
   } else {
     container.innerHTML = `
@@ -359,8 +407,10 @@ function injectToastUI(queryText, match) {
         <button class="btn-close" id="close">✕</button>
       </div>
       <p class="not-found-text">
-        No electronic VOE clearinghouse registered for "<strong>${esc(queryText)}</strong>". Initiate a manual Written VOE (Form 1005).
+        No electronic VOE clearinghouse registered for "<strong>${esc(queryText)}</strong>". Initiate a manual Written VOE (Form 1005) or run the providers' search pages by hand.
       </p>
+      <button class="btn-wvoe" id="wvoe-btn">Start Manual WVOE</button>
+      <button class="btn-wvoe" id="voe-search-btn">Manual VOE Search (all providers)</button>
     `;
   }
 
@@ -368,6 +418,34 @@ function injectToastUI(queryText, match) {
 
   // Shadow Event Handlers
   shadow.getElementById('close').onclick = () => host.remove();
+
+  // WVOE buttons open the SIDE PANEL (user pivot 2026-10-23: the processor
+  // works inside their LOS tab, so value collection must not steal a tab —
+  // the panel collects the form while the LOS stays visible). Manual WVOE is
+  // offered ONLY where no electronic provider match exists (user rule: coded
+  // employers reject manual WVOE forms) — i.e. no-match and uncoded catalog
+  // rows. The click is relayed to the service worker, which stamps any
+  // pending prefill into storage and calls chrome.sidePanel.open()
+  // (gesture-bearing message; chrome.sidePanel.* is not callable from a
+  // content script). The manual provider sweep page stays a deliberate new
+  // tab.
+  const wvoeBtn = shadow.getElementById('wvoe-btn');
+  if (wvoeBtn) {
+    const senderMatchId = (typeof match === 'object' && match?.id) ? match.id : null;
+    wvoeBtn.onclick = () => {
+      try {
+        chrome.runtime.sendMessage(
+          { type: 'OPEN_WVOE_PANEL', matchId: senderMatchId },
+          () => { void chrome.runtime.lastError; });
+      } catch (e) {
+        console.error('[VOE Helper] panel open relay failed:', e);
+      }
+    };
+  }
+  const voeSearchBtn = shadow.getElementById('voe-search-btn');
+  if (voeSearchBtn) {
+    voeSearchBtn.onclick = () => window.open(chrome.runtime.getURL('voe-search.html'), '_blank');
+  }
 
   const copyBtn = shadow.getElementById('copy-btn');
   if (copyBtn && match?.provider_code) {

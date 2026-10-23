@@ -393,3 +393,82 @@ Append-only log of significant steps and findings. New entries at the bottom.
 - Scope held to M1: no toast button yet (M2), no presets (M3), no template
   editing. Follow-up flagged: tree-shake the bundle down to the Text plugin
   (the only one the template needs) before M4 ships.
+
+## Phase 2 M2 + manual VOE search page + annual TWN sweep rule (2026-10-23, turn 3)
+- **User threads:** (a) WVOE buttons missing from the toast (coded match and
+  no-match); (b) relax ground rule 2 for TWN's public search portal on a
+  once-a-year headless-free manual cadence; (c) a manual VOE search page with
+  provider shortcuts; (d) two-pane WVOE: form on the right, live PDF preview
+  left; (e) match-detection-auto-push explored.
+- **WVOE M2 shipped (~wvoe.html + wvoe.js rebuilt):** two-pane layout — LEFT
+  pane is a live preview (debounced 500 ms pdfme re-render into an `<embed>`),
+  RIGHT pane is the editable form (verifier/loan, employer, provider blocks).
+  `wvoe.html?employer=<row id>` pre-fills employer name + provider block
+  (provider, code, note) from the matched catalog row; `Download PDF` is the
+  final output. Empty fields omitted. Toast: coded matches render a **Generate
+  WVOE Form** button opening the prefilled page; no-match toasts render
+  **Start Manual WVOE** + **Manual VOE Search (all providers)** buttons.
+  manifest.json gains `web_accessible_resources` for wvoe.html/js and
+  voe-search.html/js (toast runs in page context, so extension pages must be
+  web-accessible; vendor pdfme bundle listed too).
+- **voe-search.html + voe-search.js shipped:** intermediate manual-sweep page
+  with cards for Truework quickstart, The Work Number employee portal,
+  tncverify.com, Experian Employer Services, Vault Verify — URLs re-verified
+  live over HTTP this turn (200s); InVerify DNS-dead again
+  (`inverify.net` does not resolve) so it ships as a NON-LINK legacy card.
+  **Report this match** builds a `github.com/Spuds0588/VOE-Helper/issues/new`
+  URL with `template=match-report.md` + title/body prefill (employer name,
+  provider/code/source-URL checklist, ground-rule reminder); the matching
+  issue template was added under `.github/ISSUE_TEMPLATE/match-report.md`.
+- **Match-detection auto-push scoped out (phase 3):** per-provider DOM match
+  detection, toast on "you may have found a match", and a GitHub-Actions
+  workflow merging issues into the JSONL library stay out of v1 (YAGNI); the
+  manual issue flow is the v1 path for catalog growth.
+- **TWN annual sweep authorized + codified (sources.md):** ground rule 2
+  gains an owner-authorized exception — the public login-free
+  "Find Your Employer"-class surface may be swept ONCE A YEAR inside the
+  annual deep audit, by hand in a headed browser, human-paced (no automation,
+  no bulk paging, harvest still under the landing bar). Verified live proxied
+  this turn: `employees.theworknumber.com` (the consumer front door) is the
+  reachable public surface; `eeservices.equifax.com` does NOT resolve from
+  this network, so the annual sweep text names the surface class rather than
+  one fragile host. Recurring-cadence section gains an "Annual TWN
+  public-portal sweep" subsection.
+- **Headed tests:** tools/test_wvoe_spike.py extended with P3 (voe-search
+  page: 6 cards, no link on the InVerify card, report click intercepted via
+  window.open monkeypatch, issue URL asserted to carry the employer name) —
+  full suite EXIT 0 (P1 manual + P2 prefill + P3, both PDFs pdftotext-verified).
+  Usability suite C now asserts the no-match toast renders BOTH manual
+  buttons; G asserts the WVOE button on coded matches across all three
+  providers — ALL USABILITY CHECKS PASSED, U_EXIT=0, matrix 31/31.
+- **PIVOT (same turn, user order): WVOE value collection moved into a Chrome
+  Side Panel.** Reason: the processor works inside their web LOS tab, and a
+  full-page form steals the tab mid-order. manifest.json adds the `sidePanel`
+  permission; sidepanel.html + sidepanel.js render the form in the panel —
+  values persist to chrome.storage `wvoeDraft` (debounced 400 ms) which the
+  panel itself AND the two-pane wvoe.html restore on open; the panel can
+  generate + download the PDF directly (same vendored pdfme bundle, shared
+  template moved to wvoe-template.js) and "Open full-page preview" does the
+  only deliberate tab switch (chrome.tabs.create — user-initiated).
+- **Toast wiring for the panel: injectToastUI's WVOE buttons relay an
+  OPEN_WVOE_PANEL message** (content scripts cannot call chrome.sidePanel.*);
+  the SW listener stamps `wvoePendingPrefill` = match id | null (consumed
+  one-shot by the panel on load) and calls chrome.sidePanel.open pinned to
+  the sender's tab, with a tabs.query focused-window fallback for senders
+  without a tab (the SW itself cannot runtime.sendMessage — learned when the
+  first relay check hit "Receiving end does not exist"). manifest.json also
+  gained web_accessible_resources for the extension pages (the toast runs in
+  page context, so extension pages must be web-accessible).
+- **Manual-WVOE visibility rule (user, same turn): only offer the manual WVOE
+  where NO electronic match exists.** Coded catalog rows render NO WVOE
+  button — employers with an electronic provider reject manual WVOE forms;
+  the button ("Start Manual WVOE") stays on no-match toasts and uncoded
+  rows. Usability G re-asserted accordingly (coded Walmart/L3Harris ->
+  absent; uncoded Worldwide Express -> present).
+- **Final verification: all three headed suites green — tools/test_wvoe_spike.py
+  EXIT 0 with P1 (two-pane manual) + P2 (prefill) + P3 (voe-search) + P4 NEW
+  (side panel: seeded prefill applied + one-shot consumption, relay stamp,
+  draft persistence, panel-generated third PDF in the pdftotext batch);
+  tools/test_usability.py ALL CHECKS PASSED (matrix 31/31, C manual buttons,
+  G coded/uncoded rule); tools/test_headed.py core E2E ALL PASS (H_EXIT=0)
+  after the background.js changes.**

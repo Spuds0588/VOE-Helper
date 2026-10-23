@@ -5,10 +5,31 @@
 <title>VOE Helper — WVOE</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         max-width: 640px; margin: 40px auto; padding: 0 16px; color: #1f2937; }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  h2 { font-size: 13px; font-weight: 600; color: #6b7280; margin: 0 0 16px; }
-  .hint { font-size: 12px; color: #6b7280; margin-bottom: 16px; }
+         margin: 0; height: 100vh; display: flex; flex-direction: column; color: #1f2937; }
+  header { padding: 14px 18px 10px; }
+  h1 { font-size: 18px; margin: 0 0 2px; }
+  h2 { font-size: 13px; font-weight: 600; color: #6b7280; margin: 0; }
+  .layout { flex: 1; display: flex; min-height: 0; }
+  /* Left: live preview; Right: the form. */
+  #previewPane { flex: 1.2; min-width: 0; border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; background: #f9fafb; }
+  #previewPane .ph { padding: 8px 14px; font-size: 11px; font-weight: 700; color: #6b7280;
+                     text-transform: uppercase; letter-spacing: .05em; }
+  #previewWrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 14px 14px; }
+  #previewPlaceholder { font-size: 12px; color: #9ca3af; text-align: center; line-height: 1.5; }
+  embed.pdf { width: 100%; height: 100%; border: 1px solid #e5e7eb; background: #fff; }
+  #previewWrap[data-preview-state="busy"] { opacity: .5; }
+  form#editor { flex: 1; min-width: 380px; max-width: 480px; padding: 4px 16px 16px; overflow-y: auto; box-sizing: border-box; }
+  .hint { font-size: 12px; color: #6b7280; margin: 0 0 14px; line-height: 1.5; }
+  fieldset { border: 1px solid #e5e7eb; border-radius: 6px; margin: 0 0 12px; padding: 10px 12px; }
+  legend { font-size: 11px; font-weight: 700; color: #6b7280; padding: 0 4px; text-transform: uppercase; letter-spacing: .04em; }
+  label { display: block; font-size: 11px; font-weight: 600; color: #4b5563; margin: 8px 0 2px; }
+  input, textarea {
+    width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
+    border: 1px solid #d1d5db; border-radius: 4px; padding: 6px 8px; color: #1f2937;
+  }
+  textarea { resize: vertical; }
+  input:focus, textarea:focus { outline: 1px solid #2563eb; border-color: #2563eb; }
+  .actions { margin-top: 14px; display: flex; align-items: center; }
   .btn-main {
     display: inline-block; background: #2563eb; color: #fff; border: 1px solid #1d4ed8;
     padding: 8px 16px; border-radius: 5px; font-weight: 600; font-size: 13px;
@@ -22,16 +43,57 @@
 </style>
 </head>
 <body>
-  <h1>Written VOE (WVOE) generator</h1>
-  <h2>VOE Helper — phase 2, milestone M1 spike</h2>
-  <p class="hint">
-    Fills the bundled WVOE template with hardcoded values (Walmart / The Work
-    Number 10108) and downloads the result — entirely client-side via the vendored
-    <code>@pdfme/generator</code> bundle. No network access, no uploads.
-  </p>
-  <button class="btn-main" id="generate">Generate WVOE Form</button>
-  <span id="status" data-state="idle">idle</span>
+  <header>
+    <h1>Written VOE (WVOE) generator</h1>
+    <h2>Live preview on the left; edit on the right — pre-filled when opened from a match</h2>
+  </header>
+  <div class="layout">
+    <div id="previewPane">
+      <div class="ph">Preview</div>
+      <div id="previewWrap" data-preview-state="empty">
+        <p id="previewPlaceholder">The generated WVOE PDF appears here as you type.
+          Use “Download PDF” at the bottom right to save the final file.</p>
+      </div>
+    </div>
+    <form id="editor" autocomplete="off">
+      <p class="hint">
+        Everything stays local: preview + download are rendered client-side via the
+        vendored <code>@pdfme/generator</code> bundle. Empty fields are omitted from
+        the PDF.
+      </p>
 
+  <fieldset>
+    <legend>Verifier / loan</legend>
+    <label for="date">Date</label>
+    <input id="date" type="text" placeholder="YYYY-MM-DD">
+    <label for="verifierBlock">Verifier block (company, attn, loan #)</label>
+    <textarea id="verifierBlock" rows="4" placeholder="Verifier&#10;Spuds Lending LLC&#10;Attn: Processing&#10;Loan #123456"></textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Employer</legend>
+    <label for="employerName">Employer name</label>
+    <input id="employerName" type="text" placeholder="From the match, or type it">
+    <label for="employerContact">Employer contact (address / phone) — optional</label>
+    <textarea id="employerContact" rows="3" placeholder="Wal-Mart Stores, Inc.&#10;702 SW 8th St, Bentonville, AR 72716&#10;Phone: (800) 411-2884"></textarea>
+    <label for="employmentTitle">Position / title — optional</label>
+    <input id="employmentTitle" type="text" placeholder="Regular PT/FT, Onbook">
+  </fieldset>
+
+  <fieldset>
+    <legend>Provider</legend>
+    <label for="providerBlock">Provider block (provider, code, caveats)</label>
+    <textarea id="providerBlock" rows="3" placeholder="Electronic VOE provider: The Work Number&#10;Employer Code: 10108"></textarea>
+  </fieldset>
+
+  <div class="actions">
+    <button class="btn-main" id="generate">Download PDF</button>
+    <span id="status" data-state="idle">idle</span>
+  </div>
+    </form>
+  </div>
+
+  <script src="wvoe-template.js"></script>
   <script src="vendor/pdfme-generator.iife.min.js"></script>
   <script src="wvoe.js"></script>
 </body>

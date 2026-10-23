@@ -2,14 +2,15 @@
   "manifest_version": 3,
   "name": "VOE Helper",
   "version": "1.0.0",
-  "description": "Instant VOE/VOI provider and employer code lookup.", "permissions": [
+  "description": "Instant VOE/VOI provider and employer code lookup.",  "permissions": [
   "contextMenus",
   "storage",
   "activeTab",
   "scripting",
   "alarms",
   "clipboardWrite",
-  "offscreen"
+  "offscreen",
+  "sidePanel"
  ],
   "background": {
     "service_worker": "background.js"
@@ -33,5 +34,19 @@
       "16": "icons/icon16.png",
       "48": "icons/icon48.png"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "wvoe.html",
+        "wvoe.js",
+        "voe-search.html",
+        "voe-search.js",
+        "sidepanel.html",
+        "sidepanel.js",
+        "vendor/pdfme-generator.iife.min.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
