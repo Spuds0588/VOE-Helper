@@ -321,16 +321,7 @@ ordering page honor? Verified in a real browser against
 - The search combobox is client-side; typing filters Truework's full catalog
   live. There is no server-side prefilter parameter derived from `companyName`.
 
-Extension implication (recorded, NOT built): the bulk Truework rows carry only
-the bare quickstart link, so a user still types the employer name there. A
-future enhancement could resolve employer name → companyId at click time via
-Truework's anonymous company-search endpoint (POST
-`app.truework.com/api/company/companies/`, no auth, returns matching companies
-with id + domain) and construct the fully preselected deep link. Cost/notes:
-requires `host_permissions` for `app.truework.com`, a service-worker fetch on
-click, and caching — a phase-2-scale change, out of scope for v1. An interim
-improvement (no permissions change) is appending `companyName=<record name>`
-for humans to see in the URL, but it provably does not prefill — skip it.
+Extension implication (SUPERSEDED same day — built): a content-script prefill shipped 2026-10-23 (`truework-prefill.js`, registered in manifest.json for `app.truework.com/requester/quickstart*`) plus the background-side link change: Truework portal links now append `?companyName=<match name>`. The page itself ignores the param, but the content script types the name into the employer-search combobox on load (native value setter + `input` event, the standard React-compatible injection — verified live: the list filtered to real catalog entries). The user still picks the employer from the filter list; the script never auto-selects, so the wrong-entity rule holds. The full-triple preselect (companyId resolve at click time) remains the phase-2 upgrade path, unchanged.
 
 ## Sourcing pass 8 — event pass: fresh dork lanes, first-ever Thomas & Company code-bearing crop (2026-10-23)
 
@@ -412,7 +403,7 @@ the ground rules.
 
 | Cycle | Scope | Effort |
 |---|---|---|
-| **Monthly mini-check** | Rot ping only. Re-fetch every host/URL named in this file (sources catalog + every pass's Front-B list + the gated-wall list). Classify each: live (200/normal redirect), rehomable (404 but re-homed on same domain), gated (403/402/challenge page), gone. Record deltas in history.md; re-home pointers into row notes where a same-domain replacement serves. **No research, no new searches, no code changes from a mini-check.** | ~15 min, scripted (loop of `curl -sIL --max-time 20 -A "Mozilla/5.0 …"`) |
+| **Monthly mini-check** | Rot ping + discovery dorks. (1) Re-fetch every host/URL named in this file (sources catalog + every pass's Front-B list + the gated-wall list). Classify each: live (200/normal redirect), rehomable (404 but re-homed on same domain), gated (403/402/challenge page), gone. Record deltas in history.md; re-home pointers into row notes where a same-domain replacement serves. (2) Run the standing discovery-dork set (below) and append every new-looking candidate URL (deduped against this file) to the candidate queue at the bottom of this file. **No research on candidates, no code changes, no landings from a mini-check.** | ~15 min, scripted rot ping (`tools/check_sources.py`) + the dork set by hand |
 | **Quarterly full pass** | (1) Fresh Template-Query A sweep: the three pass-6 query shapes — `"employer code" "the work number" filetype:pdf site:.edu`, `site:.gov`, and theschool-district/city/county phrase variant — re-run date-stamped that quarter, checked against known-coded rows, every hit self-read verbatim. (2) Gated-wall re-probe: one honest direct fetch of each name in the wall list (Princeton, UTHealth, Wayne County MI, JHU Howard General, UNC, McLeod, Pacific Bells, UAB page, Pro Unlimited) — bot-walls lift; if one serves, normal bar applies, **no circumvention ever**. (3) Landing bar + verification: verbatim self-read → `verified_seeds.jsonl` → `tools/build_index.py --check` → matcher spot-check (standing regressions: Dallas/Polk ties, AMR negative,no-match, duplicate-code display) → headed E2E if record count moves. | 1–2 hr |
 | **Annual deep audit** | Re-fetch every URL referenced in any row's `notes` field (not just the host-level list) and re-sample at least 8 rows for verbatim re-read at their current live location.Re-examine standing non-findings (big tech FAQ, grocery/food/theater chains) with one fresh query each — only if something material has changed since the last verdict (a new method, a new line of outlet, a known employer event). Re-run the full wrong-entity collision sweep (normalized-key pass) against grown index. | half day |
 | **Trigger-based (event)** | Drop everything if: a Chrome MV3 service-worker policy change lands, Equifax/TWN publicly renames or re-codes employer codes, or an employer reorganization (merger/spin-off) is reported by a user touching a coded row — that row gets a targeted re-verification the same session. | as needed |
@@ -428,10 +419,107 @@ the ground rules.
    Equifax/TALX surfaces, per-entry verification of any multi-row document.
 3. **Every pass gets the same bookkeeping:** append-only entries in
    `todo.md` (live) and `history.md` (log), regardless of whether codes land.
-4. **A mini-check may not land codes** — it only maintains pointers. Codes
-   land only inside a quarterly full pass (or an authorized event pass).
+4. **A mini-check may not land codes** — it only maintains pointers and
+   queues candidates. Codes land only inside a quarterly full pass (or an
+   authorized event pass), always under the landing bar.
 
-## Future lane catalog (what is still worth looking at, honestly)
+### Standing discovery-dork set (run every monthly mini-check)
+
+Added 2026-10-23 after sourcing pass 8 proved the dork lane is not exhausted.
+Run each query, dedupe against this file's recorded surfaces, and append
+anything new-looking to the candidate queue. Checking candidates is itself
+NOT a mini-check task — the queue is harvested line-by-line at the next
+quarterly full pass under the normal bar.
+
+1. `"employer code" "the work number" filetype:pdf` — minus the exact
+   expressions already in this file (the pass-6 template shapes, restricted
+   to .edu/.gov).
+2. `"our employer code is" OR "your company code:" filetype:pdf` — plain
+   quote variants; pass 8 mined these for T&C and TWN alike.
+3. `"tncverify.com" OR "thomas & company" "company code" filetype:pdf` — the
+   T&C lane (query shape recorded in pass 8; first run produced 6 codes).
+4. `"experian verify" "access code" filetype:pdf` — the Experian Verify
+   lane (new provider class; see the landscape verdict below).
+5. `"vault verify" "company code"` — Vault Verify lane. GE Vernova's public
+   contact page publishes "Employment Verification (USA Employee Only)
+   Company Code: 30052" (gevernova.com/contact) — the pattern is real. Note
+   (2026-10-23): Equifax completed the Vault Verify acquisition Nov 2025 and
+   the vaultverify.com front door now routes to The Work Number, so expect
+   stale Vault URLs/codes; every hit needs a currentness check.
+6. `"inverify" "company code"` — InVerify lane (Okta's contact page publishes
+   Company Code OKT120). Largely a LEGACY-ARTIFACT lane: CSUN announced its
+   InVerify decommission in Dec 2022 (moved to The Work Number), and Equifax
+   now routes InVerify users into its PeopleHQ login — land nothing here
+   without confirming the code is still the active route.
+7. Site-scoped contact/FAQ re-sweep: for the letter-slice of bulk Truework
+   rows grown most since the last pass, 3–5 `site:<employer-domain>
+   "employer code"` spot checks — re-homes dead VOE pages early.
+
+## Provider-landscape verdict (2026-10-23, researched + examples verified)
+
+Question: do OTHER VOE providers publish per-employer codes on public pages
+the way The Work Number and Thomas & Company do (i.e. are there more dork
+lanes)? Verdict per provider — examples were read on the cited pages:
+
+| Provider | Codes on public pages? | Ordering flow | Dork-lane verdict |
+|---|---|---|---|
+| **The Work Number / Equifax** | Yes — the catalog's main lane (~137 codes) | Verifier login (VsPortal) | Existing lanes. |
+| **Thomas & Company** | Yes — company codes in employer EWV flyer PDFs (6 landed pass 8) | tncverify.com order form; employee login has a public Company Code field | Existing lane, productive. |
+| **Truework** | No codes (public per-employer directory retired Oct 2026) | Public quickstart ordering | Not a code lane. Prefill handled by content script. |
+| **Vault Verify** | **Yes** — GE Vernova's own contact page: "Company Code: 30052" (gevernova.com/contact) | Public site; **acquired by Equifax Nov 2025**, front door now routes to The Work Number | **High for indexed employer instructions**, with a stale-URL/currentness caveat on every hit. Dork 5. |
+| **InVerify** | **Yes** — Okta's contact page: "Company Code: OKT120" (okta.com/contact) | **Legacy/decommissioning**: CSUN moved to TWN in Dec 2022; Equifax routes InVerify users into PeopleHQ | **Moderate, decaying.** Only land a hit if the code is still the active route. Dork 6. |
+| **Experian Verify** | **Codes that appear on employer pages are EMPLOYEE access codes, not verifier codes** (e.g. UM System "Employer Access Code: 36567BE5" is for the employee's own account setup; verifiers use the employee's SSN) | Public portal entry; per-person data behind Experian client relationship | **Low for `company code`;** wrong-code trap. Dork 4 must never land an employee-access code as a verifier code. |
+| **HireRight** | No verified example — "employer codes" in its documents belong to other fulfillment services | Client/applicant portals | **Very low.** |
+| **Sterling (now First Advantage)** | No verified example | Client logins | **Very low.** |
+| **Certn** | No verified example | Account/dashboard | **Very low.** |
+| **Checkr** | No verified example | Credentialed account | **Very low.** |
+
+- **Net:** only Vault Verify and (decaying) InVerify add genuinely new dork
+  lanes; they are in the standing set (queries 5–6). No reliable public
+  employer-pool counts exist for any of these providers — published screening
+  volumes/coverage must not be read as pool sizes.
+- **Applicability to the extension:** coded rows for these lanes would follow
+  the same schema (provider field) only if a future pass confirms the code +
+  a live ordering route. Vault Verify rows would effectively be TWN rows
+  going forward (Equifax merged it); treat any pre-merge Vault code as
+  TWN-vintage, and per provider naming it stays recorded under the provider
+  named on the employer's own page.
+
+## Candidate queue (monthly mini-checks append here; quarterly passes harvest)
+
+Format: `- [date added] <candidate URL or query> (source dork: <#>) — one-line
+why it looks new`. Nothing here is verified; the queue is a lead list only.
+Mini-checks append; quarterly full passes (or authorized event passes)
+harvest under the normal landing bar and delete harvested lines.
+
+(empty as of 2026-10-23 — first mini-check populates it)
+
+## Portal-surface prefill + iframe probe (2026-10-23, live-DOM verified)
+
+Follow-up to the quickstart prefill: could the extension prefill the OTHER
+providers' public surfaces, and can any portal page be iframed into a modal
+instead of a new tab? All three surfaces were probed in a real browser; frame
+policy was checked via response headers.
+
+- **Iframe verdict: all three send `X-Frame-Options: SAMEORIGIN`** (The Work
+  Number also sends `frame-ancestors 'self'` CSP; Truework has an explicit
+  frame allow-list of ICE Mortgage/Ellie Mae LOS hosts — we are not on it;
+  tncverify sets the header too). **No in-page modal iframe is possible** — a
+  blocked frame renders blank. The new-tab flow stays for all providers.
+  (Truework's allow-list is a later Encompass/ICE LOS integration note,
+  phase 3+.)
+- **Truework quickstart:** search-box prefill **works** via content-script
+  injection (see the SUPERSEDED note above; shipped). Not iframable.
+- **The Work Number:** verifier ordering UI lives behind the VsPortal
+  authenticated flow — **nothing prefillable on public surfaces.** Not
+  iframable either.
+- **Thomas & Company:** `tncverify.com/employee/login/` is a plain-HTML form
+  with a literal Company Code field (`EmployeeProvidedAccessCode`) that
+  accepts programmatic values (persisted, verified). Prefill is possible and
+  value-bearing for the borrower/PIN flow; but the PROCESSOR's ordering flow
+  has no search box. If T&C ordering is ever surfaced per-row, prefill the
+  code field. Not iframable.
+
 
 Ranked by expected yield inside the ground rules. Anything not listed here is
 either exhausted (verdict above) or out-of-bounds forever.

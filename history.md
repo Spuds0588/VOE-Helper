@@ -342,3 +342,30 @@ Append-only log of significant steps and findings. New entries at the bottom.
   green; headed core E2E green on the new catalog.** Usability suite not
   re-run — its matrix contains no selections that collide with the new
   names/aliases (inspected), matcher mechanics unchanged.
+
+## Phase-2 adjacent: portal prefill + iframe probe, dork-lane expansion committed (2026-10-23, turn 2)
+- **Iframe probe (all three surfaces): no modals possible.** Response headers
+  show `X-Frame-Options: SAMEORIGIN` on Truework quickstart, The Work Number,
+  and tncverify (TWN adds `frame-ancestors 'self'`; Truework allow-lists ICE
+  Mortgage/Ellie Mae LOS hosts only). An in-page iframe would render blank —
+  the new-tab toast flow stays. Recorded in sources.md.
+- **Prefill shipped (commit 40676e9):** background.js appends
+  `?companyName=<match name>` to Truework quickstart links and
+  `truework-prefill.js` (content script, manifest-registered for the
+  quickstart URL) types the name into the employer-search combobox on load —
+  probed live in a real browser first: the list filtered to real catalog
+  entries; the script never auto-selects (wrong-entity rule holds). The
+  probe also exposed a real bug mine: the toast computed `portalHref` from
+  `match.portal_url` before the `match` guard, so every no-match toast crash
+  left no toast at all (usability C). Guarded; both suites green
+  (U_EXIT=0, H_EXIT=0 in the fresh runs).
+- **Provider-landscape verdict (researcher + spot checks) written into
+  sources.md:** only Vault Verify (GE Vernova contact page: "Company Code:
+  30052"; Equifax completed its Vault Verify acquisition Nov 2025) and the
+  decaying InVerify lane (Okta: OKT120; CSUN decommission Dec 2022) add new
+  productive dork lanes — standing set expanded to 7 queries with
+  currentness rules. Experian Verify pages carry EMPLOYEE access codes, not
+  verifier codes — documented trap. HireRight/Sterling/Certn/Checkr: very
+  low for code dorks (screening vendors, not record custodians). No public
+  pool counts for any provider. A **candidate queue** section was added to
+  sources.md (mini-checks append, quarterly passes harvest).
