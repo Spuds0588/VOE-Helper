@@ -501,7 +501,46 @@ why it looks new`. Nothing here is verified; the queue is a lead list only.
 Mini-checks append; quarterly full passes (or authorized event passes)
 harvest under the normal landing bar and delete harvested lines.
 
-(empty as of 2026-10-23 — first mini-check populates it)
+(candidates below; none verified — a lead list only. Added 2026-10-23,
+dork-expansion pass 9)
+
+- [2026-10-23] core-docs.s3.amazonaws.com/documents/asset/uploaded_file/2252/MCSD/3119114/The_Work_Number_FAQ_s.pdf (dork: standing-set pass-9 sweep) — generic-guide PDF states "The Employer Code is 391098" but the document self-names NO employer ("MCSD" folder token only); land only after the owning district is confirmed.
+- [2026-10-23] commons.csod.com/clientimg/commons/welcome/Employee Guide to The Work Number.pdf (dork: pass-9 sweep) — guide states "The Employer Code is 13883" with no entity self-naming; client landing 404s. Queue until the employer is identified.
+- [2026-10-23] nps.k12.nj.us Newark Board of Education guide (dork: pass-9 sweep) — Google snippet reads "you can use the employer code 33000"; district domain is authoritative, but the exact PDF URL is truncated in results and the REST API is disabled — land only after a fetched verbatim self-read.
+- [2026-10-23] ascendnps.org/wp-content/uploads/2023/03/Work-Number-Employer-Code-by-Agency-eff-7.1.25.pdf (dork: pass-9 sweep) — multi-row "Agency Employer Code" table (10 codes, CFH/Arts+/AJC/SA/HC/RWCI/MCAI/UWCC/RAIN/SSMC); suspect Charlotte-area nonprofit consortium under Ascend NPS. Per-entry landing needs the official member-name mapping from ascendnps.org.
+- [2026-10-23] city.milwaukee.gov/ImageLibrary/Groups/derAuthors/Benefits-/TheWorkNumber.pdf (dork: pass-9 sweep) — City of Milwaukee employee sheet (distinct from catalog's Milwaukee County row); fetch 403'd. Direct honest re-fetch only, per the gated-wall rule.
+- [2026-10-23] commerce.gov/hr/employees/benefits/employment-and-income-verifications (dork: pass-9 sweep) — Dept. of Commerce page is Cloudflare-bot-walled from this network. No verification attempted beyond the honest fetch.
+
+## Dork-expansion pass 9 (2026-10-23, authorized event pass — user order: "expand
+
+google dorks or alike")
+
+- **New anchor discovered: the TWN Client Service toll-free.** Searching
+  `"800-996-7566" "employer code" filetype:pdf` pulls employer-owned verifier
+  guides that print the service's support number alongside their own code —
+  including employers no other shape had reached (Prolink, Acuity Brands, FERC,
+  CompuCom, Prothena). This is the single most productive new query of the pass
+  and is added to the standing set as query 8:
+  `"800-996-7566" "employer code" filetype:pdf`.
+- Weak/empty angles this pass (do not rerun as-is):
+  `"1-800-367-2884" "employer code" filetype:pdf` (0 organic hits),
+  `"the work number" "0649" "employer code"` (1 hit, our own catalog row),
+  `site:.us filetype:pdf` (mostly state already-knowns; landed nothing), the
+  union-local shape (generic Equifax templates only), and the salary-key shape
+  (retiree guides without codes beyond Navistar).
+- **Six codes landed under the bar (all fetched + pdftotext verbatim,
+  employer-owned/official domains):** ProLink Staffing 29425, Acuity Brands
+  10661, Federal Energy Regulatory Commission 11727, Prothena Corporation plc
+  10235943, Northern Rivers Family of Services 21818, Navistar, Inc. 10487
+  (vintage 2016 note). Non-findings recorded: NYU login-guide PDF (no code),
+  CSX verification page (no code), Commerce.gov (bot-walled), City of
+  Milwaukee PDF (403).
+- **Index after pass 9: 15,753 records, coded 149 (TWN 143 + T&C 6).** Build
+  --check PASS; live matcher sim 11/11 (six new rows resolve coded, standing
+  regressions + AMR negative intact); headed core E2E ALL AUTOMATED CHECKS
+  PASSED (15,753 records live, scan latency 2.50ms).
+
+## Provider-landscape verdict (2026-10-23, researched + examples verified)
 
 ### Annual TWN public-portal sweep (added 2026-10-23)
 

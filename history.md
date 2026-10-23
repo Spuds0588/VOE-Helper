@@ -554,7 +554,41 @@ turn 4)
 - Suites: spike P1-P5 EXIT 0 (with the new contact assertion), usability
   ALL PASS, headed core E2E ALL PASS.
 
-## First annual TWN sweep COMPLETED (2026-10-23, session 2)
+## Dork-expansion pass 9 (2026-10-23, authorized event pass)
+- User order: expand the Google dorks to find more employers that self-identify
+  as being on The Work Number, then verify manually. Standing dork set read
+  first so new shapes did not duplicate queries 1-7.
+- **One new productive lane found: the TWN Client Service toll-free anchor.**
+  "800-996-7566" "employer code" filetype:pdf reached employer-owned verifier
+  guides no template shape had surfaced (Prolink, Acuity Brands, FERC,
+  CompuCom, Prothena). Added to the standing set as query 8. Weak/empty angles
+  recorded (1-800-367-2884, the "0649" shape, site:.us, union-local,
+  salary-key) — including one candidate where Google's snippet showed a code
+  but the fetched PDF self-names no employer.
+- **Six codes landed under the absolute bar** (each fetched + pdftotext,
+  code line read verbatim in the extracted text): ProLink Staffing 29425
+  (prolinkworks.com, doc self-addresses "a ProLink employee"), Acuity Brands
+  10661 (acuityinc.com, repeats the code across variants), FERC 11727
+  (ferc.gov official 2020 verification card), Prothena Corporation plc
+  10235943 (prothena.com verifier instructions), Northern Rivers Family of
+  Services 21818 (nrfs.org benefits guide; org self-identified on its own
+  About page), Navistar, Inc. 10487 (international.com 2016 retiree salary-key
+  guide, vintage caveat recorded).
+- Non-findings recorded: NYU's linked PDF is a login guide (no code), CSX's
+  page publishes no code, commerce.gov is a Cloudflare bot-wall (one honest
+  fetch each, no circumvention), city.milwaukee.gov PDF 403'd.
+- Indexed: verified_seeds.jsonl 144 → 150 rows; index rebuilt 15,742 →
+  **15,753 records, coded 149 (TWN 143 + T&C 6)**. build_index.py --check
+  PASS; mirror-code matcher sim 11/11 (all six new rows resolve coded;
+  standing regressions Home Depot/Target alias/Polk tie intact; AMR still
+  does not capture "American Airlines"; no-match returns None); headed core
+  E2E on the live service worker: ALL AUTOMATED CHECKS PASSED (15,753 records
+  live, in-memory scan 2.50ms). Usability suite not re-run — its 31-case
+  matrix contains no selections colliding with the six new names (inspected).
+- Three unknown-entity candidates left queued in sources.md (MCSD 391098,
+  csod 13883, Newark 33000) plus the Ascend NPS 10-row agency table — landing
+  those needs entity identification first, per the bar.
+
 - **The owner solved the reCAPTCHA in the shared headed browser; the agent
   then ran the annual-sweep basket one search at a time on the re-homed
   surface (secure.eeservices.equifax.com/ewsweb/auth/employersearchopen)
