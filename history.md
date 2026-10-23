@@ -1,5 +1,52 @@
 # history.md — VOE Helper v1 build log
 
+## Maintenance pass: re-check methodology + usability (2026-10-23)
+- **Recurring re-check methodology** written into data/sources.md (cadence
+  table: monthly mini-check / quarterly full pass / annual deep audit /
+  event triggers; rot-never-un-verifies rule restated; wayback snapshots
+  admitted for pointer re-homing and vintage confirmation only) plus a
+  remaining lane catalog (outreach first, then EDGAR, union flyers,
+  district-CMS PDF sweat, public state collections). AGENTS.md points to the
+  playbook and to `tools/check_sources.py`, which now implements the monthly
+  rot ping (40 source surfaces collected from sources.md + row notes;
+  baseline 33 LIVE / 5 GATED / 2 GONE, commercebank.com DNS + polkcountyor.gov
+  timeout to watch next cycle).
+- **Usability pass (headed**, tools/test_usability.py**, 31-case selection
+  matrix + real context-menu flow + toast render checks**) found and fixed:
+  1. Substring-pass wrong-entity bugs — selecting just "Depot" resolved to
+     Binny's Beverage Depot and "I work at Home Depot" resolved to the At
+     Home store. Fixed in background.js: pass 2 is now tiered (employer-key
+     inside selection beats selection inside key; coded rows win within a
+     tier; longest matching key wins — shortest keys are where coincidental
+     mid-word substrings live). Tier rules also let coded short names
+     (IRS/NASA/ABM/HMSHost/Comcast/Ryder) resolve out of sentence fragments,
+     which pass 2 never did before.
+  2. Long single-token selections (~300 chars) overflowed the no-match
+     toast. Fixed with overflow-wrap:anywhere + a scroll cap on the
+     not-found text.
+  3. Copy-code button now routes through a NEW extension-owned offscreen
+     document (manifest gains clipboardWrite + offscreen): writes happen in
+     extension context, which no host page's clipboard policy can prompt,
+     block, or gate. Verified end to end: button click → offscreen →
+     clipboard write → 'Copied!' (previously the page-context write could
+     prompt or get rejected by the host page).
+  4. Test-infrastructure honesty fixes AFTER these findings: the old XTest
+     physical-coordinate right-click math misses the browser chrome offset
+     and can hit the tab strip (usability suite demoed it, menu-popup
+     screenshot showed "New tab to the right"); both suites now right-click
+     via CDP Input.dispatchMouseEvent at exact CSS viewport coordinates.
+     The test-harness clipboard read-back (navigator.clipboard.readText)
+     was firing Chrome's "Share clipboard?" permission bubble during tests
+     — replaced with asserting the extension's own offscreen response ('Copied!'),
+     so tests are prompt-free now too.
+- Suites: tools/test_usability.py ALL CHECKS PASSED (31/31 matrix, real
+  right-click toast, overflow clean, offscreen copy confirmed, duplicate
+  host guard 1, notes render wrap clean); tools/test_headed.py ALL
+  AUTOMATED CHECKS PASSED including the real context-menu flow and the
+  standing tie regressions on the 15,572-record index.
+- Phase 2 scope documented in PHASE2-WVOE-form.md (pdfme-based WVOE form
+  generator, offscreen pattern to reuse; build deliberately deferred).
+
 Append-only log of significant steps and findings. New entries at the bottom.
 
 ## 2026-10-22
@@ -185,6 +232,32 @@ Append-only log of significant steps and findings. New entries at the bottom.
   compiled aggregation tables (rejected by rule). Sourcing can claim a real
   exhaustion verdict for the public surfaces this catalog defines, with
   outreach/state-uppercase still the only avenues a next pass could open.
+
+- **Recurring re-check methodology landed.** data/sources.md now carries a
+  binding cadence: monthly mini-check (source-URL rot ping, pointers only,
+  ~15 min), quarterly full pass (fresh verifier-PDF template sweep engaged
+  against known-coded rows + one-shot gated-wall re-probe at the normal bar
+  + landing gate = verbatim self-read -> verified_seeds.jsonl ->
+  `tools/build_index.py --check` -> matcher spot-check incl. Dallas/Polk
+  ties, AMR negative, no-match, duplicate-code display -> headed E2E if the
+  record count moves), annual deep audit (every URL referenced in any row
+  note re-fetched, >=8 rows re-read verbatim at their current locations,
+  wrong-entity collision sweep over the grown index), plus event triggers
+  (MV3 policy changes, TWN remapping, employer reorgs touch a coded row).
+  Immutable rules restated: rot never un-verifies, mini-checks land no
+  codes, the verbatim bar is absolute. Wayback snapshots of employer-owned
+  pages admitted as a new source-class for pointer re-homing and vintage
+  confirmation only (never as an upgrade). Remaining lane catalog ordered:
+  outreach, snapshots, EDGAR full-text, union flyers, systematic
+  district-CMS PDFs, public state-employee collections.
+- **tools/check_sources.py** (stdlib-only) implements the monthly mini-check:
+  harvests every source surface recorded in sources.md and row notes (full
+  URLs + bare domain/path tokens), re-fetches each once, classifies
+  LIVE/RE-HOME/GATED/GONE/BOUNCE, lists follow-ups, `--strict` for cron.
+  First baseline over 40 surfaces: 33 LIVE, 5 GATED (known walls —
+  abm.com/team-members since joined the gated list), 2 GONE
+  (commercebank.com DNS-fails at check time — watch it next cycle;
+  polkcountyor.gov timed out) — recorded against the never-un-verify rule.
 
 ## Sourcing pass 7 — lead chase closes the funnel (2026-10-22)
 - Re-attempted all four pass-6 flaky-fetch leads directly: Princeton

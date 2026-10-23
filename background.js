@@ -90,10 +90,6 @@ async function findEmployer(rawQuery) {
     if (nameNorm === query) return true;
     return e.aliases && e.aliases.some(a => normalize(a) === query);
   };
-  const secondPass = (e) => {
-    const nameNorm = normalize(e.name);
-    return query.length >= 4 && (nameNorm.includes(query) || query.includes(nameNorm));
-  };
 
   // Pass-1 tie rule: on exact name/alias ties, a record carrying a provider_code
   // wins over an uncoded row (first coded match wins; uncoded exact matches only
@@ -105,13 +101,71 @@ async function findEmployer(rawQuery) {
     if (!match || (!match.provider_code && employers[i].provider_code)) match = employers[i];
     if (match.provider_code) break;
   }
-  if (!match) match = employers.find(secondPass);
 
+  // Pass-2 substring tiers: a fragment or sentence selection resolves to the
+  // most plausible candidate, not merely the first scan hit. First tier with
+  // any candidate wins:
+  //   1. employer key appears inside the selection, coded row
+  //   2. employer key appears inside the selection, uncoded row
+  //   3. selection appears inside the employer key, coded row
+  //   4. selection appears inside an uncoded employer key (keys >= 6 chars)
+  // Keys run over name + aliases; coded keys need >= 3 chars, uncoded >= 4.
+  // Within a tier the LONGEST matching key wins — shortest keys are where
+  // coincidental mid-word substrings live ("uc" inside "truck").
+  if (!match && query.length >= 4) {
+    let tier = 99, keyLen = 0;
+    for (const e of employers) {
+      const coded = !!e.provider_code;
+      const keys = [normalize(e.name), ...(e.aliases || []).map(normalize)]
+        .filter(k => k && k.length >= (coded ? 3 : 4));
+      for (const k of keys) {
+        if (k.includes(query)) {
+          const t = coded ? 3 : (k.length >= 6 ? 4 : 5);
+          if (t < tier || (t === tier && k.length > keyLen)) {
+            tier = t; keyLen = k.length; match = e;
+          }
+        } else if (query.includes(k)) {
+          const t = coded ? 1 : 2;
+          if (t < tier || (t === tier && k.length > keyLen)) {
+            tier = t; keyLen = k.length; match = e;
+          }
+        }
+      }
+    }
+  }
   const duration = (performance.now() - startTime).toFixed(2);
   console.log(`[VOE Helper] Search completed in ${duration}ms. Result:`, match ? match.name : 'NO_MATCH');
 
   return match || null;
 }
+
+// Clipboard handoff: the injected toast runs inside a HOST PAGE that can
+// impose its own clipboard-write policy (prompts, permissions-policy blocks).
+// Writing from the extension's own offscreen document is extension-context
+// clipboard access under the clipboardWrite permission — no host page can
+// gate it, and no prompt is ever shown.
+async function copyViaOffscreen(text) {
+  const ctxs = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [chrome.runtime.getURL('offscreen.html')]
+  });
+  if (!ctxs.length) {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen.html',
+      reasons: ['CLIPBOARD'],
+      justification: 'Write the employer code to the clipboard on user click'
+    });
+  }
+  const res = await chrome.runtime.sendMessage({ target: 'voe-offscreen', type: 'copy', text });
+  return !!res?.ok;
+}
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg?.type === 'COPY_CODE' && typeof msg.text === 'string' && msg.text.length <= 128) {
+    copyViaOffscreen(msg.text).then(ok => sendResponse({ ok })).catch(() => sendResponse({ ok: false }));
+    return true;  // async sendResponse
+  }
+});
 
 // Context Menu Event Listener
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
@@ -251,6 +305,9 @@ function injectToastUI(queryText, match) {
       color: #4b5563;
       font-size: 12px;
       margin: 8px 0 0 0;
+      overflow-wrap: anywhere;
+      max-height: 110px;
+      overflow: auto;
     }
   `;
   shadow.appendChild(style);
@@ -302,9 +359,25 @@ function injectToastUI(queryText, match) {
 
   const copyBtn = shadow.getElementById('copy-btn');
   if (copyBtn && match?.provider_code) {
-    copyBtn.onclick = () => {
-      navigator.clipboard.writeText(match.provider_code);
-      copyBtn.innerText = 'Copied!';
+    // Copy via the service worker's offscreen document (extension context) —
+    // never the host page's clipboard policy. Never claim success it did not
+    // have.
+    copyBtn.onclick = async () => {
+      try {
+        const res = await new Promise(resolve => {
+          try {
+            chrome.runtime.sendMessage(
+              { type: 'COPY_CODE', text: String(match.provider_code) },
+              r => { void chrome.runtime.lastError; resolve(r); });
+          } catch (e) {
+            resolve(null);
+          }
+        });
+        if (!res || !res.ok) console.error('[VOE Helper] offscreen copy rejected');
+        copyBtn.innerText = res?.ok ? 'Copied!' : 'Copy failed';
+      } catch (e) {
+        copyBtn.innerText = 'Copy failed';
+      }
       setTimeout(() => (copyBtn.innerText = 'Copy Code'), 1500);
     };
   }

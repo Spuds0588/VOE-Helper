@@ -286,3 +286,74 @@ the page says (including the name the employer uses for itself).
   state-employee collections behind credential gates. That is the announced
   successor lane, not a conceivable sweep. Sourcing within the stated bounds is
   **declared exhausted**; any future codes come from a new lane, not this one.
+
+## Recurring re-check methodology (standing cadence — binding on future maintenance)
+
+The sourcing catalog represents the world as of 2026-10-22. Employers restructure,
+re-host pages, lift bot-walls, and publish new verifier PDFs — and the Truework
+and TALX directories themselves grow. The library therefore needs a perpetual,
+cheap, scripted maintenance rhythm. The cadence below is defined so that any
+future session (or contributor) executes it identically without re-litigating
+the ground rules.
+
+### Cadence
+
+| Cycle | Scope | Effort |
+|---|---|---|
+| **Monthly mini-check** | Rot ping only. Re-fetch every host/URL named in this file (sources catalog + every pass's Front-B list + the gated-wall list). Classify each: live (200/normal redirect), rehomable (404 but re-homed on same domain), gated (403/402/challenge page), gone. Record deltas in history.md; re-home pointers into row notes where a same-domain replacement serves. **No research, no new searches, no code changes from a mini-check.** | ~15 min, scripted (loop of `curl -sIL --max-time 20 -A "Mozilla/5.0 …"`) |
+| **Quarterly full pass** | (1) Fresh Template-Query A sweep: the three pass-6 query shapes — `"employer code" "the work number" filetype:pdf site:.edu`, `site:.gov`, and theschool-district/city/county phrase variant — re-run date-stamped that quarter, checked against known-coded rows, every hit self-read verbatim. (2) Gated-wall re-probe: one honest direct fetch of each name in the wall list (Princeton, UTHealth, Wayne County MI, JHU Howard General, UNC, McLeod, Pacific Bells, UAB page, Pro Unlimited) — bot-walls lift; if one serves, normal bar applies, **no circumvention ever**. (3) Landing bar + verification: verbatim self-read → `verified_seeds.jsonl` → `tools/build_index.py --check` → matcher spot-check (standing regressions: Dallas/Polk ties, AMR negative,no-match, duplicate-code display) → headed E2E if record count moves. | 1–2 hr |
+| **Annual deep audit** | Re-fetch every URL referenced in any row's `notes` field (not just the host-level list) and re-sample at least 8 rows for verbatim re-read at their current live location.Re-examine standing non-findings (big tech FAQ, grocery/food/theater chains) with one fresh query each — only if something material has changed since the last verdict (a new method, a new line of outlet, a known employer event). Re-run the full wrong-entity collision sweep (normalized-key pass) against grown index. | half day |
+| **Trigger-based (event)** | Drop everything if: a Chrome MV3 service-worker policy change lands, Equifax/TWN publicly renames or re-codes employer codes, or an employer reorganization (merger/spin-off) is reported by a user touching a coded row — that row gets a targeted re-verification the same session. | as needed |
+
+### Rules the cadence does not change
+
+1. **Rot never un-verifies.** A 404 on a recorded source URL only moves the
+   pointer to the re-home or stamps the row's vintage; the code stays banked
+   on its at-landing verification. Silent un-verification remains forbidden.
+2. **The landing bar is absolute forever:** verbatim self-read in fetched text
+   from an employer-owned or official-domain surface. No inference, no
+   snippets-are-enough, no bulk import, no 403/bot-wall circumvention, no
+   Equifax/TALX surfaces, per-entry verification of any multi-row document.
+3. **Every pass gets the same bookkeeping:** append-only entries in
+   `todo.md` (live) and `history.md` (log), regardless of whether codes land.
+4. **A mini-check may not land codes** — it only maintains pointers. Codes
+   land only inside a quarterly full pass (or an authorized event pass).
+
+## Future lane catalog (what is still worth looking at, honestly)
+
+Ranked by expected yield inside the ground rules. Anything not listed here is
+either exhausted (verdict above) or out-of-bounds forever.
+
+1. **Employer outreach (announced successor lane).** A form email to HR/benefits
+   teams asking them to publish their code on a public verification page.
+   Track responses in a ledger under `data/` when started; any published code
+   lands under the normal bar with the worked surface as its source URL.
+   Highest expected yield per effort of any future lane.
+2. **Web Archive snapshots of employer-owned pages** (new allowed source-class,
+   with caveats). Many recorded source URLs of passes 1–5 have rotted
+   (~60%+ of pass-1 samples in the post-ship audit). A wayback snapshot of an
+   employer's own dead page is a fetch of the employer's document. Rule:
+   acceptable **only** for (a) re-homing pointers when the live page is gone,
+   (b)confirming the vintage for a row whose live source died, and (c) as a lead source. A row whose only fetching-side source is a snapshot stays
+   at vintage-caveat strength — never upgrade standing on a snapshot.
+3. **Federal SEC/EDGAR filings** (used once, in pass 3) — public filings
+   regularly name specific affiliates' shared-services codes. A targeted
+   EDGAR full-text search (`efts.sec.gov` no-auth) for The Work Number
+   language in 10-K/8-K is legal, indexed, and untouched so far.
+4. **Union/wage-team benefit flyers** — dated-caveat rule as in pass 3; used
+   twice so far (AFA-CWA, TWU 514). A focused union-site sweep has never
+   been done; expect low yield but reachable material.
+5. **K-12 district ADP/payroll-vendor hosted docs on district domains** —
+   districts increasingly host new-hire/verification guides under
+   `*.k12.**.us` CMS paths (Pass-6 county/K-12 shape found 3 of these). The
+   pass-6 `site:.gov`/city-shape query caught only districts; a systematic
+   `filetype:pdf "new employee verification" site:*.k12.*.us`-class query is
+   cheap and runs across three productive query lines before it.
+6. **State-employee public collections** — some states publish an employee
+   benefits PDF listing TWN codes for agencies (behind-the-gate material
+   remains out of bounds; only genuinely public state pages qualify).
+
+Reconsideration triggers for out-of-bounds buckets: only an unambiguous,
+invited-access change (an employer granting deliberate public access) moves a
+gated/credential wall lane back into bounds; nothing here over-rides
+the ground rules.

@@ -2,14 +2,15 @@
   "manifest_version": 3,
   "name": "VOE Helper",
   "version": "1.0.0",
-  "description": "Instant VOE/VOI provider and employer code lookup.",
-  "permissions": [
-    "contextMenus",
-    "storage",
-    "activeTab",
-    "scripting",
-    "alarms"
-  ],
+  "description": "Instant VOE/VOI provider and employer code lookup.", "permissions": [
+  "contextMenus",
+  "storage",
+  "activeTab",
+  "scripting",
+  "alarms",
+  "clipboardWrite",
+  "offscreen"
+ ],
   "background": {
     "service_worker": "background.js"
   },

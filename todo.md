@@ -36,3 +36,7 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 8.6 | Sourcing pass 6 (template-wide verifier-PDF sweep + hygiene front: 35 coded rows incl. IRS/NASA/Commerce/CCCS system + Spartanburg correction) | done - index 15,742 with 130 coded, all self-read, sim 24/24 incl. Dallas/Polk ties, checks + headed E2E green, shipped |
 
 | 8.7 | Pass 7 lead chase (Princeton/UTHealth/WayneCo/JHU) — all four resolve to bot-walls; no codes land | done - verdict written into sources.md: public-surface sourcing declared exhausted within bounds; UAB/Pro Unlimited/UNC recorded out-of-bounds |
+
+| 8.9 | Usability pass (headed): matcher matrix 31 selections + toast render checks | done - 2 wrong-entity substring bugs fixed (tied to tie rule via tiered pass 2), no-match overflow fixed, copy button routed through extension-owned offscreen doc (manifest clipboardWrite+offscreen) so host pages can never prompt/block; test harness right-click + clipboard verification made prompt-free; both suites ALL PASS |
+
+| 9.2 | Phase 2 scope: PDFme WVOE form generator | done (scope/plan only, in PHASE2-WVOE-form.md; build deferred until requested) |
