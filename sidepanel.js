@@ -104,6 +104,12 @@
         setStatus('error', 'nothing to generate — fill at least one field');
         return;
       }
+      // Form 1005 is addressed to an employer; without Item 1 the form is
+      // unusable, so require a recipient before rendering.
+      if (!values.employerName) {
+        setStatus('error', 'employer name needed — Item 1 “To” can\u2019t be blank');
+        return el('employerName').focus();
+      }
       const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
       const bytes = await window.pdfmeGenerate({
         template: {
@@ -114,9 +120,13 @@
       });
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
+      // File each loan distinctly: WVOE-<employer>-<date>.pdf.
+      const stamp = (values.date || '').replace(/[^0-9-]/g, '');
+      const slug = (values.employerName || '')
+        .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'voe-wvoe.pdf';
+      a.download = 'WVOE-' + (slug ? slug + '-' : '') + (stamp || 'undated') + '.pdf';
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -196,10 +206,11 @@
     b.id = 'sweep-card-' + p.key;
     b.innerHTML =
       '<span class="glyph" aria-hidden="true"></span>' +
-      '<span class="what"><span class="nm"></span><span class="former"></span><span class="ds"></span></span>';
+      '<span class="what"><span class="nm"><span></span></span><span class="former"></span><span class="ds"></span></span>' +
+      '<span class="arrow" aria-hidden="true">↗</span>';
     b.querySelector('.glyph').textContent = p.glyph;
     b.querySelector('.glyph').style.background = p.color;
-    b.querySelector('.what .nm').textContent = p.name;
+    b.querySelector('.what .nm span').textContent = p.name;
     // Subtle grey "previously …" line for providers that changed names —
     // only when one is documented in the catalog notes.
     if (p.former) b.querySelector('.what .former').textContent = p.former;
@@ -369,6 +380,8 @@
     const sweep = mode === 'sweep';
     viewWvoe.hidden = sweep;
     viewSweep.hidden = !sweep;
+    // each view owns its sticky action bar; the other's bar must not linger
+    el('actionbar-wvoe').hidden = sweep;
     el('tab-wvoe').dataset.active = String(!sweep);
     el('tab-sweep').dataset.active = String(sweep);
   }

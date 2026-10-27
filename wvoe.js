@@ -168,12 +168,22 @@
         setStatus('error', 'nothing to generate — fill at least one field');
         return;
       }
+      // Form 1005 is addressed to an employer; without Item 1 the form is
+      // unusable, so require a recipient before rendering.
+      if (!values.employerName) {
+        setStatus('error', 'employer name needed — Item 1 “To” can\u2019t be blank');
+        return el('employerName').focus();
+      }
       const bytes = await render(values);
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
+      // File each loan distinctly: WVOE-<employer>-<date>.pdf.
+      const stamp = (values.date || '').replace(/[^0-9-]/g, '');
+      const slug = (values.employerName || '')
+        .replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'voe-wvoe.pdf';
+      a.download = 'WVOE-' + (slug ? slug + '-' : '') + (stamp || 'undated') + '.pdf';
       document.body.appendChild(a);
       a.click();
       a.remove();

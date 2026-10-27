@@ -2,140 +2,257 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>VOE Helper — WVOE</title>
+<title>VOE Helper — side panel</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-         margin: 0; padding: 12px; color: #1f2937; font-size: 13px; }
-  h1 { font-size: 15px; margin: 0 0 2px; }
-  h2 { font-size: 12px; font-weight: 500; color: #6b7280; margin: 0 0 12px; line-height: 1.45; }
-  label { display: block; font-size: 11px; font-weight: 600; color: #4b5563; margin: 7px 0 2px; }
-  input, textarea {
-    width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
-    border: 1px solid #d1d5db; border-radius: 4px; padding: 5px 7px; color: #1f2937;
+  :root { color-scheme: light; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0; padding: 0; color: #1f2937; font-size: 13px;
+    display: flex; flex-direction: column; min-height: 100vh;
+    background: #f9fafb;
   }
-  textarea { resize: vertical; }
-  input:focus, textarea:focus { outline: 1px solid #2563eb; border-color: #2563eb; }
-  .actions { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+  /* ---------- sticky header: brand + segmented view switch ---------- */
+  .panel-head {
+    position: sticky; top: 0; z-index: 10;
+    background: #fff; border-bottom: 1px solid #e5e7eb;
+    padding: 8px 12px 9px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+    font-size: 12px; font-weight: 700; color: #111827; letter-spacing: .01em;
+  }
+  .brand-dot {
+    width: 8px; height: 8px; border-radius: 3px; background: #2563eb; flex: 0 0 auto;
+  }
+  .brand small { font-weight: 500; color: #6b7280; font-size: 10.5px; margin-left: auto; }
+  .seg { display: flex; gap: 2px; background: #f3f4f6; border-radius: 7px; padding: 2px; }
+  .seg-btn {
+    flex: 1; border: 0; background: transparent; padding: 5px 8px; border-radius: 5px;
+    font: inherit; font-size: 11.5px; font-weight: 600; color: #4b5563; cursor: pointer;
+  }
+  .seg-btn[data-active="true"] { background: #fff; color: #111827; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+  .seg-btn:hover:not([data-active="true"]) { color: #111827; }
+
+  main { flex: 1; padding: 10px 12px 4px; }
+
+  .view-sub { font-size: 12px; color: #6b7280; line-height: 1.45; margin: 0 0 10px; }
+
+  /* ---------- grouped fieldsets (Atlassian: sections, one column) ---------- */
+  .group {
+    border: 1px solid #e5e7eb; border-radius: 10px; background: #fff;
+    padding: 9px 11px 3px; margin-bottom: 9px;
+  }
+  .group-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .07em;
+    text-transform: uppercase; color: #6b7280; margin-bottom: 7px;
+  }
+  .group-label .g-hint { font-weight: 500; letter-spacing: 0; text-transform: none; color: #9ca3af; }
+  .group form, .group > form { margin: 0; }
+  #editor { padding: 0; margin: 0; }
+  .field { margin-bottom: 9px; }
+  label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin: 0 0 3px; }
+  label .hint { font-weight: 400; color: #9ca3af; font-size: 10.5px; }
+  input, textarea, select {
+    width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
+    border: 1px solid #d1d5db; border-radius: 6px; padding: 5px 7px;
+    color: #1f2937; background: #fff;
+  }
+  textarea { resize: vertical; min-height: 0; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid #bfdbfe; border-color: #2563eb; }
+  .field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .field-2col .field { margin-bottom: 0; }
+
+  /* internal reference group: visually quieter (not printed anywhere) */
+  .group-muted { background: #f9fafb; border-style: dashed; }
+  .group-muted label { color: #4b5563; }
+  .group-muted input, .group-muted textarea { background: #fff; }
+
+  /* ---------- sticky action bar (primary action never scrolls away) ---------- */
+  .actionbar {
+    position: sticky; bottom: 0; z-index: 10;
+    background: #fff; border-top: 1px solid #e5e7eb;
+    padding: 9px 12px;
+    box-shadow: 0 -2px 6px rgba(17,24,39,.04);
+  }
+  .abar-row { display: flex; gap: 8px; align-items: center; }
+  #status, #sweepStatus { margin: 6px 0 0; }
   .btn-main {
-    display: inline-block; background: #2563eb; color: #fff; border: 1px solid #1d4ed8;
-    padding: 7px 14px; border-radius: 5px; font-weight: 600; font-size: 13px; cursor: pointer;
+    flex: 1; background: #2563eb; color: #fff; border: 1px solid #1d4ed8;
+    padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;
   }
   .btn-main:hover { background: #1d4ed8; }
   .btn-main:disabled { background: #9ca3af; border-color: #6b7280; cursor: wait; }
   .btn-secondary {
-    display: inline-block; background: #fff; color: #1f2937; border: 1px solid #d1d5db;
-    padding: 7px 12px; border-radius: 5px; font-weight: 600; font-size: 12px; cursor: pointer;
+    flex: 0 0 auto; background: #fff; color: #1f2937; border: 1px solid #d1d5db;
+    padding: 8px 12px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer;
+    white-space: nowrap;
   }
-  .btn-secondary:hover { border-color: #2563eb; color: #2563eb; }
-  #status { font-size: 12px; color: #6b7280; font-weight: 500; width: 100%; }
-  #status[data-state="error"] { color: #b91c1c; }
-  #status[data-state="ok"] { color: #15803d; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
-  .tab {
-    background: #fff; border: 1px solid #d1d5db; border-radius: 5px;
-    padding: 5px 10px; font-size: 12px; font-weight: 600; color: #4b5563; cursor: pointer;
+  .btn-secondary:hover { border-color: #9ca3af; color: #111827; }
+
+  /* ---------- status flag (Atlassian message semantics; hidden when idle) ---------- */
+  #status, #sweepStatus {
+    font-size: 11.5px; font-weight: 600; width: 100%;
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 6px; padding: 6px 9px; margin: 6px 0 0; line-height: 1.4;
+    box-sizing: border-box;
   }
-  .tab[data-active="true"] { background: #2563eb; border-color: #1d4ed8; color: #fff; }
-  #sweepCards { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  #status:empty, #sweepStatus:empty { display: none; padding: 0; margin: 0; }
+  #sweepStatus { width: 100%; box-sizing: border-box; }
+  #status[data-state="idle"]:not(:empty) { color: #374151; background: #f3f4f6; }
+  #status[data-state="busy"], #sweepStatus[data-state="busy"] {
+    color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe;
+  }
+  #status[data-state="ok"], #sweepStatus[data-state="ok"] {
+    color: #166534; background: #f0fdf4; border: 1px solid #bbf7d0;
+  }
+  #status[data-state="error"], #sweepStatus[data-state="error"] {
+    color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca;
+  }
+  #sweepStatus { margin: 0 0 8px; width: 100%; }
+  #sweepStatus[data-state="idle"]:not(:empty) { color: #374151; background: #f3f4f6; }
+
+  /* ---------- sweep: provider list as compact rows (Raycast list pattern) ---------- */
+  #sweepCards { display: flex; flex-direction: column; gap: 6px; margin: 2px 0 10px; }
   .sweep-card {
     display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box;
     text-align: left; background: #fff; border: 1px solid #e5e7eb;
-    border-radius: 8px; padding: 9px 11px; cursor: pointer; font: inherit; color: #1f2937;
+    border-radius: 8px; padding: 8px 10px; cursor: pointer; font: inherit; color: #1f2937;
   }
-  .sweep-card:hover { border-color: #2563eb; box-shadow: 0 1px 4px rgba(37,99,235,.12); }
+  .sweep-card:hover { border-color: #2563eb; background: #eff6ff; }
+  .sweep-card:active { background: #dbeafe; }
   .sweep-card[data-opened="true"] { border-color: #16a34a; background: #f0fdf4; }
-  /* logo: brand-color monogram badge, big enough to recognize at a glance */
   .sweep-card .glyph {
-    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 8px;
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 7px;
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 800; font-size: 13px; letter-spacing: .02em;
+    color: #fff; font-weight: 800; font-size: 11.5px; letter-spacing: .02em;
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
   }
-  .sweep-card .nm { display: block; font-weight: 700; font-size: 13.5px; }
-  .sweep-card .former { display: block; font-size: 10px; color: #9ca3af; margin-top: 1px; }
-  .sweep-card .ds { display: block; font-size: 10.5px; color: #6b7280; margin-top: 1px; line-height: 1.35; }
-  .sweep-card .what { min-width: 0; }
-  .muted-note { font-size: 11px; color: #92400e; background: #fef3c7;
-    border: 1px solid #fde68a; border-radius: 6px; padding: 7px 9px; line-height: 1.45; }
-  .savebox { margin-top: 14px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
-  select#saveProvider {
-    width: 100%; box-sizing: border-box; font: inherit; font-size: 13px;
-    border: 1px solid #d1d5db; border-radius: 4px; padding: 5px 7px; color: #1f2937;
+  .sweep-card .what { min-width: 0; display: block; }
+  .sweep-card .nm { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; }
+  .sweep-card .arrow {
+    margin-left: auto; color: #9ca3af; font-size: 13px; font-weight: 600; flex: 0 0 auto;
   }
-  #sweepStatus { font-size: 12px; color: #6b7280; font-weight: 500; width: 100%; }
-  #sweepStatus[data-state="error"] { color: #b91c1c; }
-  #sweepStatus[data-state="ok"] { color: #15803d; }
-  /* where-can-you-send-the-form line (saved/catalog WVOE contacts) */
-  .contact-line { font-size: 11px; color: #065f46; background: #ecfdf5;
+  .sweep-card .former {
+    display: block; font-size: 9.5px; color: #9ca3af; margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sweep-card .ds {
+    display: block; font-size: 10.5px; color: #6b7280; margin-top: 1px; line-height: 1.35;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  /* ---------- sweep save group + notes ---------- */
+  .muted-note {
+    font-size: 10.5px; color: #854d0e; background: #fef3c7;
+    border: 1px solid #fde68a; border-radius: 8px; padding: 7px 9px; line-height: 1.45;
+    margin: 0 0 10px;
+  }
+  .savebox {
+    border: 1px solid #e5e7eb; border-radius: 10px; background: #fff;
+    padding: 9px 11px 3px;
+  }
+  .savebox .group-label { display: flex; align-items: baseline; }
+  .savebox .group-label .g-hint { margin-left: auto; }
+  details.contact-box { margin: 4px 0 9px; }
+  details.contact-box summary {
+    font-size: 11px; font-weight: 600; color: #4b5563; cursor: pointer; line-height: 1.4;
+  }
+  details.contact-box label { margin-top: 7px; }
+  input.contact-in { font-size: 12.5px; }
+  /* success / contact lines (saved WVOE contacts) */
+  .contact-line {
+    font-size: 11px; color: #065f46; background: #ecfdf5;
     border: 1px solid #a7f3d0; border-radius: 6px; padding: 7px 9px;
-    line-height: 1.45; word-break: break-word; }
-  .contact-box { margin-top: 12px; border-top: 1px dashed #e5e7eb; padding-top: 8px; }
-  .contact-box summary { font-size: 11.5px; font-weight: 600; color: #4b5563; cursor: pointer; }
-  .contact-box label { margin-top: 7px; }
-  input.contact-in { width: 100%; box-sizing: border-box; font: inherit; font-size: 12.5px;
-    border: 1px solid #d1d5db; border-radius: 4px; padding: 5px 7px; color: #1f2937; }
+    line-height: 1.45; word-break: break-word; margin: 0 0 9px;
+  }
 </style>
 </head>
 <body>
-  <nav class="tabs">
-    <button class="tab" id="tab-wvoe" type="button">WVOE form</button>
-    <button class="tab" id="tab-sweep" type="button">Find provider</button>
-  </nav>
+  <header class="panel-head">
+    <div class="brand"><span class="brand-dot" aria-hidden="true"></span> VOE Helper
+      <small>Fannie Mae Form 1005</small></div>
+    <nav class="seg" aria-label="Panel views">
+      <button class="seg-btn" id="tab-wvoe" type="button" data-active="true">WVOE form</button>
+      <button class="seg-btn" id="tab-sweep" type="button" data-active="false">Find provider</button>
+    </nav>
+  </header>
 
+  <main>
   <section id="view-wvoe">
-  <h1>WVOE — collect in place</h1>
-  <h2>
-    Fill this next to the LOS — nothing steals its tab. Download PDF prints the
-    <strong>official Fannie Mae Form 1005</strong> with your values on it; the
-    collector fields sync live to the two-pane page behind
-    <strong>Open full-page preview</strong>, the only context switch, and it is
-    yours.
-  </h2>
+  <p class="view-sub">Fill this beside the LOS — nothing steals its tab. Download prints the
+    <strong>official Form 1005</strong> with your values on it; fields sync live to the
+    full-page preview.</p>
 
   <form id="editor" autocomplete="off">
-    <label for="date">Date</label>
-    <input id="date" type="text" placeholder="YYYY-MM-DD">
+    <div class="group">
+      <div class="group-label">Lender <span class="g-hint">Items 2 · 5 · 6</span></div>
+      <div class="field">
+        <label for="date">Date</label>
+        <input id="date" type="text" placeholder="YYYY-MM-DD">
+      </div>
+      <div class="field">
+        <label for="verifierBlock">Lender block <span class="hint">company, attn — Item 2 “From”</span></label>
+        <textarea id="verifierBlock" rows="3"
+          placeholder="Attn: Processing — Spuds Lending LLC&#10;1200 Main St&#10;Columbia, MO 65201"></textarea>
+      </div>
+      <div class="field">
+        <label for="lenderNumber">Lender's number <span class="hint">loan / file # · Item 6 · optional</span></label>
+        <input id="lenderNumber" type="text" placeholder="Loan #1240001">
+      </div>
+    </div>
 
-    <label for="verifierBlock">Lender block (company, attn) — printed in Item 2 “From”</label>
-    <textarea id="verifierBlock" rows="4" placeholder="Attn: Processing — Spuds Lending LLC&#10;1200 Main St&#10;Columbia, MO 65201"></textarea>
+    <div class="group">
+      <div class="group-label">Employer <span class="g-hint">Item 1 “To”</span></div>
+      <div class="field">
+        <label for="employerName">Employer name</label>
+        <input id="employerName" type="text" placeholder="From the match, or type it">
+      </div>
+      <div class="field">
+        <label for="employerContact">Employer address / phone</label>
+        <textarea id="employerContact" rows="2"></textarea>
+      </div>
+    </div>
 
-    <label for="lenderNumber">Lender's number (loan/file #, Item 6) — optional</label>
-    <input id="lenderNumber" type="text" placeholder="Loan #1240001">
+    <div class="group">
+      <div class="group-label">Applicant <span class="g-hint">Items 7 · 10</span></div>
+      <div class="field">
+        <label for="applicantName">Borrower name <span class="hint">Item 7 · + employee # if known</span></label>
+        <input id="applicantName" type="text" placeholder="Jane Doe — employee #4451">
+      </div>
+      <div class="field">
+        <label for="employmentTitle">Present position <span class="hint">Item 10 · optional</span></label>
+        <input id="employmentTitle" type="text">
+      </div>
+    </div>
 
-    <label for="employerName">Employer name</label>
-    <input id="employerName" type="text" placeholder="From the match, or type it">
-
-    <label for="employerContact">Employer address / phone — printed in Item 1 “To”</label>
-    <textarea id="employerContact" rows="3"></textarea>      <label for="providerBlock">Provider block (internal reference — not printed on the form)</label>
-    <textarea id="providerBlock" rows="3"></textarea>
-    <div class="contact-line" id="wvoeContact" hidden></div>
-
-    <label for="employmentTitle">Present position (Item 10) — optional</label>
-    <input id="employmentTitle" type="text">
-
-    <label for="applicantName">Borrower name (Item 7, + employee/badge # if known)</label>
-    <input id="applicantName" type="text" placeholder="Jane Doe — employee #4451">
-
-    <div class="actions">
-      <button class="btn-main" id="generate">Download PDF</button>
-      <button class="btn-secondary" id="openPreview" type="button">Open full-page preview</button>
-      <span id="status" data-state="idle">idle</span>
+    <div class="group group-muted">
+      <div class="group-label">Internal reference <span class="g-hint">not printed on the form</span></div>
+      <div class="field">
+        <label for="providerBlock">Provider block</label>
+        <textarea id="providerBlock" rows="3"></textarea>
+        <div class="contact-line" id="wvoeContact" hidden></div>
+      </div>
     </div>
   </form>
   </section>
 
   <!-- Manual provider sweep (user pivot: also lives in the panel; the
        CURRENT tab moves to each provider search page top-down, and one or
-       two clicks back here record the found provider for the employer). -->
+       two clicks back here record the confirmed provider for the employer). -->
   <section id="view-sweep" hidden>
-    <h1>Find the VOE provider</h1>
-    <h2>Click the cards top-down — <strong>this tab</strong> moves to each
-      provider's search page. Didn't take a hit? Click the next card down.
-      Found the employer? Come back here and hit Save — one or two clicks and
-      the matcher routes this employer to that provider locally.</h2>
+    <p class="view-sub">Click the cards top-down — <strong>this tab</strong> moves to each
+      provider's search page. Didn't take a hit? Click the next card down. Found the
+      employer? Come back and hit Save — one or two clicks and the matcher routes
+      this employer to that provider locally.</p>
 
-    <label for="sweepName">Employer name you're searching</label>
-    <input id="sweepName" type="text" placeholder="Employer legal name as you know it">
+    <div class="group">
+      <div class="group-label">Searching for</div>
+      <div class="field">
+        <label for="sweepName">Employer name</label>
+        <input id="sweepName" type="text" placeholder="Employer legal name as you know it">
+      </div>
+    </div>
 
     <div id="sweepCards"></div>
 
@@ -146,33 +263,59 @@
       employer codes.</p>
 
     <div class="savebox">
-      <label for="saveProvider">Who turned out to have it?</label>
-      <select id="saveProvider">
-        <option value="">— click a card above, or pick here —</option>
-      </select>
-      <label for="saveCode">Employer code shown on their page (optional — leave blank if you
-        don't see one; never guess)</label>
-      <input id="saveCode" type="text" placeholder="e.g. 10108, only if verbatim on page">
+      <div class="group-label">Record the route
+        <span class="g-hint">who had it</span></div>
+      <div class="field">
+        <label for="saveProvider">Provider</label>
+        <select id="saveProvider">
+          <option value="">— click a card above, or pick here —</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="saveCode">Employer code <span class="hint">only if verbatim on page — never guess</span></label>
+        <input id="saveCode" type="text" placeholder="e.g. 10108, only if verbatim on page">
+      </div>
       <!-- Community growth lane: where can manual WVOEs be sent? Any address
            the provider/employer publishes publicly can be shared here, so the
            library covers this employer end to end. -->
       <details class="contact-box">
-        <summary>Add the manual-WVOE submission address (optional — only what their page publishes)</summary>
-        <label for="saveMail">Mailing address (verbatim from their page)</label>
-        <input id="saveMail" class="contact-in" type="text" placeholder="e.g. Employment Verification, 123 Main St…">
-        <label for="saveFax">Fax (verbatim)</label>
-        <input id="saveFax" class="contact-in" type="text" placeholder="e.g. 555-555-0100">
-        <label for="saveEmail">Email (verbatim)</label>
-        <input id="saveEmail" class="contact-in" type="text" placeholder="e.g. verification@employer.com">
+        <summary>Add the manual-WVOE submission address
+          <span class="hint">optional — only what their page publishes</span></summary>
+        <div class="field">
+          <label for="saveMail">Mailing address (verbatim)</label>
+          <input id="saveMail" class="contact-in" type="text"
+                 placeholder="Employment Verification, 123 Main St…">
+        </div>
+        <div class="field">
+          <label for="saveFax">Fax (verbatim)</label>
+          <input id="saveFax" class="contact-in" type="text" placeholder="555-555-0100">
+        </div>
+        <div class="field">
+          <label for="saveEmail">Email (verbatim)</label>
+          <input id="saveEmail" class="contact-in" type="text" placeholder="verification@employer.com">
+        </div>
       </details>
       <div class="contact-line" id="sweepContact" hidden></div>
-      <div class="actions">
+    </div>
+
+    <div class="actionbar">
+      <div class="abar-row">
         <button class="btn-main" id="saveRoute">Save this route</button>
-        <button class="btn-secondary" id="saveReport" type="button">Save + open GitHub issue</button>
-        <span id="sweepStatus" data-state="idle"></span>
+        <button class="btn-secondary" id="saveReport" type="button">Save + issue</button>
       </div>
+      <span id="sweepStatus" data-state="idle"></span>
     </div>
   </section>
+  </main>
+
+  <!-- sticky bar only for the WVOE view; the sweep keeps its own -->
+  <div class="actionbar" id="actionbar-wvoe">
+    <div class="abar-row">
+      <button class="btn-main" id="generate" type="button">Download PDF</button>
+      <button class="btn-secondary" id="openPreview" type="button">Preview</button>
+    </div>
+    <span id="status" data-state="idle"></span>
+  </div>
 
   <script src="wvoe-template.js"></script>
   <script src="vendor/pdfme-generator.iife.min.js"></script>

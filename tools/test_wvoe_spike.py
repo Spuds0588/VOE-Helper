@@ -150,9 +150,14 @@ async def main():
     chrome = None
     try:
         chrome = start_chrome()
-        await asyncio.sleep(2)
-        sw = next((t for t in targets() if t["type"] == "service_worker"
-                   and t["url"].startswith("chrome-extension://")), None)
+        # Bounded retry: the SW target can take a few seconds to register.
+        sw = None
+        for _ in range(30):
+            sw = next((t for t in targets() if t["type"] == "service_worker"
+                       and t["url"].startswith("chrome-extension://")), None)
+            if sw:
+                break
+            await asyncio.sleep(0.5)
         if not sw:
             raise RuntimeError("extension service worker target not found")
         global EXT_ID
@@ -178,6 +183,20 @@ async def main():
             log("P1 page state:", state)
             if state != "idle|function":
                 failures.append(f"P1: page did not come up clean: {state}")
+            # Recipient guard: an empty generate must refuse with the Item 1
+            # error instead of producing an unaddressed Form 1005.
+            await s.evaluate("document.getElementById('generate').click()")
+            guard = "busy"
+            for _ in range(20):
+                guard = await s.evaluate(
+                    "document.getElementById('status').dataset.state + '|'"
+                    " + document.getElementById('status').textContent")
+                if guard.split("|")[0] == "error":
+                    break
+                await asyncio.sleep(0.5)
+            log("P1 empty-generate guard:", guard)
+            if not (guard.startswith("error|") and "employer name" in guard):
+                failures.append(f"P1: empty-generate guard wrong: {guard}")
             layout = await s.evaluate(
                 "({wrap: !!document.getElementById('previewWrap'),"
                 "  state: document.getElementById('previewWrap').dataset.previewState})")
@@ -220,6 +239,12 @@ async def main():
                 failures.append(f"P1: live preview never rendered an embed: {preview}")
 
         # ---------- P2: catalog prefill mode ----------
+        # Re-resolve the SW target: the handle captured at P1 can go stale
+        # (idle SW churn); a stale webSocketDebuggerUrl answers HTTP 500.
+        sw = next((t for t in targets() if t["type"] == "service_worker"
+                   and t["url"].startswith("chrome-extension://")), None)
+        if not sw:
+            raise RuntimeError("extension service worker target not found")
         async with Session(websockets.connect(sw["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
             await s2.rpc("Runtime.enable")
             row = await s2.evaluate(
@@ -559,7 +584,8 @@ async def main():
         # ---------- PDF verification (all downloads) ----------
         pdfs = []
         for _ in range(40):
-            pdfs = sorted(DL_DIR.glob("voe-wvoe*.pdf"), key=lambda p: p.stat().st_mtime)
+            # Named for the loan since 2026-10-27: WVOE-<employer>-<date>.pdf.
+            pdfs = sorted(DL_DIR.glob("WVOE-*.pdf"), key=lambda p: p.stat().st_mtime)
             if len(pdfs) >= 3:  # manual + prefill + side panel
                 break
             await asyncio.sleep(0.5)
