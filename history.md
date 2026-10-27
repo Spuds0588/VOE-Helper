@@ -809,3 +809,24 @@ turn 4)
 - **Foxit eSign scoped** into ESIGNING-PLAN.md (research agent, cited): REST under client-credentials OAuth (client secret — not a per-user BYOK token), 5 credits per envelope, embedded-signing URL (iframe-able), webhooks + polling, 4,000 req/5 min + 25 MB/doc; no published CORS policy. Verdict: weaker hosted lane than SignWell BYOK — probe CORS + confirm the API entitlement region (NA/EU) before any promise; when used, the safe shape is user-owned credentials + short-lived embedded sessions, never a shared secret in the extension.
 - **Tests**: tools/test_wvoe_spike.py grew two phases — P4B (seed `wvoePendingRawName`, assert the Employer field fills and the key is consumed one-shot) and P4C (seed one saved lender profile + selectedLenderId, assert the dropdown restores and the part-two fill works) — plus a target-id disambiguation fix (new sub-targets matched by created targetId, stale tabs checked); the ladder state found during the run (the stored `selectedLenderId` was destructured into an undeclared name, so the selection came back empty) was fixed in sidepanel.js. FULL PASS. tools/test_headed.py ALL AUTOMATED CHECKS PASSED.
 - No catalog/data changes: index stays 15,778 records / 198 coded.
+
+## Settings tab + auto-fill engine stack (2026-10-27)
+
+- places-setup.html added: walkthrough page in the home-page style — how to create a
+  Google Cloud project, enable Places API (New), restrict + copy the key. Target:
+  GitHub Pages (`places-setup.html`), linked directly beside the key field.
+- sidepanel.html: gear button top-right in the header opens a Settings view
+  (panelView 'settings' persisted and restored); Google + Geoapify BYOK key fields
+  moved out of the WVOE form into it, each with its own help/pricing note. Gear
+  toggles back to the active tab; storage listeners extended for the new mode.
+- sidepanel.js employerLookup reworked into a stacked engine pipeline, sorted
+  most-capable first: Google Places (New) → Geoapify (free BYOK, place search +
+  place-details, address and phone when OSM has them) → Photon (keyless OSM,
+  address always, phone only when the record tags it). Photon runs last no matter
+  what — lookup never dead-ends without keys. Errors surface per engine; a filled
+  engine notes whether the phone came through.
+- sources: Geoapify free tier (3,000 credits/day, places + contact data) and
+  Photon acceptable-use (keyless, address-biased) checked against vendor docs.
+- Verify: node --check on sidepanel/background/wvoe.js; python id/dupe audit of
+  panel markup (0 missing, 0 dupes); headed E2E green (ALL AUTOMATED CHECKS
+  PASSED). Committed 5e0258b and pushed to origin/main.
