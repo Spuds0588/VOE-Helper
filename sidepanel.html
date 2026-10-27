@@ -160,6 +160,11 @@
   .setup-note { font-size: 10.5px; color: var(--text-muted); line-height: 1.45; margin: 0 0 9px; }
   .setup-link { display: block; margin-top: 3px; }
   .share-lane { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin: 8px 0 3px; }
+  .part-choice label { display: block; margin-bottom: 3px; }
+  .radio-row { display: flex; align-items: center; gap: 5px; margin: 2px 0; font-size: 12px; }
+  .radio-row input[type="radio"] { accent-color: var(--accent); }
+  .check-row { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; cursor: pointer; }
+  .check-row input[type="checkbox"] { accent-color: var(--accent); margin-top: 2px; }
 
   /* internal reference group: visually quieter (not printed anywhere) */
   .group-muted { background: var(--muted-bg); border-style: dashed; }
@@ -358,7 +363,7 @@
     </div>
 
     <div class="group">
-      <div class="group-label">Applicant <span class="g-hint">Items 7 · 10</span></div>
+      <div class="group-label">Applicant <span class="g-hint">Items 7 · 8 · 10</span></div>
       <div class="field">
         <label for="applicantName">Borrower name <span class="hint">Item 7 · + employee # if known</span></label>
         <input id="applicantName" type="text" placeholder="Jane Doe — employee #4451">
@@ -366,6 +371,28 @@
       <div class="field">
         <label for="employmentTitle">Present position <span class="hint">Item 10 · optional</span></label>
         <input id="employmentTitle" type="text">
+      </div>
+      <!-- The employer fills Pt II (present) or Pt III (previous); the part
+           they must NOT touch gets a bold X on its header (industry
+           standard strike-through). Default Part II; the X on Part III
+           prints even with no choice made. -->
+      <div class="field part-choice">
+        <label>Employer verifies</label>
+        <span class="radio-row">
+          <input type="radio" id="partTwo" name="partChoice" value="two" checked>
+          <label for="partTwo">Part II — present employment</label>
+        </span>
+        <span class="radio-row">
+          <input type="radio" id="partThree" name="partChoice" value="three">
+          <label for="partThree">Part III — previous employment</label>
+        </span>
+        <span class="hint">a black X overprints the other part's header</span>
+      </div>
+      <div class="field part-choice">
+        <label class="check-row">
+          <input type="checkbox" id="borrowerAuthAttached">
+          “Borrower authorization is attached” <span class="hint">printed in Item 8 — use when a signed borrower authorization covers the VOE instead of per-form signatures</span>
+        </label>
       </div>
     </div>
 

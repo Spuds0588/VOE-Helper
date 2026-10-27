@@ -42,6 +42,14 @@
     }
     return values;
   };
+  // Editor-only choices riding beside the printed text fields (both drive
+  // the strike-through X and the Item 8 note).
+  const readExtras = () => ({
+    verificationPart:
+      (document.querySelector('input[name="partChoice"]:checked') || {}).value === 'three'
+        ? 'three' : 'two',
+    borrowerAuthAttached: el('borrowerAuthAttached').checked
+  });
 
   // ---------- draft persistence (debounced) ----------
   let draftTimer = null;
@@ -50,10 +58,18 @@
     draftTimer = setTimeout(() => {
       const draft = {};
       for (const f of FIELDS) draft[f] = el(f).value;
+      try {
+        draft.partChoice = readExtras().verificationPart;
+        draft.borrowerAuthAttached = readExtras().borrowerAuthAttached ? 'yes' : '';
+      } catch { /* page-context preview */ }
       chrome.storage.local.set({ wvoeDraft: draft }).catch(() => {});
     }, 400);
   };
   for (const f of FIELDS) el(f).addEventListener('input', saveDraft);
+  // Editor-only choices persist too (change events, not input).
+  for (const r of document.querySelectorAll('input[name="partChoice"]'))
+    r.addEventListener('change', saveDraft);
+  el('borrowerAuthAttached').addEventListener('change', saveDraft);
 
   // ---------- restore + prefill ----------
   // Prefill stamps are consumed by BOTH the load path and a storage
@@ -112,6 +128,10 @@
         for (const f of FIELDS) {
           if (typeof wvoeDraft[f] === 'string') el(f).value = wvoeDraft[f];
         }
+        // Editor-only choices (strike-through part + authorization note)
+        if (wvoeDraft.partChoice === 'three') el('partThree').checked = true;
+        else el('partTwo').checked = true;
+        el('borrowerAuthAttached').checked = wvoeDraft.borrowerAuthAttached === 'yes';
       }
       // 2. pending prefill stamps (service worker on toast click)
       return consumeStamps({ atLoad: true });
@@ -379,11 +399,11 @@
         return el('employerName').focus();
       }
       const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
-      const { inputs, employerFontSize } = wvoeComposeInputs(values);
+      const { inputs, sizes } = wvoeComposeInputs(values, readExtras());
       const bytes = await window.pdfmeGenerate({
         template: {
           basePdf,
-          schemas: voeForm1005Schema(employerFontSize)
+          schemas: voeForm1005Schema(sizes)
         },
         inputs: [inputs]
       });
@@ -424,6 +444,8 @@
   function saveDraftImmediate() {
     const draft = {};
     for (const f of FIELDS) draft[f] = el(f).value;
+    draft.partChoice = readExtras().verificationPart;
+    draft.borrowerAuthAttached = readExtras().borrowerAuthAttached ? 'yes' : '';
     return chrome.storage.local.set({ wvoeDraft: draft });
   }
 

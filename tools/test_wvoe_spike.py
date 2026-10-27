@@ -24,6 +24,7 @@ Exit 0 = both phases passed. Uses Chrome for Testing (--load-extension OK).
 """
 import asyncio
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -210,6 +211,12 @@ async def main():
                     "lenderNumber": "Loan #991233",
                     "applicantName": "Applicant: J. Doe (manual)",
                     "providerBlock": "Provider filled by hand: Truework"}
+            # Borrower-authorization option: attach the Item 8 note in P1 so
+            # the final PDF phase can assert it prints on THIS form only
+            # (the default runs must not print it).
+            await s.evaluate(
+                "(()=>{const e=document.getElementById('borrowerAuthAttached');"
+                "e.checked=true;e.dispatchEvent(new Event('change'));})()")
             # Fill the form in-page (manual path: no ?employer= param) and generate.
             await s.evaluate(
                 "(()=>{const vals=" + json.dumps(vals) + ";"
@@ -826,6 +833,40 @@ async def main():
                     failures.append(f"pdftotext missing [{label}]: {needle!r}")
             if "Provider filled by hand: Truework" in alltext:
                 failures.append("pdftotext: providerBlock printed but must stay internal")
+            # Strike-through X + Item 8 note (2026-10-27 convention): all
+            # spike runs use the default Part II ⇒ exactly ONE standalone 'X'
+            # per form, on the Part III header row (Part header anchors are
+            # the xMin<40 'Part' words: I/II/III/IV in order; calibrated
+            # Part II y≈312.9pt, Part III y≈600.6pt). The auth note must
+            # appear ONLY on the P1 manual PDF (checkbox set there).
+            for pdf in pdfs:
+                xml = subprocess.run(["pdftotext", "-bbox", "-f", "1", "-l", "1",
+                                      str(pdf), "-"], capture_output=True, text=True).stdout
+                words = []
+                for attrs, wtext in re.findall(r'<word ([^>]+)>([^<]*)</word>', xml):
+                    xm = re.search(r'xMin="([-.\d]+)"', attrs)
+                    ym = re.search(r'yMin="([-.\d]+)"', attrs)
+                    if xm and ym:
+                        words.append((wtext.strip(), float(xm.group(1)), float(ym.group(1))))
+                headers = sorted(y for _, x, y in words if x < 40 and _ == "Part")
+                xw = next(((x, y) for _, x, y in words if _ == "X"), None)
+                if len(headers) < 4:
+                    failures.append(f"xmark {pdf.name}: page-1 Part headers not found: {headers}")
+                elif xw is None:
+                    failures.append(f"xmark {pdf.name}: no strike-through X on page 1")
+                elif abs(xw[1] - headers[2]) > 14 or abs(xw[1] - headers[1]) < 80:
+                    failures.append(f"xmark {pdf.name}: X y={xw[1]!r:.1f} not on "
+                                    f"Part III row (headers II={headers[1]!r:.1f} "
+                                    f"III={headers[2]!r:.1f})")
+            texts = {p.name: subprocess.run(["pdftotext", str(p), "-"],
+                     capture_output=True, text=True).stdout for p in pdfs}
+            manual_texts = [t for n, t in texts.items() if "manual mode check" in t]
+            if not manual_texts or not all(
+                    "Borrower authorization is attached." in t for t in manual_texts):
+                failures.append("pdftotext: borrower-auth note missing on the P1 manual form")
+            for name, t in texts.items():
+                if "manual mode check" not in t and "Borrower authorization is attached." in t:
+                    failures.append(f"pdftotext: borrower-auth note leaked onto {name}")
             log("pdftotext verification:", "FAILURES" if failures else "all fields present (P1+P2)")
 
     except Exception as exc:

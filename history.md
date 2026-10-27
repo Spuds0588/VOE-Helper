@@ -1,5 +1,28 @@
 # history.md — VOE Helper v1 build log
 
+## WVOE part convention + auto-shrink + auth note (2026-10-27, user follow-up)
+- User: "needs auto font size shrink" for multiline regions; Part II/III
+  choice (current vs previous employment, default Part II) with an
+  industry-standard black X struck over the section NOT chosen; and an
+  Item 8 "borrower authorization is attached" option for the bundled
+  borrower-auth lane (no per-VOE borrower signatures).
+- Template (wvoe-template.js): generic wvoeFitFontSize (width/height/
+  lineHeight/ladder) now sizes Item 1's composed block, the verifier block,
+  applicant name and present position; coordinates measured on the real
+  base PDF (Part II header 110.4–116.5mm, Part III 211.9–214.8, Item 8 cell
+  x≈127–206/y 99.5–110).
+- Editors (sidepanel.html + wvoe.html): partChoice radio (default II → X
+  prints on Part III; III → on Part II; one section is always struck) and
+  borrowerAuthAttached checkbox; readExtras/draft/restore/generate wired in
+  sidepanel.js + wvoe.js; note prints as 'Borrower authorization is
+  attached.' in Item 8 only when checked.
+- Spike: P1 now checks the auth box; final PDF phase asserts exactly ONE
+  standalone 'X' per page-1 form, its y within ±14pt of the CORRECT Part
+  header (anchors calibrated: Part II ≈312.9pt, Part III ≈600.6pt) and
+  >80pt from the other; note present only on the toggled PDF. FULL PASS;
+  headed E2E green; visually verified both orientations (research/
+  wvoe-pdf/part3-1.png default-Part-II vs defx-1.png).
+
 ## Maintenance pass: re-check methodology + usability (2026-10-23)
 - **Recurring re-check methodology** written into data/sources.md (cadence
   table: monthly mini-check / quarterly full pass / annual deep audit /

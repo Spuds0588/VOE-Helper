@@ -129,4 +129,17 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 3 | Root cause B: wvoe.html never adopts later panel edits | done — onChanged adopts into empty fields, preview re-renders |
 | 4 | Root cause C: long values overprinted/clipped in Item 1, Item 6/7/10 | done — Item 1 merged into one composed 'employerFull' box with wrap-aware font step (8.5/7.5/6.5); Item 6 → 7.5pt, Item 7 → 8pt, Item 10 → 8pt wide 61 |
 | 5 | Spike phase P4D (live relay: catalog + raw name, contact-clear assert) | added and passing |
+
+## 2026-10-27 · Form 1005 part convention + shrink + auth note (user follow-up)
+
+| # | task | status |
+|---|------|--------|
+| 1 | Measured base-form coords: Part II header row y 110.4–116.5mm, Part III y 211.9–214.8, Item 8 cell x≈127–206 y 99.5–110 | done — pixel+pdftotext verified on the real base PDF |
+| 2 | Template: generic auto-shrink (wvoeFitFontSize) for Item 1 composed block, verifier block, applicant name, title | done — fit helpers take width/height/lineHeight ladders; Item 1 stays inside the 17.9mm cell at 6 lines |
+| 3 | Part II/III strike convention: bold X on the NOT-selected part's header (default Part II ⇒ X on Part III; III ⇒ X on Part II, industry standard, never both fillable) | done — markPartTwo/markPartThree overlays in wvoe-template.js; radios in both sidepanel.html + wvoe.html (partChoice, default II) |
+| 4 | "Borrower authorization is attached." Item 8 note option (bundled borrower-auth instead of per-VOE signatures) | done — borrowerAuthAttached checkbox both editors; note prints only when checked |
+| 5 | Wiring: readExtras + draft persistence + restore + generate in sidepanel.js and wvoe.js (editor choices persist across reopens) | done |
+| 6 | Spike assertions: exactly ONE standalone X per page-1 form, on the correct header (bbox anchors calibrated: Part II y≈312.9pt, Part III y≈600.6pt, ±14pt); auth note present ONLY on the P1 manual PDF | added and passing |
+| 7 | Visual verify: part-III-selected render (X on Part II), default render (X on Part III), long-value shrink render | done — research/wvoe-pdf/part3-1.png, defx-1.png, longval-1.png |
+| 8 | Suites: spike FULL PASS incl. new phases; headed E2E ALL AUTOMATED CHECKS PASSED; syntax clean | done |
 | 6 | Verify: node --check ×3, spike (all phases + pdftotext), headed suite, glyph-geometry probe via pdftotext -bbox | all green |

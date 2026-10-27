@@ -46,14 +46,21 @@
     }
     return values;
   };
+  // Editor-only choices driving the strike-through X and the Item 8 note.
+  const readExtras = () => ({
+    verificationPart:
+      (document.querySelector('input[name="partChoice"]:checked') || {}).value === 'three'
+        ? 'three' : 'two',
+    borrowerAuthAttached: el('borrowerAuthAttached').checked
+  });
 
-  async function render(values) {
+  async function render(values, extras) {
     const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
-    const { inputs, employerFontSize } = wvoeComposeInputs(values);
+    const { inputs, sizes } = wvoeComposeInputs(values, extras);
     return window.pdfmeGenerate({
       template: {
         basePdf,
-        schemas: voeForm1005Schema(employerFontSize)
+        schemas: voeForm1005Schema(sizes)
       },
       inputs: [inputs]
     });
@@ -93,7 +100,7 @@
     delegation += 1;
     previewWrap.dataset.previewState = 'busy';
     try {
-      const bytes = await render(values);
+      const bytes = await render(values, readExtras());
       if (delegation === 1) showPreviewPdf(bytes);
     } catch (err) {
       console.error('[VOE Helper wvoe] preview render failed:', err);
@@ -106,6 +113,12 @@
   for (const f of FIELDS) {
     el(f).addEventListener('input', schedulePreview);
   }
+  // Editor-only choices: persist + rerender (the X lands on a different
+  // header the instant the radio flips).
+  for (const r of document.querySelectorAll('input[name="partChoice"]'))
+    r.addEventListener('change', () => { schedulePreview(); saveDraft(); });
+  el('borrowerAuthAttached').addEventListener('change',
+    () => { schedulePreview(); saveDraft(); });
 
   // ---------- catalog prefill ----------
   // The toast button opens wvoe.html?employer=<record id>.
@@ -141,6 +154,12 @@
         const v = typeof wvoeDraft[f] === 'string' ? wvoeDraft[f] : '';
         if (v && !el(f).value) { el(f).value = v; touched = true; }
       }
+      // Editor-only choices restore too.
+      if (wvoeDraft.partChoice === 'three') el('partThree').checked = true;
+      else el('partTwo').checked = true;
+      const authNow = el('borrowerAuthAttached').checked;
+      el('borrowerAuthAttached').checked = wvoeDraft.borrowerAuthAttached === 'yes';
+      if (el('borrowerAuthAttached').checked !== authNow) touched = true;
       if (touched) {
         setStatus('idle', 'Restored values collected in the side panel');
         updatePreview().then(schedulePreview);
@@ -153,6 +172,10 @@
   const saveDraft = () => {
     const draft = {};
     for (const f of FIELDS) draft[f] = el(f).value;
+    try {
+      draft.partChoice = readExtras().verificationPart;
+      draft.borrowerAuthAttached = readExtras().borrowerAuthAttached ? 'yes' : '';
+    } catch { /* choices not ready yet */ }
     chrome.storage.local.set({ wvoeDraft: draft }).catch(() => {});
   };
   for (const f of FIELDS) el(f).addEventListener('input', () => saveDraft());
@@ -196,7 +219,7 @@
         setStatus('error', 'employer name needed — Item 1 “To” can\u2019t be blank');
         return el('employerName').focus();
       }
-      const bytes = await render(values);
+      const bytes = await render(values, readExtras());
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       // File each loan distinctly: WVOE-<employer>-<date>.pdf.

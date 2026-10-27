@@ -15,7 +15,15 @@
 // employer must answer (Part II/III/IV) is left blank on purpose.
 const VOE_FORM1005_ASSET = 'assets/fannie-mae-form-1005.pdf';
 
-function voeForm1005Schema(employerFontSize = 8.5) {
+function voeForm1005Schema(sizes = {}) {
+  // Auto-shrink: each multiline region takes the largest size whose
+  // estimated print height fits its fixed cell (helpers below).
+  const sz = {
+    employerFull: sizes.employerFull || 8.5,
+    verifierBlock: sizes.verifierBlock || 8.5,
+    applicantName: sizes.applicantName || 8,
+    employmentTitle: sizes.employmentTitle || 8
+  };
   return [[ // page 1
     // Item 1 — To (Name and address of employer). ONE composed box spanning
     // the whole cell (x≈9.5-105.8, y 61.7-79.7): the employer name lines and
@@ -25,11 +33,26 @@ function voeForm1005Schema(employerFontSize = 8.5) {
     // itself. employerFontSize arrives per render from wvoeEmployerFontSize.
     { name: 'employerFull', type: 'text',
       position: { x: 10.5, y: 61.8, width: 94.5, height: 17.9 },
-      width: 94.5, height: 17.9, fontSize: employerFontSize, lineHeight: 1.22, content: '' },
-    // Item 2 — From (Name and address of lender), right column x≈106.9-206.4.
+      width: 94.5, height: 17.9, fontSize: sz.employerFull, lineHeight: 1.22, content: '' },
+    // Part II / Part III strike-through convention: the part the employer
+    // is NOT to fill gets a bold X on its header row (industry standard).
+    // Default Part II is enforced in the editors, so markPartThree prints
+    // by default and markPartTwo prints only when Part III is chosen.
+    { name: 'markPartTwo', type: 'text',
+      position: { x: 9.6, y: 109.8, width: 14, height: 7 },
+      width: 14, height: 7, fontSize: 11, content: '' },
+    { name: 'markPartThree', type: 'text',
+      position: { x: 9.6, y: 211.2, width: 14, height: 7 },
+      width: 14, height: 7, fontSize: 11, content: '' },
+    // Item 8 — Signature of Applicant cell (x≈127-206, y 99.5-110). When
+    // the loan is verified through the bundled borrower authorization
+    // instead of a wet signature on each VOE, print the note here.
+    { name: 'applicantAuthNote', type: 'text',
+      position: { x: 130, y: 103.5, width: 73, height: 5.5 },
+      width: 73, height: 5.5, fontSize: 8, content: '' },
     { name: 'verifierBlock', type: 'text',
       position: { x: 107.5, y: 61.8, width: 98, height: 17.8 },
-      width: 98, height: 17.8, fontSize: 8, lineHeight: 1.3, content: '' },
+      width: 98, height: 17.8, fontSize: sz.verifierBlock, lineHeight: 1.3, content: '' },
     // Item 5 — Date (right of the "3. Signature of Lender" label).
     { name: 'date', type: 'text',
       position: { x: 145.5, y: 83.2, width: 17, height: 5.5 },
@@ -71,9 +94,10 @@ const WVOE_PRINTED_FIELDS = ['employerName', 'employerContact', 'verifierBlock',
                              'date', 'lenderNumber', 'applicantName',
                              'employmentTitle'];
 
-// Item 1's box is exactly the height between the label row and the
-// "I certify" band; long value sets need a smaller font to stay inside it.
-// Rough Helvetica wrap estimate: avg glyph ≈ 0.56 em.
+// Generic auto-shrink: largest font whose estimated print height (Helvetica
+// wrap estimate, avg glyph ≈ 0.56 em, line step = fontSize · lineHeight ·
+// 0.3528 mm/pt) fits the fixed cell. Generous estimate over-measures on
+// purpose — an extra margin beats bleeding onto the neighboring row.
 function wvoeEstimateLines(text, fontSize, widthMm) {
   const charMm = fontSize * 0.3528 * 0.56;
   const perLine = Math.max(8, Math.floor(widthMm / charMm));
@@ -83,24 +107,23 @@ function wvoeEstimateLines(text, fontSize, widthMm) {
   }
   return n;
 }
-// Largest font whose estimated print height stays within the 17.9 mm cell
-// (line step = fontSize · lineHeight 1.22 · 0.3528 mm/pt).
-function wvoeEmployerFontSize(name, contact) {
-  const text = ((name || '') + '\n' + (contact || ''));
-  for (const size of [8.5, 7.5, 6.5]) {
-    const lines = wvoeEstimateLines(text, size, 94.5);
-    const used = lines * size * 1.22 * 0.3528;
-    if (used <= 17.6) return size;
+function wvoeFitFontSize(text, widthMm, heightMm, lineHeight, sizes) {
+  for (const size of sizes) {
+    const lines = wvoeEstimateLines(text, size, widthMm);
+    const used = lines * size * lineHeight * 0.3528;
+    if (used <= heightMm - 0.5) return size;
   }
-  return 6.5; // pathological: keep readable, never shrink below this
+  return sizes[sizes.length - 1]; // floor: keep readable, no smaller step
 }
 // Item 1 prints as ONE composed value ('employerFull'): the required name on
 // the first line(s) and the contact/address lines under it. The collected
 // field names (employerName, employerContact) stay the panel's input
 // vocabulary; this helper composes just before rendering. Copy-safe: returns
 // a new object (the caller still reads values.employerName for the guard
-// and the download filename).
-function wvoeComposeInputs(values) {
+// and the download filename). extras carries the editor-only choices:
+// verificationPart ('two' default | 'three') drives the strike-through X,
+// borrowerAuthAttached prints the Item 8 authorization note.
+function wvoeComposeInputs(values, extras) {
   const composed = Object.assign({}, values);
   const parts = [];
   const name = (values.employerName || '').trim();
@@ -110,6 +133,22 @@ function wvoeComposeInputs(values) {
   if (parts.length) composed.employerFull = parts.join('\n');
   delete composed.employerName;
   delete composed.employerContact;
-  return { inputs: composed,
-           employerFontSize: wvoeEmployerFontSize(name, contact) };
+  const ext = extras || {};
+  // Strike-through X: the NON-selected part's header gets marked. The
+  // editors enforce a default of Part II, so an absent choice still marks
+  // Part III (never leave both fillable).
+  const part = (ext.verificationPart === 'three') ? 'three' : 'two';
+  composed[part === 'two' ? 'markPartThree' : 'markPartTwo'] = 'X';
+  if (ext.borrowerAuthAttached) {
+    composed.applicantAuthNote = 'Borrower authorization is attached.';
+  }
+  return {
+    inputs: composed,
+    sizes: {
+      employerFull: wvoeFitFontSize(name + '\n' + contact, 94.5, 17.9, 1.22, [8.5, 7.5, 6.5]),
+      verifierBlock: wvoeFitFontSize(values.verifierBlock || '', 98, 17.8, 1.3, [10, 8.5, 7.5, 6.5]),
+      applicantName: wvoeFitFontSize(values.applicantName || '', 113, 9.5, 1.3, [9, 8, 7]),
+      employmentTitle: wvoeFitFontSize(values.employmentTitle || '', 61, 6, 1.3, [9, 8, 7])
+    }
+  };
 }

@@ -84,6 +84,22 @@
     <legend>Applicant — Item 7 / 8</legend>
     <label for="applicantName">Borrower name (+ employee/badge number if known)</label>
     <input id="applicantName" type="text" placeholder="Jane Doe — employee #4451">
+    <!-- Strike-through convention: the part the employer must NOT fill gets
+         a bold X on its header; the editors enforce a default of Part II. -->
+    <label>Employer verifies</label>
+    <span>
+      <input type="radio" id="partTwo" name="partChoice" value="two" checked>
+      <label for="partTwo">Part II — present employment</label>
+    </span>
+    <span>
+      <input type="radio" id="partThree" name="partChoice" value="three">
+      <label for="partThree">Part III — previous employment</label>
+    </span>
+    <label class="row">
+      <input type="checkbox" id="borrowerAuthAttached">
+      “Borrower authorization is attached” (printed in Item 8 — use when a signed
+      borrower authorization covers the VOE instead of per-form signatures)
+    </label>
   </fieldset>
 
   <fieldset>
