@@ -119,3 +119,14 @@ Live task list. Update in place; do not backtrack. Full working plan lives here;
 | 2 | Gear icon + Settings view | done — gear in the panel header top-right; BYOK key fields moved out of the form into Settings; panelView persists as 'settings' and restores |
 | 3 | Free/keyed engine stack in employerLookup | done — Google Places → Geoapify (free BYOK, 3k/day) → keyless Photon (address always; phone when OSM tags it); per-engine errors surface, no silent dead-end |
 | 4 | Verify + ship | done — syntax checks, id/dupe audit on panel markup, headed E2E green, committed 5e0258b and pushed |
+
+## 2026-10-27 · WVOE generation hardening ("text wasn't populating right")
+
+| # | task | status |
+|---|------|--------|
+| 1 | Reproduce via spike renders (pdftoppm PNGs, not just pdftotext) | done — PDFs rendered and inspected visually |
+| 2 | Root cause A: open panel ignored a second right-click's prefill stamps | done — sidepanel.js now consumes stamps live via storage.onChanged; switching employers also clears the old contact lines |
+| 3 | Root cause B: wvoe.html never adopts later panel edits | done — onChanged adopts into empty fields, preview re-renders |
+| 4 | Root cause C: long values overprinted/clipped in Item 1, Item 6/7/10 | done — Item 1 merged into one composed 'employerFull' box with wrap-aware font step (8.5/7.5/6.5); Item 6 → 7.5pt, Item 7 → 8pt, Item 10 → 8pt wide 61 |
+| 5 | Spike phase P4D (live relay: catalog + raw name, contact-clear assert) | added and passing |
+| 6 | Verify: node --check ×3, spike (all phases + pdftotext), headed suite, glyph-geometry probe via pdftotext -bbox | all green |

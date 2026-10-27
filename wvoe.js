@@ -49,12 +49,13 @@
 
   async function render(values) {
     const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
+    const { inputs, employerFontSize } = wvoeComposeInputs(values);
     return window.pdfmeGenerate({
       template: {
         basePdf,
-        schemas: voeForm1005Schema()
+        schemas: voeForm1005Schema(employerFontSize)
       },
-      inputs: [values]
+      inputs: [inputs]
     });
   }
 
@@ -155,6 +156,27 @@
     chrome.storage.local.set({ wvoeDraft: draft }).catch(() => {});
   };
   for (const f of FIELDS) el(f).addEventListener('input', () => saveDraft());
+
+  // Live sync (the reverse lane): while this page is open, values collected
+  // in the side panel adopt into EMPTY fields only — anything typed here is
+  // never clobbered, and the debounced preview rerenders on any adoption.
+  // (Deep-link prefill mode stays standalone.)
+  if (!employerId) {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes.wvoeDraft) return;
+      const draft = changes.wvoeDraft.newValue;
+      if (!draft || typeof draft !== 'object') return;
+      let touched = false;
+      for (const f of FIELDS) {
+        const v = typeof draft[f] === 'string' ? draft[f] : '';
+        if (v && !el(f).value) { el(f).value = v; touched = true; }
+      }
+      if (touched) {
+        setStatus('idle', 'Adopted values collected in the side panel');
+        schedulePreview();
+      }
+    });
+  }
 
   // ---------- Download PDF (right pane action) ----------
   el('generate').addEventListener('click', async () => {

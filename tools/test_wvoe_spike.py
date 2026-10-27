@@ -400,25 +400,31 @@ async def main():
                         "chrome.storage.local.get('wvoePendingPrefill')")
                     if (consumed or {}).get("wvoePendingPrefill") is not None:
                         failures.append("P4: wvoePendingPrefill not consumed (one-shot broken)")
-                    # Relay check: an OPEN_WVOE_PANEL message from an extension
-                    # page must reach the SW (the SW itself cannot
-                    # runtime.sendMessage) and stamp the pending key. Fire
-                    # without awaiting the response (the relay never
-                    # sendResponses) and poll for the stamp.
+                    # Relay check (2026-10-27 semantics): an OPEN_WVOE_PANEL
+                    # message from an extension page must reach the SW (the
+                    # SW itself cannot runtime.sendMessage), stamp the
+                    # pending key, AND the open panel must consume it live —
+                    # no reload, no storage lingering. Different coded row so
+                    # the switch is observable.
+                    other4 = await s4.evaluate(
+                        "chrome.storage.local.get('employers').then(g=>{"
+                        "  const e=(g.employers||[]).find(x=>x.provider_code && x.id!="
+                        + json.dumps(row4["id"]) + ");"
+                        "  return {id:e.id,name:e.name};})")
                     await s4.evaluate(
                         "(chrome.runtime.sendMessage({type:'OPEN_WVOE_PANEL',"
-                        " matchId:" + json.dumps(row4["id"]) + "}), true)")
-                    relay_start = time.time()
-                    relay_stamp = None
-                    while time.time() - relay_start < 10:
-                        relay_stamp = await s4.evaluate(
-                            "chrome.storage.local.get('wvoePendingPrefill')")
-                        if (relay_stamp or {}).get("wvoePendingPrefill") is not None:
+                        " matchId:" + json.dumps(other4["id"]) + "}), true)")
+                    relay_switch = None
+                    for _ in range(20):
+                        relay_switch = await s4.evaluate(
+                            "({name: document.getElementById('employerName').value,"
+                            "  st: document.getElementById('status').textContent})")
+                        if relay_switch.get("name") == other4["name"]:
                             break
                         await asyncio.sleep(0.4)
-                    log("P4 relay stamp:", relay_stamp)
-                    if not (relay_stamp or {}).get("wvoePendingPrefill"):
-                        failures.append("P4: OPEN_WVOE_PANEL relay did not stamp pending prefill")
+                    log("P4 relay live switch:", relay_switch, "->", other4["name"])
+                    if not (relay_switch and relay_switch.get("name") == other4["name"]):
+                        failures.append("P4: OPEN_WVOE_PANEL relay did not reach the open panel")
                     # Editable field persists to wvoeDraft (debounced 400ms).
                     await s4.evaluate(
                         "(()=>{const e=document.getElementById('employmentTitle');"
@@ -460,6 +466,14 @@ async def main():
             _ = await s2.evaluate(
                 "chrome.storage.local.set({wvoePendingRawName: " + json.dumps(RAW_NAME_4B) +
                 ", wvoePendingPrefill: null, wvoeDraft: null})")
+        # Close lingering open sidepanel tabs first: since the 2026-10-27 fix
+        # an already-open panel consumes stamps LIVE, so a stale tab would
+        # swallow this stamp before the freshly created tab ever loads.
+        async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
+            for t in [x for x in targets() if x["type"] == "page"
+                      and x["url"].endswith("/sidepanel.html")]:
+                await b.rpc("Target.closeTarget", {"targetId": t["id"]})
+                await asyncio.sleep(0.3)
         async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
             new_t4b = await b.rpc("Target.createTarget", {"url": f"chrome-extension://{EXT_ID}/sidepanel.html"})
         tid4b = (new_t4b or {}).get("targetId")
@@ -545,6 +559,103 @@ async def main():
                         and "Spuds Lending LLC" in p4c.get("block", "")
                         and p4c.get("num") == "TEST-LOAN-001"):
                     failures.append(f"P4C: saved lender did not restore: {p4c}")
+
+        # ---------- P4D: live relay while the panel is ALREADY OPEN ----------
+        # The 2026-10-27 bug report in the wild: the panel consumed its
+        # prefill stamps only at page load, so a second right-click while the
+        # panel stayed open left the PREVIOUS employer's name/address
+        # printed. The running panel must consume a stamped prefill + a raw
+        # selection name live, switch employers, and clear the old contact
+        # lines (stale address must never print on the new employer's form).
+        async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
+            new_t4d = await b.rpc("Target.createTarget", {"url": f"chrome-extension://{EXT_ID}/sidepanel.html"})
+        tid4d = (new_t4d or {}).get("targetId")
+        # Isolate: close every OTHER open sidepanel tab so only the fresh P4D
+        # panel can race on consuming the stamps below.
+        async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
+            for t in [x for x in targets() if x["type"] == "page"
+                      and x["url"].endswith("/sidepanel.html")
+                      and x.get("id") != tid4d]:
+                await b.rpc("Target.closeTarget", {"targetId": t["id"]})
+                await asyncio.sleep(0.3)
+        page4d = None
+        for _ in range(40):
+            page4d = next((t for t in targets() if t["type"] == "page"
+                           and t.get("id") == tid4d), None)
+            if page4d:
+                break
+            await asyncio.sleep(0.4)
+        if not page4d:
+            failures.append("P4D: sidepanel tab never opened")
+        else:
+            async with Session(websockets.connect(
+                    page4d["webSocketDebuggerUrl"], max_size=16 * 1024 * 1024)) as s4d:
+                await s4d.rpc("Runtime.enable")
+                for _ in range(20):
+                    ready = await s4d.evaluate(
+                        "!!document.getElementById('employerName')")
+                    if ready:
+                        break
+                    await asyncio.sleep(0.4)
+                # Employer A: simulate the processor having typed text
+                # (input events drive the debounced draft save).
+                await s4d.evaluate(
+                    "(()=>{const set=(id,v)=>{const setter=Object.getOwnPropertyDescriptor("
+                    "window.HTMLInputElement.prototype,'value').set;const ta=Object.getOwnPropertyDescriptor("
+                    "window.HTMLTextAreaElement.prototype,'value').set;const e=document.getElementById(id);"
+                    "(ta&&e instanceof HTMLTextAreaElement?ta:setter).call(e,v);"
+                    "e.dispatchEvent(new Event('input',{bubbles:true}));};"
+                    "set('employerName','Employer A Corp');"
+                    "set('employerContact','900 Employer A Way\\nAnytown, ST 00000');"
+                    "set('employmentTitle','Title for A');})()")
+                await asyncio.sleep(0.8)  # draft debounce is 400ms
+                # Stamp a live catalog prefill for employer B exactly as the
+                # service worker does on a second right-click.
+                async with Session(websockets.connect(
+                        sw["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
+                    await s2.rpc("Runtime.enable")
+                    row_b = await s2.evaluate(
+                        "chrome.storage.local.get('employers').then(g=>{"
+                        "  const e=(g.employers||[]).find(x=>x.provider_code);"
+                        "  return {id:e.id,name:e.name};})")
+                    _ = await s2.evaluate(
+                        "chrome.storage.local.set({wvoePendingPrefill:" +
+                        json.dumps(row_b["id"]) + ", wvoePendingRawName:null,"
+                        " panelView:'wvoe'})")
+                switched = None
+                for _ in range(20):
+                    switched = await s4d.evaluate(
+                        "({name: document.getElementById('employerName').value,"
+                        "  contact: document.getElementById('employerContact').value,"
+                        "  prov: document.getElementById('providerBlock').value.slice(0, 30),"
+                        "  st: document.getElementById('status').textContent})")
+                    if switched.get("name") == row_b["name"] and "Pre-filled" in switched.get("st", ""):
+                        break
+                    await asyncio.sleep(0.4)
+                log("P4D live catalog relay:", switched, "->", row_b["name"])
+                if not (switched.get("name") == row_b["name"]):
+                    failures.append(f"P4D: open panel ignored a live catalog prefill: {switched}")
+                if switched.get("contact") != "":
+                    failures.append(f"P4D: previous employer's contact survived the switch: {switched!r}")
+                # Raw-name lane: stamp an uncoded employer name live.
+                async with Session(websockets.connect(
+                        sw["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2b:
+                    await s2b.rpc("Runtime.enable")
+                    _ = await s2b.evaluate(
+                        "chrome.storage.local.set({wvoePendingPrefill:null,"
+                        " wvoePendingRawName:'Live Selection Employer C'})")
+                raw_live = None
+                for _ in range(20):
+                    raw_live = await s4d.evaluate(
+                        "({name: document.getElementById('employerName').value,"
+                        "  contact: document.getElementById('employerContact').value,"
+                        "  st: document.getElementById('status').textContent})")
+                    if raw_live.get("name") == "Live Selection Employer C":
+                        break
+                    await asyncio.sleep(0.4)
+                log("P4D live raw-name relay:", raw_live)
+                if not (raw_live and raw_live.get("name") == "Live Selection Employer C"):
+                    failures.append(f"P4D: open panel ignored a live raw-name stamp: {raw_live}")
 
         # ---------- P5: side-panel provider sweep + local route save ----------
         # Probe tab that stands in for the LOS tab: the sweep's card click

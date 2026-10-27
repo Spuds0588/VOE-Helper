@@ -830,3 +830,32 @@ turn 4)
 - Verify: node --check on sidepanel/background/wvoe.js; python id/dupe audit of
   panel markup (0 missing, 0 dupes); headed E2E green (ALL AUTOMATED CHECKS
   PASSED). Committed 5e0258b and pushed to origin/main.
+
+## WVOE generation hardening round (2026-10-27)
+
+- User report: "text wasn't populating right" in manual WVOE generation. Three
+  real defects found and fixed:
+  1. The side panel consumed its prefill stamps (wvoePendingPrefill /
+     wvoePendingRawName) only at page load — a second right-click while the
+     panel was already open left the PREVIOUS employer's name on the form, and
+     the previous employer's address/phone lines even survived into the new
+     form. Panel now consumes stamps live (storage.onChanged → consumeStamps),
+     and switching employers clears the old employerContact (same-employer
+     re-clicks keep hand-typed contact lines). Spike phase P4D asserts both
+     relay lanes plus the contact clear.
+  2. wvoe.html advertised living sync but only restored the draft once at
+     open. It now listens for wvoeDraft changes and adopts into EMPTY fields
+     only (deep-link prefill mode stays standalone); debounced preview
+     re-renders on adoption.
+  3. Long values overprinted: the Item 1 name box (11pt, 1 line) bled into its
+     own contact box whenever a catalog-length name wrapped, the 4-line
+     contact block overflowed the "I certify" band, a long loan number at 9pt
+     wrapped outside its cell, and long applicant/title strings clipped.
+     Template now composes Item 1 as ONE box ('employerFull' via
+     wvoeComposeInputs + wvoeEmployerFontSize 8.5 → 7.5 → 6.5 by a generous
+     wrap estimate), verified with pdftoppm renders and a pdftotext -bbox
+     glyph probe (composed block bottom 75.2mm vs certify band 76.1mm).
+     Item 6 → 7.5pt, Item 7 → 8pt (no clipping), Item 10 → 8pt w61.
+- Verification: node --check on all three edited JS files; full spike green
+  (P1..P5 + pdf checks); headed core E2E green; renders of all three
+  generation lanes inspected visually (research/wvoe-pdf/).

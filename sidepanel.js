@@ -56,40 +56,65 @@
   for (const f of FIELDS) el(f).addEventListener('input', saveDraft);
 
   // ---------- restore + prefill ----------
-  chrome.storage.local.get(['wvoeDraft', 'wvoePendingPrefill', 'wvoePendingRawName', 'employers'])
-    .then(({ wvoeDraft, wvoePendingPrefill, wvoePendingRawName, employers = [] } = {}) => {
+  // Prefill stamps are consumed by BOTH the load path and a storage
+  // listener: a second right-click while the panel is ALREADY OPEN used to
+  // be ignored here — the running panel kept the previous employer's text
+  // (the "text wasn't populating right" report, 2026-10-27). Switching to a
+  // DIFFERENT employer also clears the previous employer's contact lines so
+  // a stale address/phone can never print on the new employer's form.
+  function applyCatalogPrefill(rec) {
+    const prevName = el('employerName').value.trim();
+    el('employerName').value = rec.name || '';
+    const lines = [];
+    if (rec.provider) lines.push('Electronic VOE provider: ' + rec.provider);
+    if (rec.provider_code) lines.push('Employer Code: ' + rec.provider_code);
+    else lines.push('(no published code — fill manually if one is known)');
+    if (rec.notes) lines.push('Note: ' + rec.notes.slice(0, 200));
+    el('providerBlock').value = lines.join('\n');
+    if (rec.name !== prevName) el('employerContact').value = '';
+    setStatus('idle', 'Pre-filled from catalog: ' + rec.name);
+    renderContact('wvoeContact', rec);
+    saveDraft();
+  }
+  function applyRawName(raw) {
+    const prevName = el('employerName').value.trim();
+    const name = String(raw).trim();
+    if (!name) return;
+    el('employerName').value = name;
+    if (name !== prevName) el('employerContact').value = '';
+    setStatus('idle', 'Employer name carried from your right-click selection');
+    saveDraft();
+  }
+  // One-shot stamp consumer; opts.atLoad keeps the historical load-path
+  // semantics (a raw-name stamp only fills a still-empty name field).
+  async function consumeStamps({ atLoad = false } = {}) {
+    const { wvoePendingPrefill, wvoePendingRawName, employers = [] } =
+      await chrome.storage.local.get(
+        ['wvoePendingPrefill', 'wvoePendingRawName', 'employers']);
+    if (wvoePendingPrefill) {
+      const rec = employers.find((e) => e && e.id === wvoePendingPrefill);
+      // one-shot either way: a stamp is consumed exactly once
+      await chrome.storage.local.remove(
+        ['wvoePendingPrefill', 'wvoePendingRawName']).catch(() => {});
+      if (rec) applyCatalogPrefill(rec);
+      else setStatus('error', 'catalog row gone: ' + wvoePendingPrefill);
+      return;
+    }
+    if (wvoePendingRawName) {
+      await chrome.storage.local.remove('wvoePendingRawName').catch(() => {});
+      if (!atLoad || !el('employerName').value.trim()) applyRawName(wvoePendingRawName);
+    }
+  }
+  chrome.storage.local.get(['wvoeDraft'])
+    .then(({ wvoeDraft } = {}) => {
       // 1. restore whatever the processor had typed before
       if (wvoeDraft && typeof wvoeDraft === 'object') {
         for (const f of FIELDS) {
           if (typeof wvoeDraft[f] === 'string') el(f).value = wvoeDraft[f];
         }
       }
-      // 2. pending prefill (stamped by the service worker on toast click)
-      if (wvoePendingPrefill) {
-        const rec = employers.find((e) => e && e.id === wvoePendingPrefill);
-        if (rec) {
-          el('employerName').value = rec.name || '';
-          const lines = [];
-          if (rec.provider) lines.push('Electronic VOE provider: ' + rec.provider);
-          if (rec.provider_code) lines.push('Employer Code: ' + rec.provider_code);
-          else lines.push('(no published code — fill manually if one is known)');
-          if (rec.notes) lines.push('Note: ' + rec.notes.slice(0, 200));
-          el('providerBlock').value = lines.join('\n');
-          // one-shot: clear so a later bare-panel open doesn't re-apply
-          chrome.storage.local.remove('wvoePendingPrefill').catch(() => {});
-          setStatus('idle', 'Pre-filled from catalog: ' + rec.name);
-          renderContact('wvoeContact', rec);
-          saveDraft();
-        } else {
-          setStatus('error', 'catalog row gone: ' + wvoePendingPrefill);
-        }
-      } else if (wvoePendingRawName && !el('employerName').value.trim()) {
-        // No catalog row behind the click (uncoded / no-match toast): the raw
-        // right-click selection text still flows into Item 1 (user, 2026-10-27).
-        el('employerName').value = String(wvoePendingRawName).trim();
-        chrome.storage.local.remove('wvoePendingRawName').catch(() => {});
-        setStatus('idle', 'Employer name carried from your right-click selection');
-      }
+      // 2. pending prefill stamps (service worker on toast click)
+      return consumeStamps({ atLoad: true });
     })
     .catch((err) => {
       console.error('[VOE Helper sidepanel] restore failed:', err);
@@ -354,12 +379,13 @@
         return el('employerName').focus();
       }
       const basePdf = (await loadForm1005()).slice(0); // fresh copy per render
+      const { inputs, employerFontSize } = wvoeComposeInputs(values);
       const bytes = await window.pdfmeGenerate({
         template: {
           basePdf,
-          schemas: voeForm1005Schema()
+          schemas: voeForm1005Schema(employerFontSize)
         },
-        inputs: [values]
+        inputs: [inputs]
       });
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
@@ -658,12 +684,24 @@
     }
   }).catch(() => {});
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area !== 'local' || !changes.panelView) return;
-    const mode = changes.panelView.newValue;
-    if (mode === 'sweep' || mode === 'wvoe' || mode === 'settings') applyView(mode);
-    if (mode === 'sweep' && voeSweepStateRef?.query && !sweepName.value) {
-      sweepName.value = voeSweepStateRef.query;
-      showSweepContact(sweepName.value.trim());
+    if (area === 'local') {
+      // live relay: a second right-click while the panel is already open
+      // must update the form, not leave the previous employer's text
+      if ((changes.wvoePendingPrefill && changes.wvoePendingPrefill.newValue)
+          || (changes.wvoePendingRawName && changes.wvoePendingRawName.newValue)) {
+        consumeStamps().catch((err) => {
+          console.error('[VOE Helper sidepanel] live prefill failed:', err);
+          setStatus('error', 'live prefill failed reading storage');
+        });
+      }
+      if (changes.panelView) {
+        const mode = changes.panelView.newValue;
+        if (mode === 'sweep' || mode === 'wvoe' || mode === 'settings') applyView(mode);
+        if (mode === 'sweep' && voeSweepStateRef?.query && !sweepName.value) {
+          sweepName.value = voeSweepStateRef.query;
+          showSweepContact(sweepName.value.trim());
+        }
+      }
     }
   });
 })();
