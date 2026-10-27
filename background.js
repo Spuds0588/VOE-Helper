@@ -186,6 +186,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       try {
         await chrome.storage.local.set({
           wvoePendingPrefill: msg.matchId || null,
+          // Raw right-click/selection text — consumed one-shot into the
+          // Employer name field when there is no catalog row behind the
+          // match, so an uncatalogued employer still flows into Item 1.
+          wvoePendingRawName: (msg.matchId || msg.query) ? String(msg.query || '') : null,
           panelView: 'wvoe'
         });
         await openSidePanel(sender);
@@ -521,7 +525,7 @@ function injectToastUI(queryText, match) {
     wvoeBtn.onclick = () => {
       try {
         chrome.runtime.sendMessage(
-          { type: 'OPEN_WVOE_PANEL', matchId: senderMatchId },
+          { type: 'OPEN_WVOE_PANEL', matchId: senderMatchId, query: String(queryText || '') },
           () => { void chrome.runtime.lastError; });
       } catch (e) {
         console.error('[VOE Helper] panel open relay failed:', e);

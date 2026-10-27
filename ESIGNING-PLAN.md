@@ -89,7 +89,18 @@ Researched 2026-10-27; prices/limits verified by source at writing time.
 | **DottedSign self-hosted** (AGPL) | unlimited users/signings + API, but free-edition docs carry an embedded identifier | OAuth client-credentials | vendor-backed; heaviest stack (8 GB rec.) |
 | Hosted: **SignWell** | dev acct 3 docs/mo; up to 25 API docs/mo free w/ card on file; $0.85/doc after | static API key | **best genuine hosted free tier** if low volume is enough |
 | Hosted: **DocuSign** | Developer/demo only (non-binding); production API from ~$600/yr | public OAuth + documented CORS | only hosted lane with published extension-CORS guidance |
+| Hosted: **Foxit eSign** | credit API: 1 envelope = 5 credits; no verified USD price or free production envelopes — confirm with Foxit; 4,000 req/5 min + 25 MB/doc (per MS connector docs) | OAuth2 client-credentials (client_id + secret — a client secret, not a per-user token BYOK style) | documented embedded-signing URL (iframe-able); CORS undocumented — probe; wrong region server = auth failure (NA vs EU) |
 | Hosted: Dropbox Sign / Adobe / Zoho / BoldSign / eSignatures.io | sandboxes are watermarked/test, not free production | keys / OAuth | no free production lane worth planning around |
+
+### Foxit eSign BYOK verdict (researched 2026-10-27)
+
+Foxit eSign is the former eSign Genie under Foxit: REST + client-credentials OAuth,
+embedded-signing session URLs (iframe-able), webhook plus polling, and limits of
+4,000 req/5 min with 25 MB docs. Weaknesses for this extension: (1) auth is a
+**client secret**, a poor fit for BYOK-in-local-storage (anything in the extension
+profile is extractable on that device — treat it as exposed); (2) no published CORS
+policy, so direct browser calls are unverified; (3) API access appears to need an
+account entitlement + regional server pinning (NA/EU). If ever used, the shape is: user's own Foxit account + client-credential minted per-device, token exchange + probe CORS first, embedded signing URL opened in a new extension tab. Sources: developersguide.foxitesign.foxit.com, foxit.com/api/esign-api/, app.developer-api.foxit.com/pricing, github.com/foxitsoftware/foxit-esign-postman-colllection, learn.microsoft.com/en-us/connectors/foxitesign/ (limits), github.com/foxitsoftware/foxit-esign-api-for-customization-and-branding (embedded iframe pattern).
 
 Sources: the researchers' cited pages —
 documenso docs + pricing, docuseal.com/signing-api + pricing + on-premises,
@@ -109,7 +120,9 @@ pricing + credits.
   user-minted token stored in local storage only.
 - **Small-team hosted fallback: SignWell BYOK** (3/mo free, 25/mo with
   card, $0.85/doc) — cheapest way to offer e-signing without running a
-  server; probe its CORS from an MV3 SW before committing.
+  server; probe its CORS from an MV3 SW before committing. Foxit eSign is a
+  weaker hosted alternative: client-secret OAuth, undocumented CORS, credit-
+  priced envelopes (see the verdict above).
 - **Do not** build against sandboxes claiming to be production
   (DocuSign demo, Dropbox Sign test, Adobe Developer, BoldSign sandbox,
   DocuSeal sandbox, OpenSign free API): watermarked or non-binding output is

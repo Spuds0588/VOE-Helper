@@ -354,6 +354,7 @@ async def main():
         # path is exercised too: an OPEN_WVOE_PANEL message must stamp the
         # pending prefill into storage before the panel is opened.
         row4 = row  # same coded Walmart row
+        RAW_NAME_4B = "Cornerstone Family Dental of Mid-Missouri"
         if row4:
             async with Session(websockets.connect(sw["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
                 await s2.rpc("Runtime.enable")
@@ -448,6 +449,102 @@ async def main():
                     log("P4 generate status:", st4)
                     if not st4.startswith("ok|"):
                         failures.append(f"P4: panel generate failed: {st4}")
+
+        # ---------- P4B: raw right-click name flows into Item 1 ----------
+        # The no-match / uncoded toast sends no catalog row — the raw
+        # selection text is stamped as wvoePendingRawName and consumed
+        # one-shot into the Employer field (user: "employer name should flow
+        # through from the selected search text").
+        async with Session(websockets.connect(sw["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
+            await s2.rpc("Runtime.enable")
+            _ = await s2.evaluate(
+                "chrome.storage.local.set({wvoePendingRawName: " + json.dumps(RAW_NAME_4B) +
+                ", wvoePendingPrefill: null, wvoeDraft: null})")
+        async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
+            new_t4b = await b.rpc("Target.createTarget", {"url": f"chrome-extension://{EXT_ID}/sidepanel.html"})
+        tid4b = (new_t4b or {}).get("targetId")
+        page4b = None
+        for _ in range(40):
+            # Only the freshly created page: older P4 sidepanel tabs still exist.
+            page4b = next((t for t in targets() if t["type"] == "page"
+                           and t.get("id") == tid4b), None)
+            if page4b:
+                break
+            await asyncio.sleep(0.4)
+        if not page4b:
+            failures.append("P4B: sidepanel tab never opened")
+        else:
+            async with Session(websockets.connect(
+                    page4b["webSocketDebuggerUrl"], max_size=16 * 1024 * 1024)) as s4b:
+                await s4b.rpc("Runtime.enable")
+                for _ in range(20):  # document may still be loading when CDP attaches
+                    ready = await s4b.evaluate(
+                        "!!document.getElementById('employerName') && !!document.getElementById('generate')")
+                    if ready:
+                        break
+                    await asyncio.sleep(0.4)
+                p4b = None
+                for _ in range(20):
+                    p4b = await s4b.evaluate(
+                        "({name: document.getElementById('employerName').value,"
+                        "  status: document.getElementById('status').textContent})")
+                    if p4b and (p4b.get("status") or "").strip():
+                        break
+                    await asyncio.sleep(0.4)
+                log("P4B raw-name prefill:", p4b)
+                if not (p4b and p4b.get("name") == RAW_NAME_4B):
+                    failures.append(f"P4B: raw selection text did not flow to employer name: {p4b}")
+                consumed_raw = await s4b.evaluate(
+                    "chrome.storage.local.get('wvoePendingRawName')")
+                if (consumed_raw or {}).get("wvoePendingRawName") not in (None, ""):
+                    failures.append("P4B: wvoePendingRawName not consumed (one-shot broken)")
+
+        # ---------- P4C: lender profile dropdown (setup-once) ----------
+        # Seed one saved lender + selectedId; the panel must restore the
+        # menu selection and pre-fill the bundled block + number fields.
+        async with Session(websockets.connect(sw["webSocketDebuggerUrl"], max_size=64 * 1024 * 1024)) as s2:
+            await s2.rpc("Runtime.enable")
+            _ = await s2.evaluate(
+                "chrome.storage.local.set({lenderProfiles: [{id: 'lnd-test', label: 'Spuds Lending LLC',"
+                " block: 'Attn: Processing — Spuds Lending LLC\\n1200 Main St\\nColumbia, MO 65201',"
+                " number: 'TEST-LOAN-001'}], selectedLenderId: 'lnd-test', wvoePendingRawName: null})")
+        async with Session(websockets.connect(browser_ws, max_size=16 * 1024 * 1024)) as b:
+            new_t4c = await b.rpc("Target.createTarget", {"url": f"chrome-extension://{EXT_ID}/sidepanel.html"})
+        tid4c = (new_t4c or {}).get("targetId")
+        page4c = None
+        for _ in range(40):
+            page4c = next((t for t in targets() if t["type"] == "page"
+                           and t.get("id") == tid4c), None)
+            if page4c:
+                break
+            await asyncio.sleep(0.4)
+        if not page4c:
+            failures.append("P4C: sidepanel tab never opened")
+        else:
+            async with Session(websockets.connect(
+                    page4c["webSocketDebuggerUrl"], max_size=16 * 1024 * 1024)) as s4c:
+                await s4c.rpc("Runtime.enable")
+                for _ in range(20):
+                    ready = await s4c.evaluate(
+                        "!!document.getElementById('employerName') && !!document.getElementById('lenderSelect')")
+                    if ready:
+                        break
+                    await asyncio.sleep(0.4)
+                p4c = None
+                for _ in range(20):
+                    p4c = await s4c.evaluate(
+                        "({sel: document.getElementById('lenderSelect').value,"
+                        "  opts: document.getElementById('lenderSelect').length,"
+                        "  block: document.getElementById('verifierBlock').value.slice(0, 40),"
+                        "  num: document.getElementById('lenderNumber').value})")
+                    if p4c and p4c.get("sel") == "lnd-test":
+                        break
+                    await asyncio.sleep(0.4)
+                log("P4C lender dropdown:", p4c)
+                if not (p4c and p4c.get("opts") == 3 and p4c.get("sel") == "lnd-test"
+                        and "Spuds Lending LLC" in p4c.get("block", "")
+                        and p4c.get("num") == "TEST-LOAN-001"):
+                    failures.append(f"P4C: saved lender did not restore: {p4c}")
 
         # ---------- P5: side-panel provider sweep + local route save ----------
         # Probe tab that stands in for the LOS tab: the sweep's card click

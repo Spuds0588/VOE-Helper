@@ -139,6 +139,20 @@
   input::placeholder, textarea::placeholder { color: var(--text-faint); }
   .field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .field-2col .field { margin-bottom: 0; }
+  /* toward-record affordances: small inline links + a button under a field */
+  .mini-link {
+    border: 0; background: none; padding: 0 0 0 4px; font: inherit; font-size: 10.5px;
+    font-weight: 600; color: var(--accent); cursor: pointer; text-transform: none;
+    letter-spacing: 0;
+  }
+  .mini-link:hover { text-decoration: underline; }
+  .btn-under { margin-top: 5px; padding: 5px 10px; font-size: 12px; }
+  .group-inset {
+    border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px 3px;
+    margin: 0 0 9px; background: var(--accent-soft);
+  }
+  .setup-note { font-size: 10.5px; color: var(--text-muted); line-height: 1.45; margin: 0 0 9px; }
+  .share-lane { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin: 8px 0 3px; }
 
   /* internal reference group: visually quieter (not printed anywhere) */
   .group-muted { background: var(--muted-bg); border-style: dashed; }
@@ -272,7 +286,37 @@
 
   <form id="editor" autocomplete="off">
     <div class="group">
-      <div class="group-label">Lender <span class="g-hint">Items 2 · 5 · 6</span></div>
+      <div class="group-label">Lender <span class="g-hint">Items 2 · 5 · 6
+        <button class="mini-link" id="lenderManage" type="button">Manage</button></span></div>
+      <div class="field">
+        <label for="lenderSelect">Lender profile</label>
+        <select id="lenderSelect">
+          <option value="">— pick a saved lender —</option>
+          <option value="__new">+ New lender…</option>
+        </select>
+      </div>
+      <!-- One-time setup: most users configure this once and pick from the
+           menu forever after (user, 2026-10-27). -->
+      <div id="lenderEditor" hidden class="group-inset">
+        <div class="field">
+          <label for="lenderLabel">Name (menu label)</label>
+          <input id="lenderLabel" type="text" placeholder="Spuds Lending LLC">
+        </div>
+        <div class="field">
+          <label for="lenderBlockText">Lender block <span class="hint">Item 2 “From”</span></label>
+          <textarea id="lenderBlockText" rows="3"
+            placeholder="Attn: Processing — Spuds Lending LLC&#10;1200 Main St&#10;Columbia, MO 65201"></textarea>
+        </div>
+        <div class="field">
+          <label for="lenderDefaultNumber">Default lender's number <span class="hint">optional — a loan # overrides it</span></label>
+          <input id="lenderDefaultNumber" type="text" placeholder="e.g. your internal file/branch prefix">
+        </div>
+        <div class="abar-row" style="padding:0 0 9px">
+          <button class="btn-main" id="lenderSave" type="button">Save lender</button>
+          <button class="btn-secondary" id="lenderDelete" type="button" hidden>Delete</button>
+          <button class="btn-secondary" id="lenderCancel" type="button">Cancel</button>
+        </div>
+      </div>
       <div class="field">
         <label for="date">Date</label>
         <input id="date" type="text" placeholder="YYYY-MM-DD">
@@ -293,11 +337,26 @@
       <div class="field">
         <label for="employerName">Employer name</label>
         <input id="employerName" type="text" placeholder="From the match, or type it">
+        <button class="btn-secondary btn-under" id="employerLookup" type="button">Find address + phone</button>
       </div>
       <div class="field">
         <label for="employerContact">Employer address / phone</label>
         <textarea id="employerContact" rows="2"></textarea>
       </div>
+      <!-- BYOK: the key is the user's own, stored locally in chrome.storage,
+           never any repo or shared secret. Places API (New) Text Search +
+           Place Details fill Item 1's address/phone in one request pass. -->
+      <details class="contact-box">
+        <summary>Google Places key <span class="hint">BYOK — for auto-filling the address above</span></summary>
+        <div class="field">
+          <label for="googlePlacesKey">Places API (New) key</label>
+          <input id="googlePlacesKey" type="password" placeholder="AIza…">
+        </div>
+        <p class="setup-note">Create it in Google Cloud → Maps Platform: enable Places API (New)
+          and place billing on the key. Look-ups cost a fraction of a cent each from your
+          account; new accounts carry free trial credit. One request fills both
+          address and phone; nothing leaves your machine but that call.</p>
+      </details>
     </div>
 
     <div class="group">
@@ -319,6 +378,12 @@
         <textarea id="providerBlock" rows="3"></textarea>
         <div class="contact-line" id="wvoeContact" hidden></div>
       </div>
+      <!-- Community lane, honoured per user (2026-10-27): whatever the
+           processor confirms on the provider page (route, code, or where
+           manual WVOEs go) feeds the shared library — one click here carries
+           this employer across to the sweep's record-and-share flow. -->
+      <p class="share-lane">Right WVOE contact for this employer?
+        <button class="mini-link" id="shareContactLink" type="button">Report it for everyone →</button></p>
     </div>
   </form>
   </section>

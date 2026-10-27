@@ -56,8 +56,8 @@
   for (const f of FIELDS) el(f).addEventListener('input', saveDraft);
 
   // ---------- restore + prefill ----------
-  chrome.storage.local.get(['wvoeDraft', 'wvoePendingPrefill', 'employers'])
-    .then(({ wvoeDraft, wvoePendingPrefill, employers = [] } = {}) => {
+  chrome.storage.local.get(['wvoeDraft', 'wvoePendingPrefill', 'wvoePendingRawName', 'employers'])
+    .then(({ wvoeDraft, wvoePendingPrefill, wvoePendingRawName, employers = [] } = {}) => {
       // 1. restore whatever the processor had typed before
       if (wvoeDraft && typeof wvoeDraft === 'object') {
         for (const f of FIELDS) {
@@ -83,6 +83,12 @@
         } else {
           setStatus('error', 'catalog row gone: ' + wvoePendingPrefill);
         }
+      } else if (wvoePendingRawName && !el('employerName').value.trim()) {
+        // No catalog row behind the click (uncoded / no-match toast): the raw
+        // right-click selection text still flows into Item 1 (user, 2026-10-27).
+        el('employerName').value = String(wvoePendingRawName).trim();
+        chrome.storage.local.remove('wvoePendingRawName').catch(() => {});
+        setStatus('idle', 'Employer name carried from your right-click selection');
       }
     })
     .catch((err) => {
@@ -92,6 +98,178 @@
 
   // Default date = today when not yet filled.
   if (!el('date').value) el('date').value = new Date().toISOString().slice(0, 10);
+
+  // ---------- lender profiles (user: setup once, pick forever after) ----------
+  // Saved {label, block, default number} trios live in chrome.storage; the
+  // dropdown fills the bundled lender block + lender's number fields. Margins
+  // per loan stay editable — a loan # typed into the number field is per-form.
+  const lenderSelect = el('lenderSelect');
+  const lenderEditor = el('lenderEditor');
+  let lenderProfiles = [];
+  let editingLenderId = null;
+  function renderLenderOptions(selectedId) {
+    lenderSelect.innerHTML = '';
+    const base = document.createElement('option');
+    base.value = ''; base.textContent = '— pick a saved lender —';
+    lenderSelect.appendChild(base);
+    for (const p of lenderProfiles) {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.label;
+      lenderSelect.appendChild(o);
+    }
+    const n = document.createElement('option');
+    n.value = '__new'; n.textContent = '+ New lender…';
+    lenderSelect.appendChild(n);
+    if (selectedId) lenderSelect.value = selectedId; else lenderSelect.value = '';
+  }
+  function applyLender(p) {
+    if (!p) return;
+    if (p.block) el('verifierBlock').value = p.block;
+    if (p.number && !el('lenderNumber').value.trim()) el('lenderNumber').value = p.number;
+    saveDraft();
+  }
+  function openLenderEditor(p) {
+    editingLenderId = (p && p.id) || null;
+    el('lenderLabel').value = (p && p.label) || '';
+    el('lenderBlockText').value = (p && p.block) || '';
+    el('lenderDefaultNumber').value = (p && p.number) || '';
+    el('lenderDelete').hidden = !p;
+    lenderEditor.hidden = false;
+  }
+  lenderSelect.addEventListener('change', () => {
+    const v = lenderSelect.value;
+    if (v === '__new') { openLenderEditor(null); return; }
+    lenderEditor.hidden = true;  // picking hides any half-open editor
+    if (v) applyLender(lenderProfiles.find(x => x.id === v));
+  });
+  el('lenderManage').addEventListener('click', () => {
+    openLenderEditor(lenderProfiles.find(x => x.id === lenderSelect.value) || null);
+  });
+  el('lenderCancel').addEventListener('click', () => { lenderEditor.hidden = true; });
+  el('lenderSave').addEventListener('click', async () => {
+    const label = el('lenderLabel').value.trim();
+    const block = el('lenderBlockText').value.trim();
+    if (!label || !block) {
+      setStatus('error', 'a lender needs a name and a block (Item 2 “From”)');
+      return;
+    }
+    const rec = {
+      id: editingLenderId || ('lnd-' + Date.now()),
+      label, block,
+      number: el('lenderDefaultNumber').value.trim()
+    };
+    const i = lenderProfiles.findIndex(x => x.id === rec.id);
+    if (i >= 0) lenderProfiles[i] = rec; else lenderProfiles.push(rec);
+    try {
+      await chrome.storage.local.set({ lenderProfiles, selectedLenderId: rec.id });
+    } catch { /* page-context preview: storage unavailable */ }
+    renderLenderOptions(rec.id);
+    applyLender(rec);
+    lenderEditor.hidden = true;
+    setStatus('ok', "Lender saved — it's in the menu for every form now");
+  });
+  el('lenderDelete').addEventListener('click', async () => {
+    if (!editingLenderId) return;
+    lenderProfiles = lenderProfiles.filter(x => x.id !== editingLenderId);
+    try {
+      await chrome.storage.local.set({ lenderProfiles, selectedLenderId: null });
+    } catch { /* page-context preview */ }
+    el('verifierBlock').value = '';
+    el('lenderNumber').value = '';
+    renderLenderOptions('');
+    lenderEditor.hidden = true;
+    saveDraft();
+    setStatus('idle', 'Lender deleted');
+  });
+  (async () => {
+    // Setup-once restore: the last picked lender re-applies on open.
+    let saved = [], selectedId = null;
+    try {
+      const got = await chrome.storage.local.get(['lenderProfiles', 'selectedLenderId']);
+      saved = got.lenderProfiles || [];
+      selectedId = got.selectedLenderId || null;
+    } catch { /* page-context preview */ }
+    lenderProfiles = saved;
+    renderLenderOptions(selectedId || '');
+    applyLender(saved.find((p) => p.id === selectedId));
+  })();
+
+  // ---------- employer address/phone via Google Places (BYOK) ----------
+  // The key is the user's own (stored locally); one Places (New) Text Search
+  // call returns formatted address + national phone for the employer name.
+  const gKeyIn = el('googlePlacesKey');
+  (async () => {
+    try {
+      const { googlePlacesKey = '' } = await chrome.storage.local.get('googlePlacesKey');
+      if (googlePlacesKey) gKeyIn.value = googlePlacesKey;
+    } catch { /* page-context preview */ }
+  })();
+  gKeyIn.addEventListener('input', () => {
+    chrome.storage.local.set({ googlePlacesKey: gKeyIn.value.trim() }).catch(() => {});
+  });
+  el('employerLookup').addEventListener('click', async () => {
+    const name = el('employerName').value.trim();
+    if (!name) {
+      setStatus('error', 'type the employer name first, then look it up');
+      return el('employerName').focus();
+    }
+    const { googlePlacesKey: key } = await chrome.storage.local.get('googlePlacesKey');
+    if (!key) {
+      gKeyIn.closest('details').open = true;
+      gKeyIn.focus();
+      setStatus('error', 'add your Google Places key below first (BYOK — costs your account a fraction of a cent per look-up)');
+      return;
+    }
+    setStatus('busy', 'Looking up ' + name + ' on Google Places…');
+    try {
+      const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': key,
+          // FieldMask governs cost: only the two fields Item 1 needs.
+          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.nationalPhoneNumber'
+        },
+        body: JSON.stringify({ textQuery: name })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status));
+      const p = data && data.places && data.places[0];
+      if (!p) {
+        setStatus('error', 'no Google place matched ' + name + ' — type the address by hand');
+        return;
+      }
+      const lines = [];
+      if (p.formattedAddress) lines.push(p.formattedAddress);
+      if (p.nationalPhoneNumber) lines.push(p.nationalPhoneNumber);
+      el('employerContact').value = lines.join('\n');
+      saveDraft();
+      setStatus('ok', 'Address + phone pulled from Google — glance-check before printing (Item 1)');
+    } catch (err) {
+      console.error('[VOE Helper sidepanel] places lookup failed:', err);
+      setStatus('error', 'google lookup failed: ' +
+        (err && err.message ? err.message : String(err)));
+    }
+  });
+
+  // ---------- community lane: report the confirmed WVOE contact ----------
+  // Carries the employer name across to the sweep view's record-and-share
+  // flow (route + verbatim submission address in the local library and in
+  // the shared issue lane). Manual edits still flow into the draft.
+  el('shareContactLink').addEventListener('click', () => {
+    const name = el('employerName').value.trim();
+    applyView('sweep');
+    if (name && !sweepName.value) sweepName.value = name;
+    (async () => {
+      try {
+        const cur = (await chrome.storage.local.get('voeSweepState')).voeSweepState || {};
+        await chrome.storage.local.set({
+          voeSweepState: { ...cur, query: name || cur.query || '' },
+          panelView: 'sweep'
+        });
+      } catch { /* page-context preview */ }
+    })();
+  });
 
   // ---------- generate + download (panel is self-sufficient) ----------
   el('generate').addEventListener('click', async () => {
