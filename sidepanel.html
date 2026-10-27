@@ -140,6 +140,12 @@
   .field-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .field-2col .field { margin-bottom: 0; }
   /* toward-record affordances: small inline links + a button under a field */
+  .gear-btn {
+    margin-left: auto; border: 0; background: none; color: var(--text-muted);
+    cursor: pointer; padding: 3px; border-radius: 6px; display: inline-flex; flex: 0 0 auto;
+  }
+  .gear-btn:hover { color: var(--text-strong); background: var(--seg-track); }
+  .gear-btn[data-active="true"] { color: var(--accent); }
   .mini-link {
     border: 0; background: none; padding: 0 0 0 4px; font: inherit; font-size: 10.5px;
     font-weight: 600; color: var(--accent); cursor: pointer; text-transform: none;
@@ -152,6 +158,7 @@
     margin: 0 0 9px; background: var(--accent-soft);
   }
   .setup-note { font-size: 10.5px; color: var(--text-muted); line-height: 1.45; margin: 0 0 9px; }
+  .setup-link { display: block; margin-top: 3px; }
   .share-lane { font-size: 11px; color: var(--text-muted); line-height: 1.5; margin: 8px 0 3px; }
 
   /* internal reference group: visually quieter (not printed anywhere) */
@@ -271,7 +278,12 @@
 <body>
   <header class="panel-head">
     <div class="brand"><span class="brand-dot" aria-hidden="true"></span> VOE Helper
-      <small>Fannie Mae Form 1005</small></div>
+      <small>Fannie Mae Form 1005</small>
+      <button class="gear-btn" id="settingsBtn" type="button" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="currentColor">
+          <path d="M19.14 12.94a7.43 7.43 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54A.49.49 0 0 0 13.9 2h-3.8a.49.49 0 0 0-.49.42l-.36 2.54c-.58.24-1.12.55-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.48a.5.5 0 0 0 .12.64l2.03 1.58a7.43 7.43 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.31.6.22l2.39-.96c.5.39 1.04.7 1.62.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54a7.3 7.3 0 0 0 1.62-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5z"/>
+        </svg>
+      </button></div>
     <nav class="seg" aria-label="Panel views">
       <button class="seg-btn" id="tab-wvoe" type="button" data-active="true">WVOE form</button>
       <button class="seg-btn" id="tab-sweep" type="button" data-active="false">Find provider</button>
@@ -343,20 +355,6 @@
         <label for="employerContact">Employer address / phone</label>
         <textarea id="employerContact" rows="2"></textarea>
       </div>
-      <!-- BYOK: the key is the user's own, stored locally in chrome.storage,
-           never any repo or shared secret. Places API (New) Text Search +
-           Place Details fill Item 1's address/phone in one request pass. -->
-      <details class="contact-box">
-        <summary>Google Places key <span class="hint">BYOK — for auto-filling the address above</span></summary>
-        <div class="field">
-          <label for="googlePlacesKey">Places API (New) key</label>
-          <input id="googlePlacesKey" type="password" placeholder="AIza…">
-        </div>
-        <p class="setup-note">Create it in Google Cloud → Maps Platform: enable Places API (New)
-          and place billing on the key. Look-ups cost a fraction of a cent each from your
-          account; new accounts carry free trial credit. One request fills both
-          address and phone; nothing leaves your machine but that call.</p>
-      </details>
     </div>
 
     <div class="group">
@@ -455,6 +453,39 @@
         <button class="btn-secondary" id="saveReport" type="button">Save + issue</button>
       </div>
       <span id="sweepStatus" data-state="idle"></span>
+    </div>
+  </section>
+
+  <!-- Settings view (gear icon, top right): BYOK credentials + the
+       auto-fill engine lineup. Keys stay in local storage on this
+       machine; each engine's own price discipline rides beside it. -->
+  <section id="view-settings" hidden>
+    <p class="view-sub">Keys you own, stored in this browser only. Find address + phone tries
+      each engine top-down until one fills the employer address.</p>
+
+    <div class="group">
+      <div class="group-label">Employee auto-fill <span class="g-hint">address + phone, Item 1</span></div>
+      <div class="field">
+        <label for="googlePlacesKey">Google Places key <span class="hint">Places API (New) — address + phone</span></label>
+        <input id="googlePlacesKey" type="password" placeholder="AIza…">
+        <a class="mini-link setup-link" href="https://spuds0588.github.io/VOE-Helper/places-setup.html"
+           target="_blank" rel="noopener" id="placesHelpLink">Walkthrough: get + set up the key →</a>
+        <p class="setup-note">Your own Maps platform account bills a fraction of a cent per look-up;
+          new accounts include free trial credit. One request fills address and phone together.</p>
+      </div>
+      <div class="field">
+        <label for="geoapifyKey">Geoapify key <span class="hint">free tier — 3,000/day incl. contact data</span></label>
+        <input id="geoapifyKey" type="password" placeholder="Your free Geoapify API key">
+        <a class="mini-link setup-link" href="https://myprojects.geoapify.com/api-keys" target="_blank"
+           rel="noopener" id="geoapifyKeyLink">Free Geoapify signup + recipes →</a>
+        <p class="setup-note">No card, free forever within 3,000 credits a day — two requests per
+          look-up (place search, then details) fill address and phone when OSM has them.</p>
+      </div>
+      <p class="setup-note" style="margin-bottom:9px">Always on, keyless fallback:
+        <strong>Photon</strong> (OpenStreetMap's free index) fills the address even with no key
+        set — phone only when the community record carries one.</p>
+      <p class="share-lane">Lender profiles live on the form, under the Lender
+        section — Manage there to add or edit.</p>
     </div>
   </section>
   </main>

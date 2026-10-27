@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set up your Google Places key | VOE Helper</title>
+    <meta name="description" content="Step-by-step: create a Google Maps Platform key with Places API (New) enabled and paste it into the VOE Helper side panel so the employer address and phone fill themselves.">
+    <meta name="robots" content="index, follow">
+
+    <link rel="icon" href="icons/icon128.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #0B0F19;
+            --bg-card: #151D2E;
+            --bg-card-hover: #1A2438;
+            --accent-blue: #3B82F6;
+            --accent-hover: #60A5FA;
+            --text-main: #F3F4F6;
+            --text-muted: #9CA3AF;
+            --border-light: rgba(255,255,255,0.08);
+        }
+        body {
+            background-color: var(--bg-dark); color: var(--text-main);
+            font-family: 'Inter', sans-serif; line-height: 1.6; margin: 0;
+        }
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; color: var(--text-main); }
+        a { color: var(--accent-blue); text-decoration: none; }
+        a:hover { color: var(--accent-hover); }
+        .wrap { max-width: 760px; margin: 0 auto; padding: 3rem 1.5rem 4rem; }
+        .eyebrow { font-size: .85rem; color: var(--accent-blue); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+        h1 { font-size: 2.2rem; font-weight: 800; margin: .6rem 0 1rem; }
+        .lead { color: var(--text-muted); }
+        ol.steps { list-style: none; padding: 0; margin: 2rem 0 0; }
+        ol.steps li {
+            background: var(--bg-card); border: 1px solid var(--border-light);
+            border-radius: 12px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+        }
+        ol.steps .step-n {
+            font-family: 'Outfit', sans-serif; font-weight: 700; color: var(--accent-blue);
+            display: block; margin-bottom: .4rem; letter-spacing: .02em;
+        }
+        .btn {
+            display: inline-block; padding: .55rem 1.1rem; border-radius: 8px;
+            font-weight: 600; margin: .5rem .4rem 0 0; font-size: .92rem;
+        }
+        .btn-primary { background: var(--accent-blue); color: #fff; }
+        .btn-primary:hover { background: var(--accent-hover); color: #fff; }
+        .btn-secondary { border: 1px solid var(--border-light); color: var(--text-main); background: var(--bg-card-hover); }
+        .btn-secondary:hover { border-color: rgba(59,130,246,.4); color: var(--text-main); }
+        .note {
+            background: rgba(59,130,246,.08); border: 1px solid rgba(59,130,246,.25);
+            border-radius: 10px; padding: .9rem 1.1rem; margin: 1.6rem 0 0; font-size: .95rem;
+        }
+        .free-lane { margin-top: 1.2rem; color: var(--text-muted); font-size: .95rem; }
+        footer { border-top: 1px solid var(--border-light); padding: 1.5rem; text-align: center; color: var(--text-muted); font-size: .85rem; }
+        code {
+            background: var(--bg-card-hover); border: 1px solid var(--border-light);
+            border-radius: 5px; padding: .1rem .35rem; font-size: .9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <p class="eyebrow">VOE Helper — setup</p>
+        <h1>Set up your Google Places key</h1>
+        <p class="lead">This key lets the side panel's <strong>Find address + phone</strong> button fill
+        the employer address and phone (Form 1005 Item 1) from the employer's name.
+        You pay Google directly from your own account — the key never leaves your browser.</p>
+
+        <ol class="steps">
+            <li><span class="step-n">Step 1 · Create a Google Cloud project</span>
+                Use (or create) a project in the Google Cloud console. Any name works, e.g. “voe-helper”.
+                <a class="btn btn-primary" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">Open the console</a>
+            </li>
+            <li><span class="step-n">Step 2 · Enable Places API (New)</span>
+                In the API Library search for <strong>“Places API (New)”</strong> (make sure it is the
+                <em>New</em> one, not legacy) and click <strong>Enable</strong>.
+                <a class="btn btn-primary" href="https://console.cloud.google.com/apis/library/places.googleapis.com" target="_blank" rel="noopener">Open the API Library</a>
+            </li>
+            <li><span class="step-n">Step 3 · Attach billing to the project</span>
+                Places look-ups are billed pay-as-you-go against a billing account — required even while
+                your free trial credit lasts.
+                <a class="btn btn-secondary" href="https://console.cloud.google.com/billing" target="_blank" rel="noopener">Open Billing</a>
+            </li>
+            <li><span class="step-n">Step 4 · Create the API key</span>
+                In Credentials, click <strong>Create credentials → API key</strong>, then click the key to
+                restrict it: under <strong>API restrictions</strong> allow only <em>Places API (New)</em>.
+                That way the key can't be used for anything else.
+                <a class="btn btn-primary" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Open Credentials</a>
+            </li>
+            <li><span class="step-n">Step 5 · Paste it into VOE Helper</span>
+                Open the VOE Helper side panel → <strong>gear icon ⚙ (top right) → Employee auto-fill</strong> →
+                paste the key into <strong>Google Places key</strong>. The panel stores it locally in your
+                browser only — it is never sent anywhere except straight to Google when you run a look-up.
+            </li>
+        </ol>
+
+        <div class="note">
+            <strong>What it costs.</strong> Each look-up makes one Text Search request that pulls the
+            employer's formatted address and phone number. Real-world bills run a fraction of a cent per
+            employer you process; Google gives new accounts free trial credit, so a trial usually covers
+            your first months of look-ups. If a look-up errors with a “Place Details / Text Search SKU… not
+            enabled” message, go back to Step 2 — that is the API not switched on for the key.
+        </div>
+
+        <p class="free-lane">Prefer not to use Google at all? The panel also always includes a
+        <strong>free, keyless fallback</strong> (OpenStreetMap's Photon index) that fills the address
+        without a key — no billing, no setup; it just can't guarantee phone numbers.
+        Add a free <a href="https://www.geoapify.com/" target="_blank" rel="noopener">Geoapify key</a>
+        (3,000 free look-ups/day) if you want phone numbers without Google.</p>
+    </div>
+    <footer>VOE Helper · <a href="https://github.com/Spuds0588/VOE-Helper">GitHub</a> ·
+        <a href="index.html">Home</a></footer>
+</body>
+</html>

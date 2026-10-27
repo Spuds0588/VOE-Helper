@@ -194,62 +194,127 @@
     applyLender(saved.find((p) => p.id === selectedId));
   })();
 
-  // ---------- employer address/phone via Google Places (BYOK) ----------
-  // The key is the user's own (stored locally); one Places (New) Text Search
-  // call returns formatted address + national phone for the employer name.
+  // ---------- employer address/phone via stacked auto-fill engines ----------
+  // Reduce inputs: the pipeline runs keyless Photon last no matter what;
+  // Google Places (address + phone, BYOK key) and Geoapify (free tier BYOK,
+  // contact data) are tried first when their key is present. A failing
+  // engine falls through to the next so the button never dead-ends.
   const gKeyIn = el('googlePlacesKey');
+  const geoKeyIn = el('geoapifyKey');
   (async () => {
     try {
-      const { googlePlacesKey = '' } = await chrome.storage.local.get('googlePlacesKey');
-      if (googlePlacesKey) gKeyIn.value = googlePlacesKey;
+      const { googlePlacesKey: gk = '', geoapifyKey: gpk = '' } =
+        await chrome.storage.local.get(['googlePlacesKey', 'geoapifyKey']);
+      if (gk) gKeyIn.value = gk;
+      if (gpk) geoKeyIn.value = gpk;
     } catch { /* page-context preview */ }
   })();
   gKeyIn.addEventListener('input', () => {
     chrome.storage.local.set({ googlePlacesKey: gKeyIn.value.trim() }).catch(() => {});
   });
+  geoKeyIn.addEventListener('input', () => {
+    chrome.storage.local.set({ geoapifyKey: geoKeyIn.value.trim() }).catch(() => {});
+  });
+  async function fetchOk(url, opts) {
+    const r = await fetch(url, opts);
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) {
+      const msg = (data && data.error && data.error.message) || ('HTTP ' + r.status);
+      throw new Error(msg);
+    }
+    return data;
+  }
+  // Engine 1 — Google Places (New): address + national phone, one request.
+  async function engineGoogle(name, key) {
+    const data = await fetchOk('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        // FieldMask governs cost: only the two fields Item 1 needs.
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.nationalPhoneNumber'
+      },
+      body: JSON.stringify({ textQuery: name })
+    });
+    const p = data && data.places && data.places[0];
+    if (!p) throw new Error('no matching place');
+    const lines = [];
+    if (p.formattedAddress) lines.push(p.formattedAddress);
+    if (p.nationalPhoneNumber) lines.push(p.nationalPhoneNumber);
+    return { lines, lacksPhone: !p.nationalPhoneNumber, engine: 'Google Places' };
+  }
+  // Engine 2 — Geoapify (free-forever BYOK): place search then details.
+  async function engineGeoapify(name, key) {
+    const search = await fetchOk(
+      'https://api.geoapify.com/v2/places?categories=commercial&name='
+       + encodeURIComponent(name) + '&limit=1&apiKey=' + encodeURIComponent(key));
+    const f = search && search.features && search.features[0];
+    const pid = f && f.properties && (f.properties.place_id || f.properties.datasource);
+    if (!pid) throw new Error('no matching place');
+    const det = await fetchOk(
+      'https://api.geoapify.com/v2/place-details?id=' + encodeURIComponent(pid)
+       + '&apiKey=' + encodeURIComponent(key));
+    const pr = (det && det.properties) || {};
+    const c = pr.contact || {};
+    const lines = [];
+    if (pr.formatted_address) lines.push(pr.formatted_address);
+    else if (pr.street && pr.housenumber) lines.push(pr.housenumber + ' ' + pr.street);
+    const phone = c.phone || pr.phone || (pr.phone_number && pr.phone_number);
+    if (phone) lines.push(String(phone));
+    return { lines, lacksPhone: !phone, engine: 'Geoapify' };
+  }
+  // Engine 3 — Photon (keyless OpenStreetMap). Address parts only; phone
+  // just when the OSM record tags it — stated in the status, never silent.
+  async function enginePhoton(name) {
+    const data = await fetchOk(
+      'https://photon.komoot.io/api/?q=' + encodeURIComponent(name) + '&limit=1');
+    const f = data && data.features && data.features[0];
+    const p = (f && f.properties) || {};
+    if (!p.name) throw new Error('no matching place');
+    const lines = [];
+    const street = [p.housenumber, p.street].filter(Boolean).join(' ');
+    if (street) lines.push(street);
+    const cityline = [p.postcode, p.city, p.state].filter(Boolean).join(' ');
+    if (cityline) lines.push(cityline);
+    const phone = (p.phone || (p.extra && p.extra.phone)) && String(p.phone || p.extra.phone);
+    if (phone) lines.push(phone);
+    return { lines, lacksPhone: !phone, engine: 'Photon (OpenStreetMap)' };
+  }
   el('employerLookup').addEventListener('click', async () => {
     const name = el('employerName').value.trim();
     if (!name) {
       setStatus('error', 'type the employer name first, then look it up');
       return el('employerName').focus();
     }
-    const { googlePlacesKey: key } = await chrome.storage.local.get('googlePlacesKey');
-    if (!key) {
-      gKeyIn.closest('details').open = true;
-      gKeyIn.focus();
-      setStatus('error', 'add your Google Places key below first (BYOK — costs your account a fraction of a cent per look-up)');
-      return;
-    }
-    setStatus('busy', 'Looking up ' + name + ' on Google Places…');
+    let { googlePlacesKey: gk = '', geoapifyKey: gpk = '' } = {};
     try {
-      const r = await fetch('https://places.googleapis.com/v1/places:searchText', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': key,
-          // FieldMask governs cost: only the two fields Item 1 needs.
-          'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.nationalPhoneNumber'
-        },
-        body: JSON.stringify({ textQuery: name })
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + r.status));
-      const p = data && data.places && data.places[0];
-      if (!p) {
-        setStatus('error', 'no Google place matched ' + name + ' — type the address by hand');
-        return;
+      ({ googlePlacesKey: gk = '', geoapifyKey: gpk = '' } =
+        await chrome.storage.local.get(['googlePlacesKey', 'geoapifyKey']));
+    } catch { /* page-context preview */ }
+    const engines = [];
+    if (gk) engines.push([() => engineGoogle(name, gk), 'Google Places']);
+    if (gpk) engines.push([() => engineGeoapify(name, gpk), 'Geoapify']);
+    engines.push([() => enginePhoton(name), 'Photon (OpenStreetMap)']);
+    const tried = [];
+    for (const [run, label] of engines) {
+      setStatus('busy', 'Looking up ' + name + ' via ' + label + '…');
+      try {
+        const { lines, lacksPhone, engine } = await run();
+        if (lines.length) {
+          el('employerContact').value = lines.join('\n');
+          saveDraft();
+          setStatus('ok', 'Filled via ' + engine + (lacksPhone
+            ? ' — address only; a Google or Geoapify key would pull the phone too'
+            : ' — glance-check before printing (Item 1)'));
+          return;
+        }
+        tried.push(label + ': no usable fields');
+      } catch (err) {
+        console.error('[VOE Helper sidepanel] ' + label + ' lookup failed:', err);
+        tried.push(label + ': ' + (err && err.message ? err.message : String(err)));
       }
-      const lines = [];
-      if (p.formattedAddress) lines.push(p.formattedAddress);
-      if (p.nationalPhoneNumber) lines.push(p.nationalPhoneNumber);
-      el('employerContact').value = lines.join('\n');
-      saveDraft();
-      setStatus('ok', 'Address + phone pulled from Google — glance-check before printing (Item 1)');
-    } catch (err) {
-      console.error('[VOE Helper sidepanel] places lookup failed:', err);
-      setStatus('error', 'google lookup failed: ' +
-        (err && err.message ? err.message : String(err)));
     }
+    setStatus('error', 'no match from ' + tried.join(' · ') + ' — type the address by hand');
   });
 
   // ---------- community lane: report the confirmed WVOE contact ----------
@@ -550,19 +615,28 @@
   }
   sweepName.addEventListener('input', () => { showSweepContact(sweepName.value.trim()); });
 
-  // ---- view switching (tabs + SW-stamped panelView) ----
+  // ---- view switching (tabs + gear + SW-stamped panelView) ----
   const viewWvoe = el('view-wvoe');
   const viewSweep = el('view-sweep');
+  const viewSettings = el('view-settings');
   let voeSweepStateRef = null;
   function applyView(mode) {
     const sweep = mode === 'sweep';
-    viewWvoe.hidden = sweep;
+    const settings = mode === 'settings';
+    viewWvoe.hidden = sweep || settings;
     viewSweep.hidden = !sweep;
-    // each view owns its sticky action bar; the other's bar must not linger
-    el('actionbar-wvoe').hidden = sweep;
-    el('tab-wvoe').dataset.active = String(!sweep);
+    viewSettings.hidden = !settings;
+    // each view owns its sticky action bar; other bars must not linger
+    el('actionbar-wvoe').hidden = sweep || settings;
+    el('tab-wvoe').dataset.active = String(!sweep && !settings);
     el('tab-sweep').dataset.active = String(sweep);
+    el('settingsBtn').dataset.active = String(settings);
   }
+  el('settingsBtn').addEventListener('click', () => {
+    const backOff = el('settingsBtn').dataset.active === 'true';
+    applyView(backOff ? 'wvoe' : 'settings');
+    chrome.storage.local.set({ panelView: backOff ? 'wvoe' : 'settings' }).catch(() => {});
+  });
   el('tab-wvoe').addEventListener('click', () => {
     applyView('wvoe');
     chrome.storage.local.set({ panelView: 'wvoe' }).catch(() => {});
@@ -573,6 +647,8 @@
   });
   chrome.storage.local.get(['panelView', 'voeSweepState']).then(({ panelView, voeSweepState } = {}) => {
     voeSweepStateRef = voeSweepState || null;
+    if (panelView === 'sweep') applyView('sweep');
+    if (panelView === 'settings') applyView('settings');
     if (panelView === 'sweep') {
       applyView('sweep');
       if (voeSweepStateRef?.query && !sweepName.value) {
@@ -584,7 +660,7 @@
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !changes.panelView) return;
     const mode = changes.panelView.newValue;
-    if (mode === 'sweep' || mode === 'wvoe') applyView(mode);
+    if (mode === 'sweep' || mode === 'wvoe' || mode === 'settings') applyView(mode);
     if (mode === 'sweep' && voeSweepStateRef?.query && !sweepName.value) {
       sweepName.value = voeSweepStateRef.query;
       showSweepContact(sweepName.value.trim());
